@@ -13,6 +13,7 @@ Base de desarrollo personalizada construida sobre el **starter kit oficial de La
 | Passkeys      | Laravel Passkeys (soporte WebAuthn)                    |
 | Tests         | Pest                                                  |
 | Base de datos  | SQLite por defecto                                     |
+| Idiomas       | Español (por defecto) + Inglés                         |
 
 ## Requisitos
 
@@ -59,6 +60,48 @@ La aplicación soporta selección de tema (color de acento) y modo claro/oscuro/
 - Tras cada navegación SPA (`wire:navigate`), el tema y el modo claro/oscuro se re-aplican al escuchar `livewire:navigated` en `resources/views/partials/head.blade.php`. Esto evita que el servidor (que renderiza `class="dark"`) elimine las clases `theme-{color}` cuando sustituye los atributos del elemento `<html>` durante la navegación.
 
 Para añadir un nuevo color de acento: agrega la entrada en el arreglo `themes` de `resources/views/livewire/settings/appearance.blade.php` y define `.theme-{color}` (+ `.dark.theme-{color}`) en `resources/css/app.css`.
+
+## Layout de la aplicación
+
+El layout activo es `resources/views/layouts/app.blade.php` → `layouts/app/sidebar.blade.php`.
+
+- **Sidebar colapsable** (desktop): el `<flux:sidebar collapsible>` se colapsa a barra de iconos. El estado se persiste en `localStorage['flux-sidebar-collapsed-desktop']` (gestionado por Flux). `resources/views/partials/head.blade.php` siembra el valor `true` en la primera visita, por lo que arranca **colapsado por defecto**; cada toggle posterior lo sobrescribe. En móvil conserva el overlay.
+- **Botón de colapso en el sidebar**: `<flux:sidebar.collapse>` en el header del sidebar (patrón oficial de Flux). Al colapsar, el logo se oculta al hacer hover y es sustituido por el botón de expansión; por eso el botón debe estar presente en desktop (no usar `lg:hidden`).
+- **Header de contenido** (solo desktop, `max-lg:hidden`): se renderiza dentro de `<flux:main>` en `layouts/app.blade.php` con el breadcrumb (`flux:breadcrumbs`) a la izquierda y, a la derecha, el botón de modo claro/oscuro (`$flux.dark`) y el selector de idioma. El colapso del sidebar se controla solo desde su propio botón en el header del sidebar.
+- **Breadcrumbs por página**: cada página pasa un arreglo `['label' => string, 'href' => string|null]`; el último item sin `href` es la página actual. En Blade: `<x-layouts::app :breadcrumbs="[...]">`; en componentes Livewire full-page, `render()` devuelve `view(...)->layout('layouts.app', ['breadcrumbs' => [...]])`.
+
+## Localización (i18n)
+
+La aplicación es bilingüe: **español (por defecto)** e **inglés**. El idioma se guarda en la sesión y se aplica en cada request mediante `App\Http\Middleware\SetLocale`.
+
+### Configuración
+
+- `.env`: `APP_LOCALE=es`, `APP_FALLBACK_LOCALE=es`.
+- `config/app.php`: `available_locales` define los idiomas soportados y su etiqueta en el selector:
+  ```php
+  'available_locales' => [
+      'es' => 'Español',
+      'en' => 'English',
+  ],
+  ```
+
+### Cadenas de traducción
+
+Se usa la estrategia de Laravel de **"translation strings as keys"**: la clave es el texto fuente en inglés y las traducciones viven en archivos JSON.
+
+- `lang/es.json` — traducción al español.
+- `lang/en.json` — inglés (clave = valor).
+- `lang/{es,en}/{auth,passwords,pagination,validation}.php` — mensajes de autenticación y validación.
+- En las vistas se usa `{{ __('Dashboard') }}`, `{{ __('Log in') }}`, etc.
+
+### Cambiar de idioma en tiempo real
+
+- **Vistas con Livewire** (app, settings, auth): componente `App\Livewire\LocaleSwitcher` (`resources/views/livewire/locale-switcher.blade.php`), mostrado en el header de contenido en desktop y en el header móvil. Al elegir un idioma guarda la sesión y navega con `window.Livewire.navigate(window.location.href)`, por lo que la página se re-renderiza al instante sin recarga completa.
+- **Página de bienvenida** (sin Livewire): formulario `POST route('locale.update')` (`LocaleController`) con un `<select>` que se autoenvía al cambiar.
+
+### Regla de trabajo
+
+Toda vista nueva o modificada debe crearse **siempre en ambos idiomas**: envuelve los textos en `__()` y añade la clave con su traducción en `lang/es.json` y `lang/en.json`. Los títulos de página pasan por `__($title)` en `resources/views/partials/head.blade.php`, por lo que `#[Title('Profile settings')]` también se traduce.
 
 ## Estrategia de ramas (Git Flow)
 

@@ -2,7 +2,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <title>
-    {{ filled($title ?? null) ? $title.' - '.config('app.name', 'Laravel') : config('app.name', 'Laravel') }}
+    @php
+        $pageTitle = filled($title ?? null) ? __($title) : null;
+    @endphp
+
+    {{ filled($pageTitle) ? $pageTitle.' - '.config('app.name', 'Laravel') : config('app.name', 'Laravel') }}
 </title>
 
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -33,6 +37,10 @@
 
         applyFluxTheme();
         applyFluxAppearance();
+
+        if (window.localStorage.getItem('flux-sidebar-collapsed-desktop') === null) {
+            window.localStorage.setItem('flux-sidebar-collapsed-desktop', 'true');
+        }
 
         document.addEventListener('livewire:navigated', () => {
             applyFluxTheme();

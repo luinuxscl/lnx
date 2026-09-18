@@ -41,6 +41,8 @@
                 </flux:tooltip>
             </flux:navbar>
 
+            <livewire:locale-switcher />
+
             <x-desktop-user-menu />
         </flux:header>
 
