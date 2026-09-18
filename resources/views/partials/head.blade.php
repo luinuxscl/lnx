@@ -16,8 +16,27 @@
 
 <script>
     (() => {
-        const theme = window.localStorage.getItem('flux.theme') ?? 'orange';
+        const applyFluxTheme = () => {
+            const theme = window.localStorage.getItem('flux.theme') ?? 'orange';
 
-        document.documentElement.classList.add('theme-'.concat(theme));
+            document.documentElement.classList.remove(...Array.from(document.documentElement.classList).filter((name) => name.startsWith('theme-')));
+
+            document.documentElement.classList.add('theme-'.concat(theme));
+        };
+
+        const applyFluxAppearance = () => {
+            window.Flux?.applyAppearance?.(window.localStorage.getItem('flux.appearance') || 'system');
+        };
+
+        window.applyFluxTheme = applyFluxTheme;
+        window.applyFluxAppearance = applyFluxAppearance;
+
+        applyFluxTheme();
+        applyFluxAppearance();
+
+        document.addEventListener('livewire:navigated', () => {
+            applyFluxTheme();
+            applyFluxAppearance();
+        });
     })();
 </script>

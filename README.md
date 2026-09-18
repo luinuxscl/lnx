@@ -56,6 +56,7 @@ La aplicación soporta selección de tema (color de acento) y modo claro/oscuro/
 - Cada tema se define como una clase `.theme-{color}` en `resources/css/app.css`, que sobreescribe las variables CSS `--color-accent`, `--color-accent-content` y `--color-accent-foreground` (con variantes `.dark` por tema).
 - Al cargar la página, `resources/views/partials/head.blade.php` aplica la clase `theme-*` desde `localStorage['flux.theme']` antes del render para evitar flashes.
 - El modo claro/oscuro lo gestiona Flux vía `localStorage['flux.appearance']`.
+- Tras cada navegación SPA (`wire:navigate`), el tema y el modo claro/oscuro se re-aplican al escuchar `livewire:navigated` en `resources/views/partials/head.blade.php`. Esto evita que el servidor (que renderiza `class="dark"`) elimine las clases `theme-{color}` cuando sustituye los atributos del elemento `<html>` durante la navegación.
 
 Para añadir un nuevo color de acento: agrega la entrada en el arreglo `themes` de `resources/views/livewire/settings/appearance.blade.php` y define `.theme-{color}` (+ `.dark.theme-{color}`) en `resources/css/app.css`.
 
@@ -80,5 +81,6 @@ Para añadir un nuevo color de acento: agrega la entrada en el arreglo `themes` 
 app/Livewire/Settings/            Componentes de settings
 resources/views/layouts/          Layouts (app, auth)
 resources/css/app.css             Tokens de Tailwind + theming Flux
+.kilo/agent/                      Sub-agentes de Kilo (ui-audit: auditoría visual de vistas con modelo económico de visión)
 tests/                            Suite de Pest
 ```
