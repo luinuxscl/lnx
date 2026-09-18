@@ -78,11 +78,27 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'es'),
 
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'es'),
 
-    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+    'faker_locale' => env('APP_FAKER_LOCALE', 'es_ES'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Supported Locales
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the locales supported by the application along with
+    | the human readable label shown in the language switcher. The first
+    | entry should match the default application locale.
+    |
+    */
+
+    'available_locales' => [
+        'es' => 'Español',
+        'en' => 'English',
+    ],
 
     /*
     |--------------------------------------------------------------------------
