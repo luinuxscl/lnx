@@ -4,6 +4,10 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
+        <div class="fixed top-4 end-4 z-50">
+            <livewire:locale-switcher />
+        </div>
+
         <div class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
             <div class="bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-e dark:border-neutral-800">
                 <div class="absolute inset-0 bg-neutral-900"></div>
