@@ -113,3 +113,13 @@ Renderizar el nuevo header dentro de `<flux:main>`, antes del slot, visible solo
 4. `/settings/profile`, `/settings/security`, `/settings/appearance`: breadcrumb "Settings / <Página>".
 5. Móvil (< lg): header móvil existente sigue funcionando (toggle abre overlay, idioma presente); el nuevo header no se muestra.
 6. `php artisan test --compact` para confirmar que nada se rompió.
+
+## Estado final de implementación (post-plan)
+
+Desviaciones respecto al plan original, ya implementadas y verificadas:
+
+- El toggle del header de contenido (`flux:sidebar.toggle`) se **eliminó**: el colapso se controla desde `<flux:sidebar.collapse>` en el header del sidebar (patrón oficial de Flux). Debe estar presente en desktop (no usar `lg:hidden`), porque al colapsar Flux oculta el logo en hover y lo sustituye por ese botón; si no está, el logo "desaparece".
+- Se añadió un **toggle de modo claro/oscuro** (`$flux.dark`, patrón de Flux) junto al selector de idioma en el header.
+- Se eliminó el `flux:sidebar.group` "Platform": los grupos sin `icon` se ocultan por completo al colapsar, por lo que el item Dashboard no mostraba su icono. Ahora es hijo directo de `flux:sidebar.nav`.
+- Breadcrumbs implementados en `dashboard.blade.php` y en `render()` de los componentes de Settings.
+- Tests: 43 passed / 106 assertions. `vendor/bin/pint --dirty` passed.
