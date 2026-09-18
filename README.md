@@ -61,6 +61,15 @@ La aplicación soporta selección de tema (color de acento) y modo claro/oscuro/
 
 Para añadir un nuevo color de acento: agrega la entrada en el arreglo `themes` de `resources/views/livewire/settings/appearance.blade.php` y define `.theme-{color}` (+ `.dark.theme-{color}`) en `resources/css/app.css`.
 
+## Layout de la aplicación
+
+El layout activo es `resources/views/layouts/app.blade.php` → `layouts/app/sidebar.blade.php`.
+
+- **Sidebar colapsable** (desktop): el `<flux:sidebar collapsible>` se colapsa a barra de iconos. El estado se persiste en `localStorage['flux-sidebar-collapsed-desktop']` (gestionado por Flux). `resources/views/partials/head.blade.php` siembra el valor `true` en la primera visita, por lo que arranca **colapsado por defecto**; cada toggle posterior lo sobrescribe. En móvil conserva el overlay.
+- **Botón de colapso en el sidebar**: `<flux:sidebar.collapse>` en el header del sidebar (patrón oficial de Flux). Al colapsar, el logo se oculta al hacer hover y es sustituido por el botón de expansión; por eso el botón debe estar presente en desktop (no usar `lg:hidden`).
+- **Header de contenido** (solo desktop, `max-lg:hidden`): se renderiza dentro de `<flux:main>` en `layouts/app.blade.php` con el breadcrumb (`flux:breadcrumbs`) a la izquierda y, a la derecha, el botón de modo claro/oscuro (`$flux.dark`) y el selector de idioma. El colapso del sidebar se controla solo desde su propio botón en el header del sidebar.
+- **Breadcrumbs por página**: cada página pasa un arreglo `['label' => string, 'href' => string|null]`; el último item sin `href` es la página actual. En Blade: `<x-layouts::app :breadcrumbs="[...]">`; en componentes Livewire full-page, `render()` devuelve `view(...)->layout('layouts.app', ['breadcrumbs' => [...]])`.
+
 ## Localización (i18n)
 
 La aplicación es bilingüe: **español (por defecto)** e **inglés**. El idioma se guarda en la sesión y se aplica en cada request mediante `App\Http\Middleware\SetLocale`.
