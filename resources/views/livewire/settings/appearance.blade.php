@@ -21,9 +21,7 @@
 
                     localStorage.setItem('flux.theme', value);
 
-                    this.themes.forEach((theme) => document.documentElement.classList.remove('theme-'.concat(theme.value)));
-
-                    document.documentElement.classList.add('theme-'.concat(value));
+                    window.applyFluxTheme();
                 },
             }"
         >
