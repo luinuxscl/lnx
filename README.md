@@ -73,7 +73,8 @@ Para añadir un nuevo color de acento: agrega la entrada en el arreglo `themes` 
 
 - `README.md` — este archivo, panorámica del proyecto.
 - `.ai/rules/` — reglas permanentes del proyecto (git flow, documentación).
-- `.agents/skills/` — skills de dominio (Flux, Livewire, Fortify, testing, etc.).
+- `.agents/skills/` — skills de dominio locales (Flux, Livewire, Fortify, testing, etc.).
+- `.kilo/skills/consolidar/` — skill de cierre: al decir "consolidar" ejecuta documentación, commits, merge y push tras una confirmación simple.
 
 ## Estructura clave
 
@@ -82,5 +83,6 @@ app/Livewire/Settings/            Componentes de settings
 resources/views/layouts/          Layouts (app, auth)
 resources/css/app.css             Tokens de Tailwind + theming Flux
 .kilo/agent/                      Sub-agentes de Kilo (ui-audit: auditoría visual de vistas con modelo económico de visión)
+.kilo/skills/                     Skills de Kilo versionadas (consolidar: documentación + commits + merge + push)
 tests/                            Suite de Pest
 ```
