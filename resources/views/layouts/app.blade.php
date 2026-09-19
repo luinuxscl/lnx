@@ -1,5 +1,5 @@
 <x-layouts::app.sidebar :title="$title ?? null">
-    <flux:main>
+    <flux:main class="flex flex-col">
         <div class="mb-6 flex items-center gap-4 border-b border-zinc-200 pb-4 max-lg:hidden dark:border-zinc-700">
             <flux:breadcrumbs>
                 @foreach (($breadcrumbs ?? []) as $item)
