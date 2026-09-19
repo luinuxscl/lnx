@@ -27,6 +27,8 @@
             <livewire:locale-switcher />
         </div>
 
+        <x-dev-credentials-warning />
+
         {{ $slot }}
     </flux:main>
 </x-layouts::app.sidebar>
