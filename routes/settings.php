@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\Role;
 use App\Livewire\Settings\Appearance;
+use App\Livewire\Settings\General;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Security;
 use Illuminate\Support\Facades\Route;
@@ -27,3 +29,10 @@ Route::get('.well-known/passkey-endpoints', function () {
         'manage' => route('security.edit'),
     ]);
 })->name('well-known.passkeys');
+
+Route::middleware([
+    'auth',
+    'role:'.Role::Root->value,
+])->prefix('admin/settings')->name('admin.settings.')->group(function () {
+    Route::livewire('/', General::class)->name('edit');
+});
