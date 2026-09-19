@@ -130,6 +130,16 @@ Para desarrollo, `.env.example` trae un root listo para usar (**Luis Sepulveda /
 
 Para producción basta con definir un `ROOT_USER_PASSWORD` fuerte (o vaciar `ROOT_USER_EMAIL`) antes de seedear.
 
+### Gestión de usuarios (CRUD)
+
+CRUD de usuarios en `/admin/users` (`admin.users.index`), accesible solo para `root` y `admin` mediante el middleware `role:root|admin` (`routes/users.php`).
+
+- `App\Livewire\Users\{Index,Create,Edit}` y `App\Policies\UserPolicy` gobiernan listado, creación, edición y borrado.
+- La asignación de rol solo permite `admin` o ningún rol: `Role::assignable()` excluye `root`, por lo que **nunca se pueden crear nuevos superusuarios** (validación server-side).
+- Las cuentas `root` no se pueden editar ni eliminar desde el CRUD, y nadie puede eliminar su propia cuenta (guardas explícitas que no dependen de `Gate::before`).
+- Los usuarios creados desde el CRUD quedan con el email verificado.
+- El ítem "Usuarios" vive en la zona de configuración del sidebar (ver `.ai/rules/views.md`).
+
 ## Estrategia de ramas (Git Flow)
 
 - `main` — producción, siempre estable.
@@ -150,6 +160,8 @@ Para producción basta con definir un `ROOT_USER_PASSWORD` fuerte (o vaciar `ROO
 
 ```
 app/Livewire/Settings/            Componentes de settings
+app/Livewire/Users/               CRUD de usuarios (root/admin)
+app/Policies/                     Policies (UserPolicy)
 resources/views/layouts/          Layouts (app, auth)
 resources/css/app.css             Tokens de Tailwind + theming Flux
 .kilo/agent/                      Sub-agentes de Kilo (ui-audit: auditoría visual de vistas con modelo económico de visión)
