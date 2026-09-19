@@ -16,6 +16,32 @@ Base de desarrollo personalizada construida sobre el **starter kit oficial de La
 | Base de datos  | SQLite por defecto                                     |
 | Idiomas       | Español (por defecto) + Inglés                         |
 
+## Nuevo proyecto desde el kit
+
+Para crear un proyecto nuevo basado en este kit (carpeta propia, git limpio, identidad sustituida y app lista):
+
+```bash
+./scripts/new-project.sh <nombre> <dominio> [--app-name "Nombre Visible"] \
+    [--github-owner OWNER] [--target RUTA] [--skip-setup]
+```
+
+Ejemplo:
+
+```bash
+./scripts/new-project.sh rukatv-admin admin.rukatv.cl --app-name "Ruka TV Admin"
+```
+
+El script copia solo los archivos versionados (`git archive`), inicializa `main`/`develop`, sustituye `APP_NAME`, `APP_URL`, remitente de correo, `composer.json`, README y los enlaces al repositorio, y ejecuta la instalación local. Al terminar, imprime los pasos para crear el repo en GitHub y desplegar en Coolify (skill global `coolify-laravel-deploy`).
+
+El kit es además un **GitHub Template**: también puedes crear el proyecto con `gh repo create <owner>/<nombre> --template luinuxscl/lnx --private`, aunque el script aporta la sustitución de identidad y el setup.
+
+El despliegue de referencia (Coolify + PostgreSQL + `Dockerfile`) usa:
+
+- Imagen `serversideup/php:8.5-fpm-nginx`, puerto `8080`, healthcheck `/up`.
+- `AUTORUN_ENABLED=true` con migraciones, seed y `storage:link` al arrancar.
+- `trustProxies(at: '*')` en `bootstrap/app.php` para detectar HTTPS tras Traefik.
+- El usuario de prueba del `DatabaseSeeder` solo se crea fuera de producción.
+
 ## Requisitos
 
 - PHP >= 8.5
