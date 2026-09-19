@@ -11,6 +11,7 @@ Base de desarrollo personalizada construida sobre el **starter kit oficial de La
 | UI            | Flux UI (free edition) + Heroicons                     |
 | AUTH          | Laravel Fortify (login, 2FA, registro, verificación)   |
 | Passkeys      | Laravel Passkeys (soporte WebAuthn)                    |
+| Autorización  | Spatie Laravel Permission (roles `root` y `admin`)     |
 | Tests         | Pest                                                  |
 | Base de datos  | SQLite por defecto                                     |
 | Idiomas       | Español (por defecto) + Inglés                         |
@@ -102,6 +103,31 @@ Se usa la estrategia de Laravel de **"translation strings as keys"**: la clave e
 ### Regla de trabajo
 
 Toda vista nueva o modificada debe crearse **siempre en ambos idiomas**: envuelve los textos en `__()` y añade la clave con su traducción en `lang/es.json` y `lang/en.json`. Los títulos de página pasan por `__($title)` en `resources/views/partials/head.blade.php`, por lo que `#[Title('Profile settings')]` también se traduce.
+
+## Autorización (roles)
+
+La app usa **spatie/laravel-permission** y trabaja **por roles, no por permisos granulares**. Roles por defecto (`App\Enums\Role`):
+
+- **`root`** — superusuario. Se configura con `Gate::before` en `AppServiceProvider`: omite todas las comprobaciones de gates y policies.
+- **`admin`** — rol administrativo, sin bypass global.
+
+### Detalles
+
+- El trait `HasRoles` está aplicado en `App\Models\User` (`$user->assignRole(Role::Root->value)`, `$user->hasRole(...)`).
+- Los alias de middleware `role`, `permission` y `role_or_permission` están registrados en `bootstrap/app.php` (p. ej. `->middleware('role:admin')`).
+- `RolePermissionSeeder` crea los roles de forma idempotente y, si `ROOT_USER_EMAIL` y `ROOT_USER_PASSWORD` están definidos, siembra el usuario root inicial. Se ejecuta desde `DatabaseSeeder`.
+- Variables de entorno del usuario root (ver `config/authorization.php`): `ROOT_USER_NAME`, `ROOT_USER_EMAIL`, `ROOT_USER_PASSWORD`.
+- El registro público (Fortify) **no** asigna ningún rol por defecto.
+
+### Credenciales root de desarrollo y alerta de seguridad
+
+Para desarrollo, `.env.example` trae un root listo para usar (**Luis Sepulveda / luinuxscl@gmail.com / password**) para que `php artisan migrate --seed` deje la app operativa al instante. Esas credenciales **nunca** deben llegar a producción, y por eso existen tres capas de defensa:
+
+1. **Bloqueo del seeder en producción**: si el entorno es `production` y `ROOT_USER_PASSWORD` sigue siendo el password de desarrollo (`App\Support\DevRootCredentials::PASSWORD`), `RolePermissionSeeder` lanza una excepción y no crea el usuario.
+2. **Log crítico**: con esas credenciales activas en producción, los comandos de consola registran un `Log::critical`; al seedear en local se emite además un warning en consola y en el log.
+3. **Banner en la UI** (todos los entornos): mientras un usuario `root` conserve el password de desarrollo, `resources/views/components/dev-credentials-warning.blade.php` muestra un aviso con enlace directo a cambiar la contraseña.
+
+Para producción basta con definir un `ROOT_USER_PASSWORD` fuerte (o vaciar `ROOT_USER_EMAIL`) antes de seedear.
 
 ## Estrategia de ramas (Git Flow)
 
