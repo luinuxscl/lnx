@@ -4,11 +4,24 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{{ __('Welcome') }} - {{ config('app.name', 'Laravel') }}</title>
+        <title>{{ __('Welcome') }} - {{ ($site ?? null)?->title() ?? config('app.name', 'Laravel') }}</title>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        @if (($site ?? null)?->description())
+            <meta name="description" content="{{ $site->description() }}">
+        @endif
+
+        @if (($site ?? null)?->faviconUrl())
+            <link rel="icon" href="{{ $site->faviconUrl() }}">
+        @else
+            <link rel="icon" href="/favicon.ico" sizes="any">
+            <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        @endif
+
+        @if (($site ?? null)?->appleTouchIconUrl())
+            <link rel="apple-touch-icon" href="{{ $site->appleTouchIconUrl() }}">
+        @else
+            <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        @endif
 
         @fonts
 
@@ -65,6 +78,10 @@
         <div class="flex items-center justify-center w-full transition-opacity opacity-100 duration-750 lg:grow starting:opacity-0">
             <main class="flex max-w-[335px] w-full flex-col-reverse lg:max-w-4xl lg:flex-row">
                 <div class="text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 bg-white dark:bg-[#161615] dark:text-[#EDEDEC] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] rounded-es-lg rounded-ee-lg lg:rounded-ss-lg lg:rounded-ee-none">
+                    @if (filled(($site ?? null)?->site_tagline))
+                        <p class="mb-3 text-[#706f6c] dark:text-[#A1A09A]">{{ $site->site_tagline }}</p>
+                    @endif
+
                     <h1 class="mb-1 font-medium">{{ __('Let\'s get started') }}</h1>
                     <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">{{ __('Laravel has an incredibly rich ecosystem.') }} <br>{{ __('We suggest starting with the following.') }}</p>
                     <ul class="flex flex-col mb-4 lg:mb-6">

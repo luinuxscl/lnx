@@ -15,6 +15,7 @@ it('hides the configuration menu from users without an admin role', function () 
         ->get(route('dashboard'))
         ->assertOk()
         ->assertDontSee('Repositorio')
+        ->assertDontSee('Configuración general')
         ->assertDontSee('Documentación');
 });
 
@@ -26,7 +27,8 @@ it('shows documentation but not the repository to admin users', function () {
         ->get(route('dashboard'))
         ->assertOk()
         ->assertSee('Documentación')
-        ->assertDontSee('Repositorio');
+        ->assertDontSee('Repositorio')
+        ->assertDontSee('Configuración general');
 });
 
 it('shows the repository of this application to root users', function () {
@@ -38,6 +40,8 @@ it('shows the repository of this application to root users', function () {
         ->assertOk()
         ->assertSee('Repositorio')
         ->assertSee('https://github.com/luinuxscl/lnx')
+        ->assertSee('Configuración general')
+        ->assertSee('admin/settings')
         ->assertSee('Documentación')
         ->assertDontSee('laravel.com/docs');
 });

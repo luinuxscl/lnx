@@ -3,15 +3,30 @@
 
 <title>
     @php
+        $siteName = ($site ?? null)?->title() ?? config('app.name', 'Laravel');
         $pageTitle = filled($title ?? null) ? __($title) : null;
+        $metaDescription = ($site ?? null)?->description();
     @endphp
 
-    {{ filled($pageTitle) ? $pageTitle.' - '.config('app.name', 'Laravel') : config('app.name', 'Laravel') }}
+    {{ filled($pageTitle) ? $pageTitle.' - '.$siteName : $siteName }}
 </title>
 
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+@if (filled($metaDescription))
+    <meta name="description" content="{{ $metaDescription }}">
+@endif
+
+@if (($site ?? null)?->faviconUrl())
+    <link rel="icon" href="{{ $site->faviconUrl() }}">
+@else
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+@endif
+
+@if (($site ?? null)?->appleTouchIconUrl())
+    <link rel="apple-touch-icon" href="{{ $site->appleTouchIconUrl() }}">
+@else
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+@endif
 
 @fonts
 
@@ -48,3 +63,13 @@
         });
     })();
 </script>
+
+@if (filled(($site ?? null)?->analytics_id) && app()->isProduction())
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $site->analytics_id }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', @json($site->analytics_id));
+    </script>
+@endif
