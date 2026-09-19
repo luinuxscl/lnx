@@ -30,6 +30,7 @@ npm install
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --seed
+php artisan storage:link
 npm run build
 php artisan serve
 ```
@@ -140,6 +141,33 @@ CRUD de usuarios en `/admin/users` (`admin.users.index`), accesible solo para `r
 - Los usuarios creados desde el CRUD quedan con el email verificado.
 - El ítem "Usuarios" vive en la zona de configuración del sidebar (ver `.ai/rules/views.md`).
 
+## Configuración general (General Settings)
+
+Vista de configuración global del sitio en `/admin/settings` (`admin.settings.edit`), accesible **solo para `root`** mediante el middleware `role:root` (`routes/settings.php`). El ítem "General settings" vive en la zona de configuración del sidebar y solo lo ve root.
+
+- `App\Livewire\Settings\General` + `App\Policies\SettingPolicy` (view/update solo root) gobiernan la vista.
+- La configuración se guarda en una fila única de la tabla `settings` (`App\Models\Setting`). `Setting::current()` la cachea bajo la clave `settings` y `Setting::forgetCache()` la invalida al guardar.
+
+### Campos configurables
+
+| Sección | Campo | Efecto |
+|---|---|---|
+| Identidad | Title | `config('app.name')`, `<title>`, marca del sidebar. |
+| Identidad | Tagline | Lema del sitio (y fallback de la meta descripción). |
+| Identidad | Meta description | `<meta name="description">` (fallback: Tagline). |
+| Identidad | Administration email | `config('mail.from.address')`. |
+| Personalización | Logo / Dark mode logo | Logo del sidebar (el oscuro se usa en modo dark). |
+| Personalización | Favicon / Apple touch icon | Iconos del `<head>`. |
+| Avanzado | Footer text | Texto mostrado sobre el menú de usuario del sidebar. |
+| Avanzado | Analytics ID | ID de GA4 inyectado en el `<head>` (solo en producción). |
+| Avanzado | Maintenance mode + message | Bloquea la app con una página 503; root y las rutas de auth siguen accesibles. |
+
+### Cómo se aplica
+
+- `App\Http\Middleware\ApplySiteSettings` (grupo `web`) vuelca los settings en `config()` y comparte `$site` con todas las vistas; `resources/views/partials/head.blade.php`, `resources/views/components/app-logo.blade.php` y el sidebar lo consumen.
+- `App\Http\Middleware\CheckMaintenanceMode` (grupo `web`) devuelve la vista `errors/maintenance.blade.php` (503) cuando el modo mantenimiento está activo. Los usuarios root y las rutas de autenticación quedan exentos para poder desactivarlo.
+- Los archivos de branding se suben al disco `public` (`storage/app/public/branding`); por eso `php artisan storage:link` es obligatorio en instalación y despliegue.
+
 ## Estrategia de ramas (Git Flow)
 
 - `main` — producción, siempre estable.
@@ -159,10 +187,13 @@ CRUD de usuarios en `/admin/users` (`admin.users.index`), accesible solo para `r
 ## Estructura clave
 
 ```
-app/Livewire/Settings/            Componentes de settings
+app/Livewire/Settings/            Componentes de settings (incl. General de root)
 app/Livewire/Users/               CRUD de usuarios (root/admin)
-app/Policies/                     Policies (UserPolicy)
+app/Models/Setting.php            Configuración global cacheada (fila única)
+app/Policies/                     Policies (UserPolicy, SettingPolicy)
+app/Http/Middleware/              SetLocale, ApplySiteSettings, CheckMaintenanceMode
 resources/views/layouts/          Layouts (app, auth)
+resources/views/errors/           Vistas de error (maintenance)
 resources/css/app.css             Tokens de Tailwind + theming Flux
 .kilo/agent/                      Sub-agentes de Kilo (ui-audit: auditoría visual de vistas con modelo económico de visión)
 .kilo/skills/                     Skills de Kilo versionadas (consolidar: documentación + commits + merge + push)
