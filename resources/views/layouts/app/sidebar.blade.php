@@ -20,6 +20,10 @@
 
             @if (auth()->user()->hasAnyRole([\App\Enums\Role::Root, \App\Enums\Role::Admin]))
                 <flux:sidebar.nav>
+                    <flux:sidebar.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')" wire:navigate>
+                        {{ __('Users') }}
+                    </flux:sidebar.item>
+
                     @if (auth()->user()->hasRole(\App\Enums\Role::Root))
                         <flux:sidebar.item icon="folder-git-2" href="https://github.com/luinuxscl/lnx" target="_blank">
                             {{ __('Repository') }}
