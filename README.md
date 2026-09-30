@@ -182,7 +182,7 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 | Identidad | Tagline | Lema del sitio (y fallback de la meta descripción). |
 | Identidad | Meta description | `<meta name="description">` (fallback: Tagline). |
 | Identidad | Administration email | `config('mail.from.address')`. |
-| Personalización | Logo / Dark mode logo | Logo del sidebar (el oscuro se usa en modo dark). |
+| Personalización | Logo / Dark mode logo | Logo del encabezado y sidebar; las imágenes personalizadas se muestran sobre un fondo transparente y el icono predeterminado conserva su fondo. |
 | Personalización | Favicon / Apple touch icon | Iconos del `<head>`. |
 | Avanzado | Footer text | Texto mostrado sobre el menú de usuario del sidebar. |
 | Avanzado | Analytics ID | ID de GA4 inyectado en el `<head>` (solo en producción). |

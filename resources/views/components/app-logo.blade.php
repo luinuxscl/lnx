@@ -9,7 +9,7 @@
 
 @if($sidebar)
     <flux:sidebar.brand :name="$siteName" {{ $attributes }}>
-        <x-slot name="logo" class="flex aspect-square size-8 items-center justify-center rounded-md bg-accent-content text-accent-foreground">
+        <x-slot name="logo" class="flex aspect-square size-8 items-center justify-center rounded-md {{ $logoUrl ? 'bg-transparent' : 'bg-accent-content' }} text-accent-foreground">
             @if ($logoUrl)
                 <img src="{{ $logoUrl }}" alt="{{ $siteName }}" class="size-8 rounded-md object-contain" />
             @else
@@ -19,7 +19,7 @@
     </flux:sidebar.brand>
 @else
     <flux:brand :name="$siteName" {{ $attributes }}>
-        <x-slot name="logo" class="flex aspect-square size-8 items-center justify-center rounded-md bg-accent-content text-accent-foreground">
+        <x-slot name="logo" class="flex aspect-square size-8 items-center justify-center rounded-md {{ $logoUrl ? 'bg-transparent' : 'bg-accent-content' }} text-accent-foreground">
             @if ($logoUrl)
                 <img src="{{ $logoUrl }}" alt="{{ $siteName }}" class="size-8 rounded-md object-contain" />
             @else
