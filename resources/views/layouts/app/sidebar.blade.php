@@ -40,12 +40,6 @@
                 </flux:sidebar.nav>
             @endif
 
-            @if (filled(($site ?? null)?->footer_text))
-                <div class="px-3 pb-2 text-xs text-zinc-500 dark:text-zinc-400">
-                    {{ $site->footer_text }}
-                </div>
-            @endif
-
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
 
