@@ -185,12 +185,13 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 | Identidad | Administration email | `config('mail.from.address')`. |
 | Personalización | Logo / Dark mode logo | Logo del encabezado y sidebar; las imágenes personalizadas se muestran sobre un fondo transparente y el icono predeterminado conserva su fondo. |
 | Personalización | Favicon / Apple touch icon | Iconos del `<head>`. |
-| Avanzado | Footer text | Texto mostrado sobre el menú de usuario del sidebar. |
+| Avanzado | Footer text | Texto mostrado en el footer del contenido de las páginas autenticadas. |
 | Avanzado | Analytics ID | ID de GA4 inyectado en el `<head>` (solo en producción). |
 | Avanzado | Maintenance mode + message | Bloquea la app con una página 503; root y las rutas de auth siguen accesibles. |
 
 ### Cómo se aplica
 
+- El footer del contenido muestra siempre la marca Like Innovación. Solo `admin` y `root` ven la versión de LNX, definida con `APP_VERSION` (valor predeterminado `0.1.0`).
 - `App\Http\Middleware\ApplySiteSettings` (grupo `web`) vuelca los settings en `config()` y comparte `$site` con todas las vistas; `resources/views/partials/head.blade.php`, `resources/views/components/app-logo.blade.php` y el sidebar lo consumen.
 - `App\Http\Middleware\CheckMaintenanceMode` (grupo `web`) devuelve la vista `errors/maintenance.blade.php` (503) cuando el modo mantenimiento está activo. Los usuarios root y las rutas de autenticación quedan exentos para poder desactivarlo.
 - Los archivos de branding se suben al disco `public` (`storage/app/public/branding`); por eso `php artisan storage:link` es obligatorio en instalación y despliegue.
