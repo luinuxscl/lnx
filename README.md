@@ -95,6 +95,7 @@ El layout activo es `resources/views/layouts/app.blade.php` → `layouts/app/sid
 
 - **Sidebar colapsable** (desktop): el `<flux:sidebar collapsible>` se colapsa a barra de iconos. El estado se persiste en `localStorage['flux-sidebar-collapsed-desktop']` (gestionado por Flux). `resources/views/partials/head.blade.php` siembra el valor `true` en la primera visita, por lo que arranca **colapsado por defecto**; cada toggle posterior lo sobrescribe. En móvil conserva el overlay.
 - **Botón de colapso en el sidebar**: `<flux:sidebar.collapse>` en el header del sidebar (patrón oficial de Flux). Al colapsar, el logo se oculta al hacer hover y es sustituido por el botón de expansión; por eso el botón debe estar presente en desktop (no usar `lg:hidden`).
+- **Marca del sidebar**: junto al logo, `x-app-logo` muestra el título en negrita y, si existe, `site_tagline` debajo en texto más pequeño. Sin lema, solo se muestra el título; si falta el título configurado, se usa `APP_NAME`. Los textos largos se truncan para dejar disponible el botón de colapso.
 - **Header de contenido** (solo desktop, `max-lg:hidden`): se renderiza dentro de `<flux:main>` en `layouts/app.blade.php` con el breadcrumb (`flux:breadcrumbs`) a la izquierda y, a la derecha, el botón de modo claro/oscuro (`$flux.dark`) y el selector de idioma. El colapso del sidebar se controla solo desde su propio botón en el header del sidebar.
 - **Breadcrumbs por página**: cada página pasa un arreglo `['label' => string, 'href' => string|null]`; el último item sin `href` es la página actual. En Blade: `<x-layouts::app :breadcrumbs="[...]">`; en componentes Livewire full-page, `render()` devuelve `view(...)->layout('layouts.app', ['breadcrumbs' => [...]])`.
 - **Alto del contenido**: `<flux:main>` es una columna flex (`flex flex-col`) para que el header de contenido y los banners convivan con la página. Una página que debe ocupar el alto restante usa `flex-1` en su raíz, **nunca `h-full`**: `h-full` reclama el 100% del alto de `main` y, al sumarse el header/banner, desborda la fila del grid; ese desborde impide que la fila crezca y rompe el sidebar sticky (el sidebar deja de cubrir todo el alto y aparece un hueco al hacer scroll).
@@ -179,7 +180,7 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 | Sección | Campo | Efecto |
 |---|---|---|
 | Identidad | Title | `config('app.name')`, `<title>`, marca del sidebar. |
-| Identidad | Tagline | Lema del sitio (y fallback de la meta descripción). |
+| Identidad | Tagline | Lema del sitio bajo el título del sidebar (y fallback de la meta descripción). |
 | Identidad | Meta description | `<meta name="description">` (fallback: Tagline). |
 | Identidad | Administration email | `config('mail.from.address')`. |
 | Personalización | Logo / Dark mode logo | Logo del encabezado y sidebar; las imágenes personalizadas se muestran sobre un fondo transparente y el icono predeterminado conserva su fondo. |
