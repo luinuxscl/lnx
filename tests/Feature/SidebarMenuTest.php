@@ -3,6 +3,8 @@
 use App\Enums\Role;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
@@ -44,4 +46,18 @@ it('shows the repository of this application to root users', function () {
         ->assertSee('admin/settings')
         ->assertSee('Documentación')
         ->assertDontSee('laravel.com/docs');
+});
+
+it('shows the uploaded avatar in desktop and mobile menus with Gravatar fallback', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $path = UploadedFile::fake()->image('avatar.png')->store("avatars/{$user->id}", 'public');
+    $user->forceFill(['avatar_path' => $path])->save();
+
+    $response = $this->actingAs($user)->get(route('dashboard'))->assertOk();
+
+    expect(substr_count($response->getContent(), 'src="'.Storage::disk('public')->url($path).'"'))->toBe(4);
+    $response->assertSee(hash('sha256', strtolower($user->email)), escape: false);
+    $response->assertSee('x-on:error="fallback()"', escape: false);
 });

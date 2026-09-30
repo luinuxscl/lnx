@@ -100,6 +100,12 @@ El layout activo es `resources/views/layouts/app.blade.php` → `layouts/app/sid
 - **Breadcrumbs por página**: cada página pasa un arreglo `['label' => string, 'href' => string|null]`; el último item sin `href` es la página actual. En Blade: `<x-layouts::app :breadcrumbs="[...]">`; en componentes Livewire full-page, `render()` devuelve `view(...)->layout('layouts.app', ['breadcrumbs' => [...]])`.
 - **Alto del contenido**: `<flux:main>` es una columna flex (`flex flex-col`) para que el header de contenido y los banners convivan con la página. Una página que debe ocupar el alto restante usa `flex-1` en su raíz, **nunca `h-full`**: `h-full` reclama el 100% del alto de `main` y, al sumarse el header/banner, desborda la fila del grid; ese desborde impide que la fila crezca y rompe el sidebar sticky (el sidebar deja de cubrir todo el alto y aparece un hueco al hacer scroll).
 
+## Avatares de usuario
+
+Cada usuario puede subir, reemplazar o quitar su avatar en **Ajustes → Perfil**. Se aceptan JPEG, PNG y WebP de hasta 2 MB. La imagen subida tiene prioridad; si no existe o no se puede cargar, se intenta obtener el Gravatar del correo del usuario. Si Gravatar tampoco ofrece una imagen, se muestran las iniciales actuales.
+
+Los avatares se guardan en el disco `public` (`storage/app/public/avatars`). La instalación y el despliegue deben mantener el enlace creado por `php artisan storage:link`. Al reemplazar o quitar un avatar, o al eliminar la cuenta, se borra el archivo anterior.
+
 ## Localización (i18n)
 
 La aplicación es bilingüe: **español (por defecto)** e **inglés**. El idioma se guarda en la sesión y se aplica en cada request mediante `App\Http\Middleware\SetLocale`.
