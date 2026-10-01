@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\PasskeyUser;
@@ -49,7 +50,7 @@ class User extends Authenticatable implements PasskeyUser
     {
         static::deleted(function (User $user): void {
             if ($user->avatar_path !== null) {
-                Storage::disk('public')->delete($user->avatar_path);
+                DB::afterCommit(fn () => Storage::disk('public')->delete($user->avatar_path));
             }
         });
     }

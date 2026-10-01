@@ -25,6 +25,9 @@
                     </flux:sidebar.item>
 
                     @if (auth()->user()->hasRole(\App\Enums\Role::Root))
+                        <flux:sidebar.item icon="clock" :href="route('admin.activity.index')" :current="request()->routeIs('admin.activity.*')" wire:navigate>
+                            {{ __('Administrative activity') }}
+                        </flux:sidebar.item>
                         <flux:sidebar.item icon="cog" :href="route('admin.settings.edit')" :current="request()->routeIs('admin.settings.*')" wire:navigate>
                             {{ __('General settings') }}
                         </flux:sidebar.item>

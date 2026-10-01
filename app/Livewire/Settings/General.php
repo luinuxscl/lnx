@@ -2,13 +2,17 @@
 
 namespace App\Livewire\Settings;
 
+use App\Actions\RecordAdministrativeActivity;
+use App\Enums\AdministrativeAction;
 use App\Models\Setting;
 use Flux\Flux;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Throwable;
 
 #[Title('General settings')]
 class General extends Component
@@ -70,9 +74,7 @@ class General extends Component
 
         $validated = $this->validate();
 
-        $settings = Setting::current();
-
-        $settings->fill([
+        $values = [
             'site_title' => $validated['site_title'],
             'site_tagline' => $validated['site_tagline'] ?: null,
             'meta_description' => $validated['meta_description'] ?: null,
@@ -82,18 +84,49 @@ class General extends Component
             'maintenance_mode' => $validated['maintenance_mode'],
             'registration_mode' => $validated['registration_mode'],
             'maintenance_message' => $validated['maintenance_message'] ?: null,
-        ]);
-
-        foreach ($this->fileFields() as $property => $column) {
-            if ($this->{$property} !== null) {
-                $this->deleteStoredFile($settings->{$column});
-                $settings->{$column} = $this->{$property}->store('branding', 'public');
+        ];
+        $uploaded = [];
+        try {
+            foreach ($this->fileFields() as $property => $column) {
+                if ($this->{$property} !== null) {
+                    $uploaded[$column] = $this->{$property}->store('branding', 'public');
+                }
             }
+            DB::transaction(function () use ($values, $uploaded): void {
+                if ($uploaded !== []) {
+                    DB::afterRollBack(function () use ($uploaded): void {
+                        foreach ($uploaded as $path) {
+                            Storage::disk('public')->delete($path);
+                        }
+                    });
+                }
+                $settings = Setting::query()->first() ?? new Setting;
+                $this->authorize('update', $settings);
+                $fields = array_merge(array_keys($values), array_values($this->fileFields()));
+                $before = $settings->only($fields);
+                $oldFiles = [];
+                foreach ($uploaded as $column => $path) {
+                    $oldFiles[] = $settings->{$column};
+                }
+                $settings->fill([...$values, ...$uploaded]);
+                if (! $settings->isDirty()) {
+                    return;
+                }
+                $settings->save();
+                app(RecordAdministrativeActivity::class)->handle(auth()->user(), AdministrativeAction::SettingsUpdated, $settings, $before, $settings->only($fields));
+                DB::afterCommit(function () use ($oldFiles): void {
+                    foreach ($oldFiles as $path) {
+                        $this->deleteStoredFile($path);
+                    }
+                    Setting::forgetCache();
+                });
+            });
+        } catch (Throwable $exception) {
+            foreach ($uploaded as $path) {
+                Storage::disk('public')->delete($path);
+            }
+            throw $exception;
         }
-
-        $settings->save();
-
-        Setting::forgetCache();
 
         $this->reset(['logo', 'logo_dark', 'favicon', 'apple_touch_icon']);
 
@@ -111,14 +144,22 @@ class General extends Component
 
         abort_unless(array_key_exists($field, $fileFields), 404);
 
-        $settings = Setting::current();
-
-        $this->deleteStoredFile($settings->{$fileFields[$field]});
-
-        $settings->{$fileFields[$field]} = null;
-        $settings->save();
-
-        Setting::forgetCache();
+        DB::transaction(function () use ($field, $fileFields): void {
+            $settings = Setting::query()->firstOrFail();
+            $this->authorize('update', $settings);
+            $column = $fileFields[$field];
+            $oldPath = $settings->{$column};
+            if ($oldPath === null) {
+                return;
+            }
+            $settings->{$column} = null;
+            $settings->save();
+            app(RecordAdministrativeActivity::class)->handle(auth()->user(), AdministrativeAction::SettingsUpdated, $settings, [$column => $oldPath], [$column => null]);
+            DB::afterCommit(function () use ($oldPath): void {
+                $this->deleteStoredFile($oldPath);
+                Setting::forgetCache();
+            });
+        });
 
         Flux::toast(variant: 'success', text: __('File removed.'));
     }

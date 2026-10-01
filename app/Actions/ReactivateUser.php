@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\AdministrativeAction;
 use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -17,9 +18,12 @@ class ReactivateUser
             abort_if($actor->is($current) || $current->hasRole(Role::Root), 403);
             Gate::forUser($actor)->authorize('reactivate', $current);
 
-            User::query()->whereKey($current->getKey())->whereNotNull('suspended_at')->update([
+            $updated = User::query()->whereKey($current->getKey())->whereNotNull('suspended_at')->update([
                 'suspended_at' => null,
             ]);
+            if ($updated === 1) {
+                app(RecordAdministrativeActivity::class)->handle($actor, AdministrativeAction::UserReactivated, $current, ['suspended_at' => $current->suspended_at->toIso8601String()], ['suspended_at' => null]);
+            }
         });
     }
 }

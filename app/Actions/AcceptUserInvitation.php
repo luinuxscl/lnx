@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\AdministrativeAction;
 use App\Enums\Role;
 use App\Models\User;
 use App\Models\UserInvitation;
@@ -43,6 +44,10 @@ class AcceptUserInvitation
             if ($current->role !== null) {
                 $user->assignRole($current->role);
             }
+
+            $record = app(RecordAdministrativeActivity::class);
+            $record->handle($user, AdministrativeAction::InvitationAccepted, $current, ['accepted_at' => null], ['accepted_at' => $current->fresh()->accepted_at?->toIso8601String()]);
+            $record->handle($user, AdministrativeAction::UserCreated, $user, [], ['name' => $user->name, 'email' => $user->email, 'role' => $current->role], $current->id);
 
             return $user;
         });
