@@ -3,10 +3,13 @@
 namespace App\Livewire\Users;
 
 use App\Actions\ReactivateUser;
+use App\Actions\RecordAdministrativeActivity;
 use App\Actions\SuspendUser;
+use App\Enums\AdministrativeAction;
 use App\Enums\Role;
 use App\Models\User;
 use Flux\Flux;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
@@ -125,7 +128,13 @@ class Index extends Component
 
         $this->authorize('delete', $user);
 
-        $user->delete();
+        DB::transaction(function () use ($user): void {
+            $current = User::query()->whereKey($user->id)->firstOrFail();
+            abort_if($current->is(auth()->user()) || $current->hasRole(Role::Root), 403);
+            $this->authorize('delete', $current);
+            app(RecordAdministrativeActivity::class)->handle(auth()->user(), AdministrativeAction::UserDeleted, $current, ['name' => $current->name, 'email' => $current->email], []);
+            $current->delete();
+        });
 
         Flux::toast(variant: 'success', text: __('User deleted.'));
     }

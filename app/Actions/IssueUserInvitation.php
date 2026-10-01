@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\AdministrativeAction;
 use App\Enums\Role;
 use App\Models\User;
 use App\Models\UserInvitation;
@@ -44,7 +45,7 @@ class IssueUserInvitation
                     throw ValidationException::withMessages(['email' => __('A pending invitation exists. Resend it from the invitation list.')]);
                 }
 
-                return UserInvitation::create([
+                $invitation = UserInvitation::create([
                     'email' => $email,
                     'pending_email' => $email,
                     'role' => $role,
@@ -53,6 +54,11 @@ class IssueUserInvitation
                     'token_hash' => hash('sha256', $token),
                     'expires_at' => now()->addDays(7),
                 ]);
+                app(RecordAdministrativeActivity::class)->handle($actor, AdministrativeAction::InvitationCreated, $invitation, [], [
+                    'email' => $email, 'role' => $role, 'locale' => $locale, 'expires_at' => $invitation->expires_at->toIso8601String(),
+                ]);
+
+                return $invitation;
             });
         } catch (UniqueConstraintViolationException $exception) {
             if (UserInvitation::query()->where('pending_email', $email)->exists()) {
@@ -62,7 +68,7 @@ class IssueUserInvitation
             throw $exception;
         }
 
-        return $this->send($invitation, $token);
+        return $this->send($invitation, $token, $actor);
     }
 
     public function resend(User $actor, UserInvitation $invitation): bool
@@ -81,18 +87,35 @@ class IssueUserInvitation
 
         $token = Str::random(64);
         try {
-            $updated = UserInvitation::query()
-                ->whereKey($invitation->id)
-                ->whereNull('accepted_at')
-                ->whereNull('revoked_at')
-                ->where('token_hash', $invitation->token_hash)
-                ->update([
-                    'pending_email' => $invitation->email,
-                    'token_hash' => hash('sha256', $token),
-                    'expires_at' => now()->addDays(7),
-                    'sent_at' => null,
-                    'send_failed_at' => null,
-                ]);
+            $updated = DB::transaction(function () use ($actor, $invitation, $token): int {
+                $current = UserInvitation::query()->whereKey($invitation->id)->firstOrFail();
+                $updated = UserInvitation::query()
+                    ->whereKey($invitation->id)
+                    ->whereNull('accepted_at')
+                    ->whereNull('revoked_at')
+                    ->where('token_hash', $invitation->token_hash)
+                    ->update([
+                        'pending_email' => $invitation->email,
+                        'token_hash' => hash('sha256', $token),
+                        'expires_at' => now()->addDays(7),
+                        'sent_at' => null,
+                        'send_failed_at' => null,
+                    ]);
+                if ($updated === 1) {
+                    $fresh = $current->fresh();
+                    app(RecordAdministrativeActivity::class)->handle($actor, AdministrativeAction::InvitationRenewed, $fresh, [
+                        'expires_at' => $current->expires_at->toIso8601String(),
+                        'sent_at' => $current->sent_at?->toIso8601String(),
+                        'send_failed_at' => $current->send_failed_at?->toIso8601String(),
+                    ], [
+                        'expires_at' => $fresh->expires_at->toIso8601String(),
+                        'sent_at' => null,
+                        'send_failed_at' => null,
+                    ]);
+                }
+
+                return $updated;
+            });
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages(['email' => __('A pending invitation exists. Resend it from the invitation list.')]);
         }
@@ -101,7 +124,7 @@ class IssueUserInvitation
             throw ValidationException::withMessages(['invitation' => __('This invitation is no longer available.')]);
         }
 
-        return $this->send($invitation->refresh(), $token);
+        return $this->send($invitation->refresh(), $token, $actor);
     }
 
     private function limit(User $actor, string $email): void
@@ -124,7 +147,7 @@ class IssueUserInvitation
         }
     }
 
-    private function send(UserInvitation $invitation, string $token): bool
+    private function send(UserInvitation $invitation, string $token, ?User $actor = null): bool
     {
         try {
             Notification::route('mail', $invitation->email)->notify(new UserInvitationNotification(
@@ -133,18 +156,32 @@ class IssueUserInvitation
             )->locale($invitation->locale));
         } catch (Throwable $exception) {
             report($exception);
-            UserInvitation::query()->whereKey($invitation->id)->whereNull('accepted_at')->whereNull('revoked_at')
-                ->where('token_hash', hash('sha256', $token))
-                ->update(['send_failed_at' => now()]);
+            $this->recordSendResult($invitation, $token, $actor, false);
 
             return false;
         }
 
-        $updated = UserInvitation::query()->whereKey($invitation->id)
-            ->whereNull('accepted_at')->whereNull('revoked_at')
-            ->where('token_hash', hash('sha256', $token))
-            ->update(['sent_at' => now(), 'send_failed_at' => null]);
+        $updated = $this->recordSendResult($invitation, $token, $actor, true);
 
         return $updated === 1;
+    }
+
+    private function recordSendResult(UserInvitation $invitation, string $token, ?User $actor, bool $sent): int
+    {
+        return DB::transaction(function () use ($invitation, $token, $actor, $sent): int {
+            $current = UserInvitation::query()->whereKey($invitation->id)->firstOrFail();
+            $updated = UserInvitation::query()->whereKey($invitation->id)
+                ->whereNull('accepted_at')->whereNull('revoked_at')
+                ->where('token_hash', hash('sha256', $token))
+                ->update($sent ? ['sent_at' => now(), 'send_failed_at' => null] : ['send_failed_at' => now()]);
+            if ($updated === 1) {
+                $fresh = $current->fresh();
+                app(RecordAdministrativeActivity::class)->handle($actor, $sent ? AdministrativeAction::InvitationSent : AdministrativeAction::InvitationSendFailed, $fresh,
+                    ['sent_at' => $current->sent_at?->toIso8601String(), 'send_failed_at' => $current->send_failed_at?->toIso8601String()],
+                    ['sent_at' => $fresh->sent_at?->toIso8601String(), 'send_failed_at' => $fresh->send_failed_at?->toIso8601String()]);
+            }
+
+            return $updated;
+        });
     }
 }
