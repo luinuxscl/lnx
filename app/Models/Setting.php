@@ -37,11 +37,19 @@ use Illuminate\Support\Facades\Storage;
     'analytics_id',
     'maintenance_mode',
     'maintenance_message',
+    'registration_mode',
 ])]
 class Setting extends Model
 {
     /** @use HasFactory<SettingFactory> */
     use HasFactory;
+
+    protected $attributes = ['registration_mode' => 'open'];
+
+    public static function registrationIsOpen(): bool
+    {
+        return self::current()->registration_mode !== 'invitation_only';
+    }
 
     /**
      * The cache key used to store the singleton settings row.

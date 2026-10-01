@@ -29,6 +29,8 @@ class General extends Component
 
     public bool $maintenance_mode = false;
 
+    public string $registration_mode = 'open';
+
     public string $maintenance_message = '';
 
     public mixed $logo = null;
@@ -55,6 +57,7 @@ class General extends Component
         $this->footer_text = $settings->footer_text ?? '';
         $this->analytics_id = $settings->analytics_id ?? '';
         $this->maintenance_mode = (bool) $settings->maintenance_mode;
+        $this->registration_mode = $settings->registration_mode ?? 'open';
         $this->maintenance_message = $settings->maintenance_message ?? '';
     }
 
@@ -77,6 +80,7 @@ class General extends Component
             'footer_text' => $validated['footer_text'] ?: null,
             'analytics_id' => $validated['analytics_id'] ?: null,
             'maintenance_mode' => $validated['maintenance_mode'],
+            'registration_mode' => $validated['registration_mode'],
             'maintenance_message' => $validated['maintenance_message'] ?: null,
         ]);
 
@@ -134,6 +138,7 @@ class General extends Component
             'footer_text' => ['nullable', 'string', 'max:255'],
             'analytics_id' => ['nullable', 'string', 'max:50'],
             'maintenance_mode' => ['boolean'],
+            'registration_mode' => ['required', 'in:open,invitation_only'],
             'maintenance_message' => ['nullable', 'string', 'max:1000'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg,webp', 'max:2048'],
             'logo_dark' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg,webp', 'max:2048'],
