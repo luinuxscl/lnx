@@ -33,7 +33,7 @@
                     <button
                         type="button"
                         @click="select(option.value)"
-                        class="flex flex-col items-center gap-2 rounded-xl border p-3 transition"
+                        class="flex flex-col items-center gap-2 rounded-xl border p-3 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                         :class="theme === option.value
                             ? 'border-accent/60 bg-accent/5 ring-2 ring-accent/40'
                             : 'border-zinc-200 hover:border-accent/60 dark:border-zinc-700'"

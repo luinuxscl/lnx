@@ -235,8 +235,47 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 
 - `README.md` — este archivo, panorámica del proyecto.
 - `.ai/rules/` — reglas permanentes del proyecto (git flow, documentación).
-- `.agents/skills/` — skills de dominio locales (Flux, Livewire, Fortify, testing, etc.).
+- `.ai/skills/` — skills propias versionadas; Boost instala además skills de paquetes en carpetas locales de cada cliente.
 - `.kilo/skills/consolidar/` — skill de cierre: al decir "consolidar" ejecuta documentación, commits, merge y push tras una confirmación simple.
+
+## Trabajo con agentes
+
+Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera `AGENTS.md` para Antigravity, Codex y OpenCode, y `CLAUDE.md` para Claude Code. La directriz versionada `.ai/guidelines/project-entry.md` se incorpora a ambos formatos al ejecutar `php artisan boost:update --no-discover --no-interaction`; los archivos generados son locales y no se editan como fuente. Si un cliente necesita instrucciones propias, su adaptación solo debe apuntar a esta sección y a `.ai/rules/index.md`.
+
+| Necesidad | Fuente o comando |
+| --- | --- |
+| Versiones PHP instaladas | `composer show --direct` |
+| Dependencias JS | `package.json` y `npm ls --depth=0` |
+| Módulos, rutas y estructura | `app/`, `routes/`, `resources/`; `php artisan route:list --except-vendor` |
+| Reglas por ruta | `.ai/rules/index.md`, luego los archivos indicados |
+| Skills propias | `.ai/skills/`; Boost las distribuye a los clientes configurados |
+| Skills de paquetes instalados | `php artisan boost:list-skills --no-interaction`; pueden variar por instalación |
+| MCP | `php artisan boost:mcp` (Laravel Boost) cuando el cliente lo configure; no presupone plugins personales |
+| Verificación | `php artisan test --compact`, `vendor/bin/pint --dirty --format agent`, `composer types:check`, `npm run build`, `python3 scripts/check-agent-context.py` |
+
+Las reglas versionadas en `.ai/rules` expresan decisiones de lnx; las skills enseñan procedimientos; los comandos anteriores verifican el checkout y Boost es el servidor MCP disponible en la instalación de referencia. `boost.json`, `AGENTS.md`, `CLAUDE.md` y las copias de skills bajo carpetas de clientes son generados y están ignorados por Git. El núcleo del kit incluye los patrones de autorización, idioma, layout y tema; cada proyecto derivado decide su nombre, dominio, marca, contenido, credenciales, despliegue y cualquier regla local adicional.
+
+Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`) y configuración global (`app/Livewire/Settings/`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
+
+La instrucción explícita del usuario prevalece. Después se aplican las reglas del proyecto derivado para sus decisiones, las reglas de lnx para el núcleo que sigue usando y, finalmente, las recomendaciones de Boost y skills. Si dos instrucciones del mismo nivel chocan, detén solo la decisión afectada y pide una aclaración concreta; no escribas una regla nueva por inferencia. Las reglas permanentes se registran únicamente a petición explícita mediante `record-rule`.
+
+### Contrato visual
+
+La referencia de tokens es `resources/css/app.css`: Instrument Sans, escala de espaciado de Tailwind 4, superficies zinc y variables `--color-accent`, `--color-accent-content` y `--color-accent-foreground`. En las pantallas actuales, `flux:heading` y `flux:text` establecen la jerarquía tipográfica, `gap-4` separa acciones próximas y `mt-6` o `space-y-6` separan secciones y campos. Las seis variantes de acento y la selección claro/oscuro/sistema se implementan en `resources/views/livewire/settings/appearance.blade.php` y `resources/views/partials/head.blade.php`. El proyecto derivado puede sustituir la identidad y el acento predeterminado sin alterar los patrones de interacción del kit.
+
+| Patrón | Implementación canónica |
+| --- | --- |
+| Navegación y breadcrumbs | `resources/views/layouts/app/sidebar.blade.php`, `resources/views/layouts/app.blade.php` |
+| Formularios y validación | `resources/views/livewire/users/create.blade.php` y `resources/views/livewire/settings/general.blade.php` |
+| Tablas, filtros y vacío | `resources/views/livewire/users/index.blade.php` |
+| Diálogos y acciones | Modal de suspensión en `resources/views/livewire/users/index.blade.php` |
+| Carga y error | `resources/views/design-gallery.blade.php` y `resources/views/livewire/users/invitations.blade.php` |
+
+La galería `/design-gallery` solo se registra en `local` y `testing`, tras autenticación y con rol `root`. `DESIGN_GALLERY_ENABLED=false` la desactiva también en esos entornos; producción nunca la registra. No aparece en la navegación. Muestra estados de carga, vacío, error, validación y acciones con componentes Flux existentes. Para revisar una pantalla, comparar móvil estrecho y escritorio, temas claro/oscuro, los seis acentos, navegación por teclado y foco visible; anotar capturas y correcciones en el PR. El selector de acento en `resources/views/livewire/settings/appearance.blade.php` es el primer caso aplicado: sus botones muestran un contorno de foco explícito. Si cambia un patrón, actualizar implementación, ejemplo de galería y esta guía en el mismo cambio. La skill `.ai/skills/design-screen/SKILL.md` indica el recorrido de revisión sin duplicar estas decisiones.
+
+### Coherencia de instrucciones
+
+`python3 scripts/check-agent-context.py` comprueba de forma determinista enlaces locales mantenidos, el índice de reglas, la estructura mínima de skills propias y los comandos marcados como verificables. Se ejecuta localmente y en CI sin claves ni LLM. Las referencias externas, las carpetas ignoradas/generadas y los ejemplos no marcados quedan fuera. El check informa archivo, causa y corrección sugerida, y falla ante errores objetivos; las contradicciones semánticas requieren revisión humana. En cada PR que cambie comportamiento o diseño, revisar si hay que actualizar reglas existentes, skills, ejemplos, traducciones y esta guía. Los agentes pueden proponer esas actualizaciones; una regla permanente nueva sigue necesitando solicitud explícita y `record-rule`.
 
 ## Estructura clave
 
