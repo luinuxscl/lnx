@@ -6,6 +6,7 @@ use Database\Factories\SettingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
@@ -23,6 +24,9 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $analytics_id
  * @property bool $maintenance_mode
  * @property string|null $maintenance_message
+ * @property Carbon|null $test_email_sent_at
+ * @property string|null $test_email_sent_to
+ * @property Carbon|null $test_email_failed_at
  */
 #[Fillable([
     'site_title',
@@ -38,6 +42,9 @@ use Illuminate\Support\Facades\Storage;
     'maintenance_mode',
     'maintenance_message',
     'registration_mode',
+    'test_email_sent_at',
+    'test_email_sent_to',
+    'test_email_failed_at',
 ])]
 class Setting extends Model
 {
@@ -65,6 +72,8 @@ class Setting extends Model
     {
         return [
             'maintenance_mode' => 'boolean',
+            'test_email_sent_at' => 'datetime',
+            'test_email_failed_at' => 'datetime',
         ];
     }
 

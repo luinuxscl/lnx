@@ -4,6 +4,7 @@ use App\Enums\Role;
 use App\Http\Controllers\AcceptInvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Livewire\Activity\Index as ActivityIndex;
+use App\Livewire\Setup\Index as SetupIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -30,3 +31,7 @@ require __DIR__.'/users.php';
 Route::livewire('admin/activity', ActivityIndex::class)
     ->middleware(['auth', 'role:'.Role::Root->value])
     ->name('admin.activity.index');
+
+Route::livewire('admin/setup', SetupIndex::class)
+    ->middleware(['auth', 'role:'.Role::Root->value])
+    ->name('admin.setup.index');
