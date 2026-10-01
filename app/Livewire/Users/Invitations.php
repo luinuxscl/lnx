@@ -3,8 +3,11 @@
 namespace App\Livewire\Users;
 
 use App\Actions\IssueUserInvitation;
+use App\Actions\RecordAdministrativeActivity;
+use App\Enums\AdministrativeAction;
 use App\Models\UserInvitation;
 use Flux\Flux;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -41,9 +44,17 @@ class Invitations extends Component
     {
         $this->authorize('update', $invitation);
 
-        $updated = UserInvitation::query()->whereKey($invitation->id)
-            ->whereNull('accepted_at')->whereNull('revoked_at')
-            ->update(['revoked_at' => now(), 'pending_email' => null]);
+        $updated = DB::transaction(function () use ($invitation): int {
+            $current = UserInvitation::query()->whereKey($invitation->id)->firstOrFail();
+            $updated = UserInvitation::query()->whereKey($invitation->id)
+                ->whereNull('accepted_at')->whereNull('revoked_at')
+                ->update(['revoked_at' => now(), 'pending_email' => null]);
+            if ($updated === 1) {
+                app(RecordAdministrativeActivity::class)->handle(auth()->user(), AdministrativeAction::InvitationRevoked, $current, ['revoked_at' => null], ['revoked_at' => $current->fresh()->revoked_at?->toIso8601String()]);
+            }
+
+            return $updated;
+        });
 
         abort_unless($updated === 1, 409);
         Flux::toast(variant: 'success', text: __('Invitation revoked.'));

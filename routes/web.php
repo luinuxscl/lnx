@@ -1,7 +1,9 @@
 <?php
 
+use App\Enums\Role;
 use App\Http\Controllers\AcceptInvitationController;
 use App\Http\Controllers\LocaleController;
+use App\Livewire\Activity\Index as ActivityIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -18,3 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/settings.php';
 require __DIR__.'/users.php';
+
+Route::livewire('admin/activity', ActivityIndex::class)
+    ->middleware(['auth', 'role:'.Role::Root->value])
+    ->name('admin.activity.index');

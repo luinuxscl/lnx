@@ -61,6 +61,14 @@ npm run build
 php artisan serve
 ```
 
+## Historial de actividad administrativa
+
+La página **Actividad administrativa** (`/admin/activity`) está disponible exclusivamente para `root`. Muestra actor, fecha, acción y recurso, permite desplegar valores anteriores/nuevos y combina filtros por actor histórico, acción y días desde/hasta. Los filtros se conservan en la URL; la página muestra 10 registros por vez. Las fechas se interpretan en `config('app.timezone')` (UTC por defecto) y abarcan los días completos.
+
+Se registran las altas por invitación, ediciones, cambios de rol, cambios administrativos de contraseña (solo el hecho), eliminaciones, suspensiones y reactivaciones de usuarios; cambios de configuración e imágenes; y creación, renovación, revocación, aceptación y resultado de envío de invitaciones. Los registros conservan identificadores y copias del nombre y correo del actor y recurso aunque se eliminen. La aceptación se atribuye al destinatario y el alta queda vinculada con su invitación. El historial no contiene contraseñas, hashes de tokens, enlaces de aceptación, secretos 2FA, credenciales de passkeys ni excepciones; para imágenes solo conserva rutas relativas.
+
+Al desplegar, ejecutar `php artisan migrate --force` antes de servir el código nuevo. La migración permite borrar a quien emitió una invitación sin borrar la invitación. El historial comienza con la instalación de esta función: no reconstruye eventos anteriores, no tiene purga automática ni exportación. Quedan fuera el registro público, el perfil personal, accesos, seeders y cambios manuales de consola.
+
 ## Suspensión de usuarios
 
 Root y administradores pueden suspender y reactivar usuarios desde **Usuarios**. Ambas acciones solicitan confirmación en un modal. La lista muestra el estado y permite filtrarlo junto con la búsqueda. También pueden gestionar otros administradores. Las cuentas root y la propia cuenta no se pueden suspender.
