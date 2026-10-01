@@ -6,13 +6,13 @@ Este documento conserva el orden global de trabajo. GitHub es la fuente del esta
 
 ## Próximo trabajo
 
-Comenzar por **#7**. Primer hito: completar **#7 → #8 → #11**, con checklist de puesta en marcha, gestión de sesiones y dashboard útil por rol.
+Comenzar por **#8**. Primer hito: completar **#8 → #11**, con gestión de sesiones y dashboard útil por rol.
 
 ## Orden acordado
 
 | Etapa | Issues, en orden | Resultado y motivo | Esfuerzo relativo |
 | --- | --- | --- | --- |
-| 1. Completar la operación del kit | [#7 Checklist](https://github.com/luinuxscl/lnx/issues/7) → [#8 Sesiones](https://github.com/luinuxscl/lnx/issues/8) → [#11 Dashboard](https://github.com/luinuxscl/lnx/issues/11) | Facilitar despliegues, retirar acceso desde otros dispositivos y ofrecer una portada útil. #7 desbloquea la entrega completa de #11. | Medio–alto |
+| 1. Completar la operación del kit | [#8 Sesiones](https://github.com/luinuxscl/lnx/issues/8) → [#11 Dashboard](https://github.com/luinuxscl/lnx/issues/11) | Retirar acceso desde otros dispositivos y ofrecer una portada útil. #7 ya está resuelta y desbloquea la entrega completa de #11. | Medio |
 | 2. Conectar agentes con la aplicación | [#21 MCP de lectura](https://github.com/luinuxscl/lnx/issues/21) | Validar consultas autorizadas desde un cliente real. Su dependencia #18 está resuelta; no depende de consumir LLMs. | Alto |
 | 3. Entregar la primera función de IA | [#12 Integración](https://github.com/luinuxscl/lnx/issues/12) → [#13 Cuotas y consumo](https://github.com/luinuxscl/lnx/issues/13) → [#14 Asistente de texto](https://github.com/luinuxscl/lnx/issues/14) | Configurar OpenRouter, controlar consumo y mejorar, resumir o traducir con aceptación humana. Mantener esta secuencia como una entrega funcional completa. | Alto |
 | 4. Mejorar la experiencia cotidiana | [#10 Preferencias](https://github.com/luinuxscl/lnx/issues/10) → [#9 Notificaciones](https://github.com/luinuxscl/lnx/issues/9) | Unificar idioma, fechas y apariencia antes de añadir la bandeja persistente. Es una conveniencia de implementación, no una dependencia obligatoria. | Medio |
@@ -23,14 +23,14 @@ Comenzar por **#7**. Primer hito: completar **#7 → #8 → #11**, con checklist
 
 ## Decisiones de secuencia
 
-- Adelantar #11 respecto de su posición en el backlog original: invitaciones (#4) ya está resuelta y basta completar #7 para cubrir sus dependencias. El resumen de consumo de IA se incorpora cuando exista #13, sin retrasar el dashboard inicial.
+- Adelantar #11 respecto de su posición en el backlog original: invitaciones (#4) y checklist de puesta en marcha (#7) ya están resueltas, así que sus dependencias están cubiertas. El resumen de consumo de IA se incorpora cuando exista #13, sin retrasar el dashboard inicial.
 - No habilitar funciones de IA para usuarios antes de disponer de los controles de #13.
 - No convertir la distribución del kit (#23) en requisito para implementar funcionalidades. Si un cliente necesita chat o documentos, se puede adelantar ese módulo respecto de #23 conservando sus dependencias.
 - #9 es una integración opcional para avisar del procesamiento de documentos; no bloquea #16.
 
 ## Estado de partida
 
-En la última revisión había 14 issues abiertas: #7–#17 y #21–#23. Invitaciones (#4), suspensión (#5), historial administrativo (#6), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) estaban cerradas.
+En la última revisión había 13 issues abiertas: #8–#17 y #21–#23. Invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
 
 ## Mantenimiento
 
