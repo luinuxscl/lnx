@@ -77,6 +77,14 @@ Suspender conserva contraseña, roles, passkeys, 2FA, avatar y datos relacionado
 
 En despliegues, aplicar primero la migración que añade `suspended_at` y `auth_version`. Durante la activación, evitar servir simultáneamente código anterior y nuevo. No revertir los controles mientras existan cuentas suspendidas.
 
+## Sesiones y dispositivos
+
+En **Ajustes → Seguridad** cada usuario ve sus sesiones de navegador activas (navegador, plataforma, IP y última actividad), con la sesión actual marcada como **Este dispositivo**. La acción **Cerrar las demás sesiones de navegador** solicita confirmación de identidad (contraseña o passkey, vía la pantalla de confirmación de Fortify) y cierra el resto de sesiones, manteniendo la actual activa.
+
+El cierre rota el `remember_token` del usuario, por lo que también revoca los inicios de sesión «recordarme» de los otros dispositivos. Es un cierre masivo: no hay revocación individual por dispositivo. Sin confirmación reciente (10 minutos), la acción redirige a la pantalla de confirmación y reabre el diálogo al volver.
+
+La función requiere `SESSION_DRIVER=database`; con otros drivers se muestra un aviso y no se listan sesiones, ya que no es posible consultarlas ni revocarlas.
+
 ## Comandos útiles
 
 | Comando                 | Descripción                          |
