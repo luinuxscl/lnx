@@ -43,6 +43,8 @@ return [
 
     'debug' => (bool) env('APP_DEBUG', false),
 
+    'design_gallery_enabled' => (bool) env('DESIGN_GALLERY_ENABLED', true),
+
     /*
     |--------------------------------------------------------------------------
     | Application URL
