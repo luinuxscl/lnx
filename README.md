@@ -164,15 +164,19 @@ Para desarrollo, `.env.example` trae un root listo para usar (**Luis Sepulveda /
 
 Para producción basta con definir un `ROOT_USER_PASSWORD` fuerte (o vaciar `ROOT_USER_EMAIL`) antes de seedear.
 
-### Gestión de usuarios (CRUD)
+### Gestión de usuarios e invitaciones
 
-CRUD de usuarios en `/admin/users` (`admin.users.index`), accesible solo para `root` y `admin` mediante el middleware `role:root|admin` (`routes/users.php`).
+La gestión de usuarios en `/admin/users` está disponible para `root` y `admin`. La ruta de creación envía una invitación por correo: el administrador indica correo, rol (`admin` o ninguno) e idioma (español o inglés). No define una contraseña ni crea la cuenta. La pantalla **Invitaciones** permite buscar, consultar estados, reenviar y revocar; el reenvío invalida el enlace anterior y conserva el idioma elegido.
 
-- `App\Livewire\Users\{Index,Create,Edit}` y `App\Policies\UserPolicy` gobiernan listado, creación, edición y borrado.
-- La asignación de rol solo permite `admin` o ningún rol: `Role::assignable()` excluye `root`, por lo que **nunca se pueden crear nuevos superusuarios** (validación server-side).
-- Las cuentas `root` no se pueden editar ni eliminar desde el CRUD, y nadie puede eliminar su propia cuenta (guardas explícitas que no dependen de `Gate::before`).
-- Los usuarios creados desde el CRUD quedan con el email verificado.
-- El ítem "Usuarios" vive en la zona de configuración del sidebar (ver `.ai/rules/views.md`).
+El enlace vence a los siete días y solo se puede aceptar una vez. El destinatario define nombre y contraseña; el correo queda verificado y se inicia su sesión. Un enlace vencido, revocado o utilizado no crea cuentas, y una cuenta ya existente nunca se sobrescribe. No es posible invitar a un nuevo `root`. Quien ya tenga sesión debe cerrarla antes de aceptar.
+
+El correo se envía durante la solicitud para mostrar un fallo inmediatamente. La invitación queda guardada como **Falló el envío** y puede reenviarse desde la lista. Un éxito significa que el transporte aceptó el envío; la entrega final depende del proveedor. Configura `MAIL_MAILER` y las credenciales del proveedor antes de invitar. Los intentos se limitan a uno por minuto y cinco por hora por destinatario, y veinte por hora por administrador; los fallos también cuentan.
+
+Las cuentas `root` no se pueden editar ni eliminar desde la gestión de usuarios. Nadie puede eliminar su propia cuenta. El ítem «Usuarios» vive en la zona de configuración del sidebar (ver `.ai/rules/views.md`).
+
+### Modalidad de registro
+
+En **Configuración general**, root puede elegir **Registro abierto** o **Solo invitaciones**. El valor inicial es registro abierto, también en instalaciones existentes que todavía no tienen una fila de configuración. En «Solo invitaciones» se ocultan los enlaces de registro público y tanto GET como POST de `/register` responden 403; los enlaces de invitación válidos siguen funcionando. El cambio se aplica al guardar, sin reconstruir la caché de rutas.
 
 ## Configuración general (General Settings)
 

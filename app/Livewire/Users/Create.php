@@ -2,79 +2,56 @@
 
 namespace App\Livewire\Users;
 
-use App\Concerns\PasswordValidationRules;
-use App\Concerns\ProfileValidationRules;
+use App\Actions\IssueUserInvitation;
 use App\Enums\Role;
-use App\Models\User;
+use App\Models\UserInvitation;
 use Flux\Flux;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title('Create user')]
+#[Title('Invite user')]
 class Create extends Component
 {
-    use PasswordValidationRules, ProfileValidationRules;
-
-    public string $name = '';
-
     public string $email = '';
-
-    public string $password = '';
-
-    public string $password_confirmation = '';
 
     public string $role = '';
 
-    /**
-     * Create a new user.
-     */
-    public function save(): void
+    public string $locale = 'es';
+
+    public function mount(): void
     {
-        $this->authorize('create', User::class);
-
-        $validated = $this->validate([
-            ...$this->profileRules(),
-            'password' => $this->passwordRules(),
-            'role' => $this->roleRules(),
-        ]);
-
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => $validated['password'],
-        ]);
-
-        $user->forceFill(['email_verified_at' => now()])->save();
-
-        if ($validated['role'] !== '') {
-            $user->assignRole($validated['role']);
-        }
-
-        Flux::toast(variant: 'success', text: __('User created.'));
-
-        $this->redirect(route('admin.users.index'), navigate: true);
+        $this->authorize('create', UserInvitation::class);
+        $this->locale = app()->getLocale();
     }
 
-    /**
-     * Get the validation rules for the role field.
-     *
-     * @return array<int, mixed>
-     */
-    protected function roleRules(): array
+    public function save(IssueUserInvitation $issue): void
     {
-        return ['nullable', 'string', Rule::in(Role::assignableValues())];
+        $this->authorize('create', UserInvitation::class);
+        $validated = $this->validate([
+            'email' => ['required', 'email', 'max:255'],
+            'role' => ['nullable', Rule::in(Role::assignableValues())],
+            'locale' => ['required', Rule::in(['es', 'en'])],
+        ]);
+
+        if (! $issue->create(auth()->user(), $validated['email'], $validated['role'] ?: null, $validated['locale'])) {
+            $this->addError('email', __('The invitation was saved, but the email could not be sent. Reissue it from the invitation list.'));
+
+            return;
+        }
+
+        Flux::toast(variant: 'success', text: __('Invitation sent.'));
+        $this->redirect(route('admin.users.invitations'), navigate: true);
     }
 
     public function render(): View
     {
-        return view('livewire.users.create')
-            ->layout('layouts.app', [
-                'breadcrumbs' => [
-                    ['label' => __('Users'), 'href' => route('admin.users.index')],
-                    ['label' => __('Create user')],
-                ],
-            ]);
+        return view('livewire.users.create')->layout('layouts.app', [
+            'breadcrumbs' => [
+                ['label' => __('Users'), 'href' => route('admin.users.index')],
+                ['label' => __('Invite user')],
+            ],
+        ]);
     }
 }

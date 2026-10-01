@@ -78,7 +78,7 @@ class RolePermissionSeeder extends Seeder
 
         Log::warning($message);
 
-        if (isset($this->command)) {
+        if ($this->command !== null) {
             $this->command->warn($message);
         }
     }

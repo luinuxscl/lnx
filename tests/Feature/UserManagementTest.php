@@ -6,6 +6,7 @@ use App\Livewire\Users\Edit;
 use App\Livewire\Users\Index;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -39,43 +40,36 @@ it('lets admins and root users view the users list', function () {
         ->assertOk();
 });
 
-it('lets admins create a verified user with a role', function () {
+it('lets admins invite a user without creating their account', function () {
+    Notification::fake();
     $admin = User::factory()->create();
     $admin->assignRole(Role::Admin->value);
 
     Livewire::actingAs($admin)
         ->test(Create::class)
-        ->set('name', 'Jane Doe')
         ->set('email', 'jane@example.com')
-        ->set('password', 'password')
-        ->set('password_confirmation', 'password')
         ->set('role', Role::Admin->value)
+        ->set('locale', 'es')
         ->call('save')
         ->assertHasNoErrors()
-        ->assertRedirect(route('admin.users.index'));
+        ->assertRedirect(route('admin.users.invitations'));
 
-    $user = User::where('email', 'jane@example.com')->first();
-
-    expect($user)->not->toBeNull()
-        ->and($user->email_verified_at)->not->toBeNull()
-        ->and($user->hasRole(Role::Admin))->toBeTrue();
+    expect(User::where('email', 'jane@example.com')->exists())->toBeFalse();
+    $this->assertDatabaseHas('user_invitations', ['email' => 'jane@example.com', 'role' => Role::Admin->value]);
 });
 
-it('never allows creating a superuser', function () {
+it('never allows inviting a superuser', function () {
     $admin = User::factory()->create();
     $admin->assignRole(Role::Admin->value);
 
     Livewire::actingAs($admin)
         ->test(Create::class)
-        ->set('name', 'New Root')
         ->set('email', 'new-root@example.com')
-        ->set('password', 'password')
-        ->set('password_confirmation', 'password')
         ->set('role', Role::Root->value)
         ->call('save')
         ->assertHasErrors('role');
 
-    expect(User::where('email', 'new-root@example.com')->exists())->toBeFalse();
+    $this->assertDatabaseMissing('user_invitations', ['email' => 'new-root@example.com']);
 });
 
 it('lets admins update a user and change their role', function () {

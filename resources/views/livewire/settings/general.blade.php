@@ -103,6 +103,11 @@
 
             <flux:input wire:model="analytics_id" :label="__('Analytics ID')" type="text" placeholder="G-XXXXXXXXXX" />
 
+            <flux:select wire:model="registration_mode" :label="__('Registration mode')">
+                <flux:select.option value="open">{{ __('Open registration') }}</flux:select.option>
+                <flux:select.option value="invitation_only">{{ __('Invitations only') }}</flux:select.option>
+            </flux:select>
+
             <flux:switch
                 wire:model.live="maintenance_mode"
                 :label="__('Maintenance mode')"
