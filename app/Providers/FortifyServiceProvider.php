@@ -4,12 +4,18 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\User;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Fortify\Events\TwoFactorAuthenticationChallenged;
 use Laravel\Fortify\Fortify;
+use Laravel\Passkeys\Passkeys;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -29,6 +35,45 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+        $this->configureAccountAccess();
+    }
+
+    private function configureAccountAccess(): void
+    {
+        Fortify::authenticateUsing(function (Request $request): ?User {
+            $provider = Auth::guard(config('fortify.guard'))->getProvider();
+            $credentials = $request->only(Fortify::username(), 'password');
+            $user = $provider->retrieveByCredentials($credentials);
+
+            if (! $user instanceof User || ! $provider->validateCredentials($user, $credentials) || $user->isSuspended()) {
+                return null;
+            }
+
+            if (config('hashing.rehash_on_login', true)) {
+                $provider->rehashPasswordIfRequired($user, $credentials);
+            }
+
+            return $user;
+        });
+
+        Passkeys::authorizeLoginUsing(fn (Request $request, $user, $passkey): bool => $user instanceof User
+            && User::query()->whereKey($user->getKey())->whereNull('suspended_at')->exists());
+
+        Event::listen(Login::class, function (Login $event): void {
+            if ($event->guard === config('fortify.guard') && $event->user instanceof User) {
+                request()->session()->put('auth_access.web', [
+                    'id' => $event->user->getKey(),
+                    'version' => $event->user->auth_version,
+                ]);
+            }
+        });
+
+        Event::listen(TwoFactorAuthenticationChallenged::class, function (TwoFactorAuthenticationChallenged $event): void {
+            request()->session()->put('login.auth_access', [
+                'id' => $event->user->getKey(),
+                'version' => $event->user->auth_version,
+            ]);
+        });
     }
 
     /**

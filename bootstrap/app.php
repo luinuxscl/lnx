@@ -2,12 +2,14 @@
 
 use App\Http\Middleware\ApplySiteSettings;
 use App\Http\Middleware\CheckMaintenanceMode;
+use App\Http\Middleware\EnsureAccountAccess;
 use App\Http\Middleware\EnsureOpenRegistration;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\StartSession;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
@@ -23,10 +25,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             SetLocale::class,
+            EnsureAccountAccess::class,
             EnsureOpenRegistration::class,
             ApplySiteSettings::class,
             CheckMaintenanceMode::class,
         ]);
+
+        $middleware->appendToPriorityList(StartSession::class, SetLocale::class);
+        $middleware->appendToPriorityList(SetLocale::class, EnsureAccountAccess::class);
 
         $middleware->alias([
             'role' => RoleMiddleware::class,

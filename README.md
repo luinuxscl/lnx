@@ -61,6 +61,14 @@ npm run build
 php artisan serve
 ```
 
+## Suspensión de usuarios
+
+Root y administradores pueden suspender y reactivar usuarios desde **Usuarios**. Ambas acciones solicitan confirmación en un modal. La lista muestra el estado y permite filtrarlo junto con la búsqueda. También pueden gestionar otros administradores. Las cuentas root y la propia cuenta no se pueden suspender.
+
+Suspender conserva contraseña, roles, passkeys, 2FA, avatar y datos relacionados. Bloquea nuevos inicios de sesión y revoca sesiones y cookies de «recordarme» anteriores. Tras reactivar una cuenta, el usuario debe iniciar sesión nuevamente; la reactivación no restaura el acceso previo. La comprobación de versión funciona con los drivers de sesión `array`, `database`, `file` y `cookie`, sin borrar registros de sesiones.
+
+En despliegues, aplicar primero la migración que añade `suspended_at` y `auth_version`. Durante la activación, evitar servir simultáneamente código anterior y nuevo. No revertir los controles mientras existan cuentas suspendidas.
+
 ## Comandos útiles
 
 | Comando                 | Descripción                          |
