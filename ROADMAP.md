@@ -6,31 +6,30 @@ Este documento conserva el orden global de trabajo. GitHub es la fuente del esta
 
 ## Próximo trabajo
 
-Comenzar por **#11** (dashboard útil por rol). #8 ya está resuelta y desbloquea la entrega completa de #11.
+Comenzar por **#21** (MCP de lectura). #11 quedó integrada en `develop` y cerrada; #21 tiene resuelta su dependencia #18.
 
 ## Orden acordado
 
 | Etapa | Issues, en orden | Resultado y motivo | Esfuerzo relativo |
 | --- | --- | --- | --- |
-| 1. Completar la operación del kit | [#11 Dashboard](https://github.com/luinuxscl/lnx/issues/11) | Ofrecer una portada útil por rol. #8 ya está resuelta y sus dependencias quedan cubiertas. | Medio |
-| 2. Conectar agentes con la aplicación | [#21 MCP de lectura](https://github.com/luinuxscl/lnx/issues/21) | Validar consultas autorizadas desde un cliente real. Su dependencia #18 está resuelta; no depende de consumir LLMs. | Alto |
-| 3. Entregar la primera función de IA | [#12 Integración](https://github.com/luinuxscl/lnx/issues/12) → [#13 Cuotas y consumo](https://github.com/luinuxscl/lnx/issues/13) → [#14 Asistente de texto](https://github.com/luinuxscl/lnx/issues/14) | Configurar OpenRouter, controlar consumo y mejorar, resumir o traducir con aceptación humana. Mantener esta secuencia como una entrega funcional completa. | Alto |
-| 4. Mejorar la experiencia cotidiana | [#10 Preferencias](https://github.com/luinuxscl/lnx/issues/10) → [#9 Notificaciones](https://github.com/luinuxscl/lnx/issues/9) | Unificar idioma, fechas y apariencia antes de añadir la bandeja persistente. Es una conveniencia de implementación, no una dependencia obligatoria. | Medio |
-| 5. Consolidar procedimientos probados | [#22 Skills reutilizables](https://github.com/luinuxscl/lnx/issues/22) | Extraer procedimientos de entregas reales de funcionalidad, MCP y verificación. Sus dependencias #18–#20 están cerradas; queda #21. | Medio |
-| 6. Llevar mejoras a proyectos derivados | [#23 Versionado y actualización](https://github.com/luinuxscl/lnx/issues/23) | Tras #22, validar actualizaciones, conflictos y reversión en un proyecto piloto autorizado antes de distribuir el núcleo. | Alto |
-| 7. Ampliar IA según demanda | [#15 Chat](https://github.com/luinuxscl/lnx/issues/15) y [#16 Extracción documental](https://github.com/luinuxscl/lnx/issues/16) | Elegir primero el que tenga un caso concreto en un proyecto derivado. Ambos requieren #12 y #13; son independientes entre sí. | Alto por módulo |
-| 8. Incorporar conocimiento propio | [#17 Consulta con fuentes](https://github.com/luinuxscl/lnx/issues/17) | Requiere #12, #13 y #15. Validar con documentos reales la recuperación, los permisos y la calidad de las referencias; no requiere #16. | Muy alto |
+| 1. Conectar agentes con la aplicación | [#21 MCP de lectura](https://github.com/luinuxscl/lnx/issues/21) | Validar consultas autorizadas desde un cliente real. Su dependencia #18 está resuelta; no depende de consumir LLMs. | Alto |
+| 2. Entregar la primera función de IA | [#12 Integración](https://github.com/luinuxscl/lnx/issues/12) → [#13 Cuotas y consumo](https://github.com/luinuxscl/lnx/issues/13) → [#14 Asistente de texto](https://github.com/luinuxscl/lnx/issues/14) | Configurar OpenRouter, controlar consumo y mejorar, resumir o traducir con aceptación humana. Mantener esta secuencia como una entrega funcional completa. | Alto |
+| 3. Mejorar la experiencia cotidiana | [#10 Preferencias](https://github.com/luinuxscl/lnx/issues/10) → [#9 Notificaciones](https://github.com/luinuxscl/lnx/issues/9) | Unificar idioma, fechas y apariencia antes de añadir la bandeja persistente. Es una conveniencia de implementación, no una dependencia obligatoria. | Medio |
+| 4. Consolidar procedimientos probados | [#22 Skills reutilizables](https://github.com/luinuxscl/lnx/issues/22) | Extraer procedimientos de entregas reales de funcionalidad, MCP y verificación. Sus dependencias #18–#20 están cerradas; queda #21. | Medio |
+| 5. Llevar mejoras a proyectos derivados | [#23 Versionado y actualización](https://github.com/luinuxscl/lnx/issues/23) | Tras #22, validar actualizaciones, conflictos y reversión en un proyecto piloto autorizado antes de distribuir el núcleo. | Alto |
+| 6. Ampliar IA según demanda | [#15 Chat](https://github.com/luinuxscl/lnx/issues/15) y [#16 Extracción documental](https://github.com/luinuxscl/lnx/issues/16) | Elegir primero el que tenga un caso concreto en un proyecto derivado. Ambos requieren #12 y #13; son independientes entre sí. | Alto por módulo |
+| 7. Incorporar conocimiento propio | [#17 Consulta con fuentes](https://github.com/luinuxscl/lnx/issues/17) | Requiere #12, #13 y #15. Validar con documentos reales la recuperación, los permisos y la calidad de las referencias; no requiere #16. | Muy alto |
 
 ## Decisiones de secuencia
 
-- Adelantar #11 respecto de su posición en el backlog original: invitaciones (#4), checklist de puesta en marcha (#7) y sesiones (#8) ya están resueltas, así que sus dependencias están cubiertas. El resumen de consumo de IA se incorpora cuando exista #13, sin retrasar el dashboard inicial.
+- #11 se integró y cerró tras resolver sus dependencias #4, #7 y #8. El resumen de consumo de IA se incorporará cuando exista #13.
 - No habilitar funciones de IA para usuarios antes de disponer de los controles de #13.
 - No convertir la distribución del kit (#23) en requisito para implementar funcionalidades. Si un cliente necesita chat o documentos, se puede adelantar ese módulo respecto de #23 conservando sus dependencias.
 - #9 es una integración opcional para avisar del procesamiento de documentos; no bloquea #16.
 
 ## Estado de partida
 
-En la última revisión había 12 issues abiertas: #9–#17 y #21–#23. Invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
+En la última revisión hay 11 issues abiertas: #9–#10, #12–#17 y #21–#23. Dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
 
 ## Mantenimiento
 
