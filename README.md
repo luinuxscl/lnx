@@ -222,6 +222,17 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 - `App\Http\Middleware\CheckMaintenanceMode` (grupo `web`) devuelve la vista `errors/maintenance.blade.php` (503) cuando el modo mantenimiento está activo. Los usuarios root y las rutas de autenticación quedan exentos para poder desactivarlo.
 - Los archivos de branding se suben al disco `public` (`storage/app/public/branding`); por eso `php artisan storage:link` es obligatorio en instalación y despliegue.
 
+## Checklist de puesta en marcha
+
+Vista en `/admin/setup` (`admin.setup.index`), accesible **solo para `root`** mediante el middleware `role:root` (`routes/web.php`). `App\Livewire\Setup\Index` muestra cuatro pasos para verificar que la instalación quedó utilizable:
+
+1. **Identidad del sitio**: verificado cuando hay `site_title` y un `admin_email` con formato válido.
+2. **Correo de prueba**: botón que envía una notificación on-demand a `admin_email` (o al correo del root si no hay ninguno) y persiste el resultado en la fila `settings`. Limitado a cinco intentos por hora y por usuario; los fallos cuentan. Un éxito solo significa que el transporte aceptó el mensaje, nunca que llegó al buzón. Un fallo de transporte se registra con `report()` y jamás expone el mensaje de la excepción (puede filtrar credenciales).
+3. **Almacenamiento**: diagnóstico en vivo del enlace `public/storage` y de una escritura/lectura/borrado de prueba en el disco `public`; el archivo temporal se elimina siempre. Se puede re-ejecutar con «Re-check storage».
+4. **Modalidad de registro**: verificado cuando ya existe una fila persistida en `settings`, es decir, root guardó configuración al menos una vez.
+
+El estado de cada paso se recalcula al cargar la página desde el estado real del sistema; solo el resultado del correo de prueba se persiste (`test_email_sent_at`, `test_email_sent_to`, `test_email_failed_at` en `settings`). Si `admin_email` cambia desde el último envío exitoso, el paso vuelve a pendiente. En despliegue, la migración de esas columnas se aplica con `php artisan migrate --force`.
+
 ## Estrategia de ramas (Git Flow)
 
 - `main` — producción, siempre estable.
@@ -256,7 +267,7 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 
 Las reglas versionadas en `.ai/rules` expresan decisiones de lnx; las skills enseñan procedimientos; los comandos anteriores verifican el checkout y Boost es el servidor MCP disponible en la instalación de referencia. `boost.json`, `AGENTS.md`, `CLAUDE.md` y las copias de skills bajo carpetas de clientes son generados y están ignorados por Git. El núcleo del kit incluye los patrones de autorización, idioma, layout y tema; cada proyecto derivado decide su nombre, dominio, marca, contenido, credenciales, despliegue y cualquier regla local adicional.
 
-Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`) y configuración global (`app/Livewire/Settings/`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
+Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`), configuración global (`app/Livewire/Settings/`) y checklist de puesta en marcha (`app/Livewire/Setup/`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
 
 La instrucción explícita del usuario prevalece. Después se aplican las reglas del proyecto derivado para sus decisiones, las reglas de lnx para el núcleo que sigue usando y, finalmente, las recomendaciones de Boost y skills. Si dos instrucciones del mismo nivel chocan, detén solo la decisión afectada y pide una aclaración concreta; no escribas una regla nueva por inferencia. Las reglas permanentes se registran únicamente a petición explícita mediante `record-rule`.
 
@@ -282,6 +293,7 @@ La galería `/design-gallery` solo se registra en `local` y `testing`, tras aute
 
 ```
 app/Livewire/Settings/            Componentes de settings (incl. General de root)
+app/Livewire/Setup/               Checklist de puesta en marcha (root)
 app/Livewire/Users/               CRUD de usuarios (root/admin)
 app/Models/Setting.php            Configuración global cacheada (fila única)
 app/Policies/                     Policies (UserPolicy, SettingPolicy)
