@@ -236,7 +236,7 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 - `README.md` — este archivo, panorámica del proyecto.
 - `.ai/rules/` — reglas permanentes del proyecto (git flow, documentación).
 - `.ai/skills/` — skills propias versionadas; Boost instala además skills de paquetes en carpetas locales de cada cliente.
-- `.kilo/skills/consolidar/` — skill de cierre: al decir "consolidar" ejecuta documentación, commits, merge y push tras una confirmación simple.
+- `git-closeout` — skill global (fuera del repo) para cerrar el ciclo: documentación, commits, integración de ramas y push.
 
 ## Trabajo con agentes
 
@@ -290,6 +290,5 @@ resources/views/layouts/          Layouts (app, auth)
 resources/views/errors/           Vistas de error (maintenance)
 resources/css/app.css             Tokens de Tailwind + theming Flux
 .kilo/agent/                      Sub-agentes de Kilo (ui-audit: auditoría visual de vistas con modelo económico de visión)
-.kilo/skills/                     Skills de Kilo versionadas (consolidar: documentación + commits + merge + push)
 tests/                            Suite de Pest
 ```
