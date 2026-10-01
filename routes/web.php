@@ -16,6 +16,12 @@ Route::post('invitations/{invitation}/{token}', [AcceptInvitationController::cla
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
+
+    if (app()->environment(['local', 'testing']) && config('app.design_gallery_enabled')) {
+        Route::view('design-gallery', 'design-gallery')
+            ->middleware('role:'.Role::Root->value)
+            ->name('design-gallery');
+    }
 });
 
 require __DIR__.'/settings.php';
