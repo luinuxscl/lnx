@@ -11,5 +11,8 @@ Este repo usa Git Flow: `main` (producción, estable), `develop` (integración),
 ## Documentación siempre actualizada y prioritaria
 La documentación es prioritaria y obligatoria. Antes de dar por terminado un feature o corrección, verificar y actualizar la documentación afectada (README.md, guías en .ai/rules, o docs relevantes). Toda funcionalidad nueva o cambio de comportamiento debe reflejarse en la documentación en el mismo PR o commit, nunca después. Cuando se trabaja en áreas no documentadas del repositorio, proponer crear su documentación.
 
+## Cierre de issues de GitHub
+Al finalizar un feature o corrección asociado a uno o más issues, revisar sus criterios de aceptación contra la implementación integrada. Cerrar en GitHub cada issue que esté completamente resuelto y dejar abiertos los que tengan trabajo pendiente; no asumir que un merge los cerró automáticamente. Antes de terminar el trabajo, comprobar que los issues resueltos figuren como `CLOSED`.
+
 ## Autorización por roles
 La autorización se gestiona por roles con `spatie/laravel-permission`, no por permisos granulares. Roles por defecto (`App\Enums\Role`): `root` (superusuario; omite gates y policies vía `Gate::before`) y `admin`. Usar siempre el enum `App\Enums\Role` en lugar de strings literales. Las credenciales root de desarrollo (`App\Support\DevRootCredentials`) nunca deben llegar a producción: el seeder lo bloquea y la UI muestra un banner mientras sigan activas.
