@@ -4,6 +4,7 @@ use App\Enums\Role;
 use App\Http\Controllers\AcceptInvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Livewire\Activity\Index as ActivityIndex;
+use App\Livewire\Dashboard;
 use App\Livewire\Setup\Index as SetupIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -16,7 +17,7 @@ Route::post('invitations/{invitation}/{token}', [AcceptInvitationController::cla
     ->middleware('throttle:10,1')->name('invitations.accept.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::livewire('dashboard', Dashboard::class)->name('dashboard');
 
     if (app()->environment(['local', 'testing']) && config('app.design_gallery_enabled')) {
         Route::view('design-gallery', 'design-gallery')

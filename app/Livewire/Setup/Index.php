@@ -2,13 +2,14 @@
 
 namespace App\Livewire\Setup;
 
+use App\Actions\DiagnoseSetup;
+use App\Enums\Role;
 use App\Models\Setting;
 use App\Notifications\SetupTestEmailNotification;
 use Flux\Flux;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -37,9 +38,10 @@ class Index extends Component
      */
     public function sendTestEmail(): void
     {
+        $this->authorizeRoot();
         $this->resetErrorBag('test_email');
 
-        $recipient = $this->effectiveRecipient();
+        $recipient = app(DiagnoseSetup::class)->effectiveRecipient(auth()->user());
         $key = 'setup-test-email:'.auth()->id();
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
@@ -75,7 +77,8 @@ class Index extends Component
      */
     public function recheckStorage(): void
     {
-        $this->steps['storage'] = $this->diagnoseStorage();
+        $this->authorizeRoot();
+        $this->steps['storage'] = app(DiagnoseSetup::class)->diagnoseStorage(auth()->user());
         Flux::toast(variant: 'success', text: __('Storage status refreshed.'));
     }
 
@@ -84,111 +87,7 @@ class Index extends Component
      */
     protected function refreshDiagnostics(): void
     {
-        $this->steps = [
-            'identity' => $this->diagnoseIdentity(),
-            'email' => $this->diagnoseEmail(),
-            'storage' => $this->diagnoseStorage(),
-            'registration' => $this->diagnoseRegistration(),
-        ];
-    }
-
-    /**
-     * Diagnose the site identity step.
-     *
-     * @return array<string, mixed>
-     */
-    protected function diagnoseIdentity(): array
-    {
-        $settings = Setting::current();
-        $title = trim((string) $settings->site_title);
-        $email = trim((string) $settings->admin_email);
-        $valid = $title !== '' && $email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
-
-        return [
-            'status' => $valid ? 'verified' : 'pending',
-            'title' => $settings->site_title,
-            'tagline' => $settings->site_tagline,
-            'admin_email' => $settings->admin_email,
-        ];
-    }
-
-    /**
-     * Diagnose the test email step from the persisted send result.
-     *
-     * @return array<string, mixed>
-     */
-    protected function diagnoseEmail(): array
-    {
-        $settings = Setting::current();
-        $recipient = $this->effectiveRecipient();
-        $sentAt = $settings->test_email_sent_at;
-        $failedAt = $settings->test_email_failed_at;
-        $sentTo = $settings->test_email_sent_to;
-
-        if ($failedAt !== null && ($sentAt === null || $failedAt->greaterThan($sentAt))) {
-            $status = 'error';
-        } elseif ($sentAt !== null && $sentTo === $recipient) {
-            $status = 'verified';
-        } else {
-            $status = 'pending';
-        }
-
-        return [
-            'status' => $status,
-            'recipient' => $recipient,
-            'sent_at' => $sentAt?->toIso8601String(),
-            'sent_to' => $sentTo,
-            'driver' => (string) config('mail.default'),
-            'from' => config('mail.from.address'),
-        ];
-    }
-
-    /**
-     * Diagnose the public storage step (link + write/read/delete probe).
-     *
-     * @return array<string, mixed>
-     */
-    protected function diagnoseStorage(): array
-    {
-        $linked = $this->storageLinkExists();
-        $writable = $linked && $this->storageIsWritable();
-
-        return [
-            'status' => $linked && $writable ? 'verified' : 'error',
-            'linked' => $linked,
-            'writable' => $writable,
-        ];
-    }
-
-    /**
-     * Diagnose the registration mode step.
-     *
-     * @return array<string, mixed>
-     */
-    protected function diagnoseRegistration(): array
-    {
-        $settings = Setting::current();
-        $configured = Setting::query()->exists();
-
-        return [
-            'status' => $configured ? 'verified' : 'pending',
-            'configured' => $configured,
-            'mode' => $settings->registration_mode ?? 'open',
-        ];
-    }
-
-    /**
-     * Determine the recipient for the test email.
-     */
-    protected function effectiveRecipient(): string
-    {
-        $configured = trim((string) Setting::current()->admin_email);
-
-        if ($configured !== '') {
-            return $configured;
-        }
-
-        return (string) auth()->user()?->email;
+        $this->steps = app(DiagnoseSetup::class)->handle(auth()->user());
     }
 
     /**
@@ -206,44 +105,15 @@ class Index extends Component
         Setting::forgetCache();
     }
 
-    /**
-     * Determine whether the public storage link exists.
-     */
-    protected function storageLinkExists(): bool
+    private function authorizeRoot(): void
     {
-        $path = public_path('storage');
-
-        return is_link($path) || file_exists($path);
-    }
-
-    /**
-     * Probe the public disk by writing, reading back and deleting a file.
-     */
-    protected function storageIsWritable(): bool
-    {
-        $disk = Storage::disk('public');
-        $name = '.setup-check-'.Str::random(16).'.txt';
-        $contents = Str::random(32);
-
-        try {
-            if (! $disk->put($name, $contents)) {
-                return false;
-            }
-
-            if ($disk->get($name) !== $contents) {
-                return false;
-            }
-        } catch (Throwable) {
-            return false;
-        } finally {
-            $disk->delete($name);
-        }
-
-        return true;
+        abort_unless(auth()->user()?->hasRole(Role::Root) && Gate::allows('viewAny', Setting::class), 403);
     }
 
     public function render(): View
     {
+        $this->authorizeRoot();
+
         return view('livewire.setup.index')->layout('layouts.app', [
             'breadcrumbs' => [
                 ['label' => __('Setup checklist')],
