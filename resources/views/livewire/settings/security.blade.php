@@ -292,7 +292,97 @@
                 </div>
             </section>
         @endif
+
+        <section class="mt-12">
+            <flux:heading>{{ __('Browser sessions') }}</flux:heading>
+            <flux:subheading>{{ __('Manage and log out your active sessions on other devices') }}</flux:subheading>
+
+            @if (! $canManageSessions)
+                <flux:callout class="mt-6" icon="information-circle">
+                    {{ __('Session management is unavailable because the application is not using the database session driver.') }}
+                </flux:callout>
+            @else
+                <div class="mt-6 flex flex-col w-full mx-auto space-y-6 text-sm" wire:cloak>
+                    <div class="border rounded-lg border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                        @forelse ($sessions as $session)
+                            <div class="flex items-center justify-between p-4 {{ ! $loop->last ? 'border-b border-zinc-200 dark:border-zinc-700' : '' }}">
+                                <div class="flex items-center gap-4">
+                                    <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800">
+                                        @if ($session['is_desktop'])
+                                            <flux:icon.computer-desktop class="size-5 text-zinc-500 dark:text-zinc-400" />
+                                        @else
+                                            <flux:icon.device-phone-mobile class="size-5 text-zinc-500 dark:text-zinc-400" />
+                                        @endif
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-2.5">
+                                            <p class="font-medium tracking-tight">{{ __($session['browser']) }} / {{ __($session['platform']) }}</p>
+                                            @if ($session['is_current'])
+                                                <flux:badge size="sm">{{ __('This device') }}</flux:badge>
+                                            @endif
+                                        </div>
+                                        <p class="text-zinc-500 dark:text-zinc-400 text-xs">
+                                            {{ __('Last active :time', ['time' => $session['last_active']]) }}
+                                            @if ($session['ip'])
+                                                <span class="opacity-50 mx-1">/</span>
+                                                {{ $session['ip'] }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-8 text-center">
+                                <div class="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800">
+                                    <flux:icon.computer-desktop class="size-7 text-zinc-400 dark:text-zinc-500" />
+                                </div>
+                                <p class="font-medium">{{ __('No browser sessions found') }}</p>
+                            </div>
+                        @endforelse
+                    </div>
+
+                    <div class="flex justify-start">
+                        <flux:button variant="outline" wire:click="confirmLogoutOtherSessions">
+                            {{ __('Log out other browser sessions') }}
+                        </flux:button>
+                    </div>
+                </div>
+            @endif
+        </section>
     </x-settings.layout>
+
+    @if ($canManageSessions)
+        <flux:modal
+            name="logout-other-sessions-modal"
+            class="max-w-md md:min-w-md"
+            @close="closeLogoutOthersModal"
+            wire:model="showLogoutOthersModal"
+        >
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <flux:heading size="lg">{{ __('Log out other browser sessions') }}</flux:heading>
+                    <flux:text>
+                        {{ __('Your current session will stay active, but all other sessions will be signed out. Remembered logins on those devices will also be revoked.') }}
+                    </flux:text>
+                </div>
+
+                <div class="flex gap-3 justify-end">
+                    <flux:button
+                        variant="outline"
+                        wire:click="closeLogoutOthersModal"
+                    >
+                        {{ __('Cancel') }}
+                    </flux:button>
+                    <flux:button
+                        variant="danger"
+                        wire:click="logoutOtherSessions"
+                    >
+                        {{ __('Log out other browser sessions') }}
+                    </flux:button>
+                </div>
+            </div>
+        </flux:modal>
+    @endif
 
     <flux:modal
         name="delete-passkey-modal"

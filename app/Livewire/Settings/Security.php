@@ -3,9 +3,13 @@
 namespace App\Livewire\Settings;
 
 use App\Concerns\PasswordValidationRules;
+use App\Support\UserAgentParser;
 use Exception;
 use Flux\Flux;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
@@ -24,6 +28,8 @@ use Livewire\Component;
 class Security extends Component
 {
     use PasswordValidationRules;
+
+    private const CONFIRMATION_TTL_SECONDS = 600;
 
     public string $current_password = '';
 
@@ -70,6 +76,17 @@ class Security extends Component
     #[Locked]
     public string $deletingPasskeyName = '';
 
+    #[Locked]
+    public bool $canManageSessions = false;
+
+    /**
+     * @var array<int, array{id: string, browser: string, platform: string, is_desktop: bool, ip: string|null, last_active: string, is_current: bool}>
+     */
+    #[Locked]
+    public array $sessions = [];
+
+    public bool $showLogoutOthersModal = false;
+
     /**
      * Mount the component.
      */
@@ -90,6 +107,16 @@ class Security extends Component
 
         if ($this->canManagePasskeys) {
             $this->loadPasskeys();
+        }
+
+        $this->canManageSessions = config('session.driver') === 'database';
+
+        if ($this->canManageSessions) {
+            $this->loadSessions();
+        }
+
+        if ($this->canManageSessions && session()->pull('security.logout_others_pending')) {
+            $this->showLogoutOthersModal = true;
         }
     }
 
@@ -175,6 +202,128 @@ class Security extends Component
         $this->showDeleteModal = false;
         $this->deletingPasskeyId = null;
         $this->deletingPasskeyName = '';
+    }
+
+    /**
+     * Load the user's active browser sessions.
+     */
+    public function loadSessions(): void
+    {
+        if (! $this->canManageSessions) {
+            $this->sessions = [];
+
+            return;
+        }
+
+        $currentSessionId = session()->getId();
+
+        $sessions = DB::connection(config('session.connection'))
+            ->table(config('session.table', 'sessions'))
+            ->where('user_id', Auth::id())
+            ->where('last_activity', '>=', now()->subMinutes((int) config('session.lifetime'))->getTimestamp())
+            ->orderByDesc('last_activity')
+            ->get()
+            ->map(fn ($session): array => (array) $session);
+
+        $parser = new UserAgentParser;
+
+        $this->sessions = $sessions
+            ->map(function (array $session) use ($currentSessionId, $parser): array {
+                $device = $parser->parse($session['user_agent']);
+
+                return [
+                    'id' => (string) $session['id'],
+                    'browser' => $device['browser'],
+                    'platform' => $device['platform'],
+                    'is_desktop' => $device['is_desktop'],
+                    'ip' => $session['ip_address'] !== null ? (string) $session['ip_address'] : null,
+                    'last_active' => Carbon::createFromTimestamp((int) $session['last_activity'])->diffForHumans(),
+                    'is_current' => $session['id'] === $currentSessionId,
+                ];
+            })
+            ->sortByDesc('is_current')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Open the confirmation modal, requesting identity confirmation when needed.
+     */
+    public function confirmLogoutOtherSessions(): void
+    {
+        abort_unless($this->canManageSessions, 403);
+
+        if (! $this->hasFreshConfirmation()) {
+            $this->requestConfirmation();
+
+            return;
+        }
+
+        $this->showLogoutOthersModal = true;
+    }
+
+    /**
+     * Log out of all browser sessions except the current one.
+     */
+    public function logoutOtherSessions(): void
+    {
+        abort_unless($this->canManageSessions, 403);
+
+        if (! $this->hasFreshConfirmation()) {
+            $this->closeLogoutOthersModal();
+            $this->requestConfirmation();
+
+            return;
+        }
+
+        $user = Auth::user();
+        $currentSessionId = session()->getId();
+
+        DB::transaction(function () use ($user, $currentSessionId): void {
+            DB::connection(config('session.connection'))
+                ->table(config('session.table', 'sessions'))
+                ->where('user_id', $user->getKey())
+                ->where('id', '!=', $currentSessionId)
+                ->delete();
+
+            $user->forceFill(['remember_token' => Str::random(60)])->save();
+        });
+
+        $this->closeLogoutOthersModal();
+        $this->loadSessions();
+
+        Flux::toast(variant: 'success', text: __('All other browser sessions have been logged out.'));
+    }
+
+    /**
+     * Close the logout-other-sessions confirmation modal.
+     */
+    public function closeLogoutOthersModal(): void
+    {
+        $this->showLogoutOthersModal = false;
+    }
+
+    /**
+     * Determine whether the user confirmed their identity recently enough.
+     */
+    private function hasFreshConfirmation(): bool
+    {
+        $confirmedAt = session('auth.password_confirmed_at');
+
+        return is_int($confirmedAt) && (time() - $confirmedAt) <= self::CONFIRMATION_TTL_SECONDS;
+    }
+
+    /**
+     * Redirect to the password confirmation screen and reopen the modal afterwards.
+     */
+    private function requestConfirmation(): void
+    {
+        session([
+            'security.logout_others_pending' => true,
+            'url.intended' => route('security.edit'),
+        ]);
+
+        $this->redirect(route('password.confirm'));
     }
 
     /**
