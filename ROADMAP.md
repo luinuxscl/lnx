@@ -6,13 +6,13 @@ Este documento conserva el orden global de trabajo. GitHub es la fuente del esta
 
 ## Próximo trabajo
 
-Comenzar por **#8**. Primer hito: completar **#8 → #11**, con gestión de sesiones y dashboard útil por rol.
+Comenzar por **#11** (dashboard útil por rol). #8 ya está resuelta y desbloquea la entrega completa de #11.
 
 ## Orden acordado
 
 | Etapa | Issues, en orden | Resultado y motivo | Esfuerzo relativo |
 | --- | --- | --- | --- |
-| 1. Completar la operación del kit | [#8 Sesiones](https://github.com/luinuxscl/lnx/issues/8) → [#11 Dashboard](https://github.com/luinuxscl/lnx/issues/11) | Retirar acceso desde otros dispositivos y ofrecer una portada útil. #7 ya está resuelta y desbloquea la entrega completa de #11. | Medio |
+| 1. Completar la operación del kit | [#11 Dashboard](https://github.com/luinuxscl/lnx/issues/11) | Ofrecer una portada útil por rol. #8 ya está resuelta y sus dependencias quedan cubiertas. | Medio |
 | 2. Conectar agentes con la aplicación | [#21 MCP de lectura](https://github.com/luinuxscl/lnx/issues/21) | Validar consultas autorizadas desde un cliente real. Su dependencia #18 está resuelta; no depende de consumir LLMs. | Alto |
 | 3. Entregar la primera función de IA | [#12 Integración](https://github.com/luinuxscl/lnx/issues/12) → [#13 Cuotas y consumo](https://github.com/luinuxscl/lnx/issues/13) → [#14 Asistente de texto](https://github.com/luinuxscl/lnx/issues/14) | Configurar OpenRouter, controlar consumo y mejorar, resumir o traducir con aceptación humana. Mantener esta secuencia como una entrega funcional completa. | Alto |
 | 4. Mejorar la experiencia cotidiana | [#10 Preferencias](https://github.com/luinuxscl/lnx/issues/10) → [#9 Notificaciones](https://github.com/luinuxscl/lnx/issues/9) | Unificar idioma, fechas y apariencia antes de añadir la bandeja persistente. Es una conveniencia de implementación, no una dependencia obligatoria. | Medio |
@@ -23,14 +23,14 @@ Comenzar por **#8**. Primer hito: completar **#8 → #11**, con gestión de sesi
 
 ## Decisiones de secuencia
 
-- Adelantar #11 respecto de su posición en el backlog original: invitaciones (#4) y checklist de puesta en marcha (#7) ya están resueltas, así que sus dependencias están cubiertas. El resumen de consumo de IA se incorpora cuando exista #13, sin retrasar el dashboard inicial.
+- Adelantar #11 respecto de su posición en el backlog original: invitaciones (#4), checklist de puesta en marcha (#7) y sesiones (#8) ya están resueltas, así que sus dependencias están cubiertas. El resumen de consumo de IA se incorpora cuando exista #13, sin retrasar el dashboard inicial.
 - No habilitar funciones de IA para usuarios antes de disponer de los controles de #13.
 - No convertir la distribución del kit (#23) en requisito para implementar funcionalidades. Si un cliente necesita chat o documentos, se puede adelantar ese módulo respecto de #23 conservando sus dependencias.
 - #9 es una integración opcional para avisar del procesamiento de documentos; no bloquea #16.
 
 ## Estado de partida
 
-En la última revisión había 13 issues abiertas: #8–#17 y #21–#23. Invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
+En la última revisión había 12 issues abiertas: #9–#17 y #21–#23. Invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
 
 ## Mantenimiento
 
