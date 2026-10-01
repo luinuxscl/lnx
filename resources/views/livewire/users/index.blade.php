@@ -2,9 +2,10 @@
     <div class="flex items-center justify-between gap-4">
         <flux:heading level="1">{{ __('Users') }}</flux:heading>
 
-        <flux:button variant="primary" icon="plus" :href="route('admin.users.create')" wire:navigate>
-            {{ __('Create user') }}
-        </flux:button>
+        <div class="flex flex-wrap gap-2">
+            <flux:button :href="route('admin.users.invitations')" wire:navigate>{{ __('Invitations') }}</flux:button>
+            <flux:button variant="primary" icon="plus" :href="route('admin.users.create')" wire:navigate>{{ __('Invite user') }}</flux:button>
+        </div>
     </div>
 
     <flux:input

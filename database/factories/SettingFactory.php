@@ -29,6 +29,7 @@ class SettingFactory extends Factory
             'footer_text' => fake()->sentence(),
             'analytics_id' => null,
             'maintenance_mode' => false,
+            'registration_mode' => 'open',
             'maintenance_message' => null,
         ];
     }
