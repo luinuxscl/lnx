@@ -41,4 +41,18 @@ class UserPolicy
             && ! $model->hasRole(Role::Root)
             && ! $user->is($model);
     }
+
+    public function suspend(User $user, User $model): bool
+    {
+        return $user->hasAnyRole([Role::Root, Role::Admin])
+            && ! $model->hasRole(Role::Root)
+            && ! $user->is($model);
+    }
+
+    public function reactivate(User $user, User $model): bool
+    {
+        return $user->hasAnyRole([Role::Root, Role::Admin])
+            && ! $model->hasRole(Role::Root)
+            && ! $user->is($model);
+    }
 }

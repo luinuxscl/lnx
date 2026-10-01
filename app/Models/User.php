@@ -29,6 +29,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
+ * @property Carbon|null $suspended_at
+ * @property int $auth_version
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -38,6 +40,10 @@ class User extends Authenticatable implements PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
+    protected $attributes = [
+        'auth_version' => 0,
+    ];
 
     protected static function booted(): void
     {
@@ -53,6 +59,11 @@ class User extends Authenticatable implements PasskeyUser
         return $this->avatar_path === null
             ? null
             : Storage::disk('public')->url($this->avatar_path);
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
     }
 
     public function gravatarUrl(): string
@@ -72,6 +83,8 @@ class User extends Authenticatable implements PasskeyUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'suspended_at' => 'datetime',
+            'auth_version' => 'integer',
         ];
     }
 
