@@ -230,6 +230,14 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 - `App\Http\Middleware\CheckMaintenanceMode` (grupo `web`) devuelve la vista `errors/maintenance.blade.php` (503) cuando el modo mantenimiento está activo. Los usuarios root y las rutas de autenticación quedan exentos para poder desactivarlo.
 - Los archivos de branding se suben al disco `public` (`storage/app/public/branding`); por eso `php artisan storage:link` es obligatorio en instalación y despliegue.
 
+## Panel por rol
+
+`/dashboard` (`dashboard`) mantiene los middleware `auth` y `verified`. La bienvenida muestra el nombre escapado y todos los usuarios tienen accesos a perfil y seguridad. El panel es un componente Livewire de clase que comprueba los roles y las policies en cada renderizado; sus cifras y diagnósticos se pasan solo a la vista, sin conservarlos en propiedades públicas.
+
+`root` y `admin` ven usuarios totales, activos (`suspended_at` nulo) y suspendidos (`suspended_at` presente). Los conteos incluyen **todas las cuentas**, también las de root y admin. Pueden abrir la lista completa, los filtros `status=active` y `status=suspended`, invitaciones y la creación de una invitación. Las invitaciones pendientes son las no aceptadas ni revocadas cuyo vencimiento es futuro, aunque haya fallado el envío; si no hay ninguna, el panel lo indica expresamente.
+
+Solo `root` ve el resumen compacto de las cuatro comprobaciones del checklist (verificadas, pendientes y con error), con accesos al checklist y a configuración general. `App\Actions\DiagnoseSetup` calcula los mismos estados para ambas pantallas. Al renderizar el panel root se comprueba el enlace público y se escribe, lee y elimina un archivo temporal en el disco `public`; los fallos muestran un estado de error recuperable. El envío del correo de prueba y su resultado persistido siguen gestionándose en el checklist. No hay sondeo periódico.
+
 ## Checklist de puesta en marcha
 
 Vista en `/admin/setup` (`admin.setup.index`), accesible **solo para `root`** mediante el middleware `role:root` (`routes/web.php`). `App\Livewire\Setup\Index` muestra cuatro pasos para verificar que la instalación quedó utilizable:

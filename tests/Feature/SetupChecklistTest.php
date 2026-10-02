@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\DiagnoseSetup;
 use App\Enums\Role;
 use App\Livewire\Setup\Index as SetupIndex;
 use App\Models\Setting;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
-class TestableSetupIndex extends SetupIndex
+class TestableDiagnoseSetup extends DiagnoseSetup
 {
     public static bool $linkExists = true;
 
@@ -35,8 +36,9 @@ beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
     Storage::fake('public');
     Notification::fake();
-    TestableSetupIndex::$linkExists = true;
-    TestableSetupIndex::$writable = null;
+    TestableDiagnoseSetup::$linkExists = true;
+    TestableDiagnoseSetup::$writable = null;
+    $this->app->bind(DiagnoseSetup::class, TestableDiagnoseSetup::class);
 });
 
 function setupRoot(): User
@@ -200,26 +202,26 @@ it('rate limits the test email after five attempts', function () {
 
 it('marks storage as verified and leaves no probe files behind', function () {
     Livewire::actingAs(setupRoot())
-        ->test(TestableSetupIndex::class)
+        ->test(SetupIndex::class)
         ->assertSet('steps.storage.status', 'verified');
 
     expect(Storage::disk('public')->allFiles())->toBe([]);
 });
 
 it('marks storage as error when the public link is missing', function () {
-    TestableSetupIndex::$linkExists = false;
+    TestableDiagnoseSetup::$linkExists = false;
 
     Livewire::actingAs(setupRoot())
-        ->test(TestableSetupIndex::class)
+        ->test(SetupIndex::class)
         ->assertSet('steps.storage.status', 'error')
         ->assertSet('steps.storage.linked', false);
 });
 
 it('marks storage as error when the public disk is not writable', function () {
-    TestableSetupIndex::$writable = false;
+    TestableDiagnoseSetup::$writable = false;
 
     Livewire::actingAs(setupRoot())
-        ->test(TestableSetupIndex::class)
+        ->test(SetupIndex::class)
         ->assertSet('steps.storage.status', 'error')
         ->assertSet('steps.storage.writable', false);
 });
