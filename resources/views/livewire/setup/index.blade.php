@@ -73,7 +73,7 @@
                 @if ($email['sent_at'] !== null)
                     <div>
                         <dt class="font-medium text-zinc-500 dark:text-zinc-400">{{ __('Last accepted') }}</dt>
-                        <dd>{{ \Illuminate\Support\Carbon::parse($email['sent_at'])->timezone(config('app.timezone'))->format('Y-m-d H:i') }}</dd>
+                        <dd>{{ \Illuminate\Support\Carbon::parse($email['sent_at'])->timezone(\App\Support\Appearance::currentTimezone())->format('Y-m-d H:i') }}</dd>
                     </div>
                 @endif
             </dl>

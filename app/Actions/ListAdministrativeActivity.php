@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\AdministrativeAction;
 use App\Models\AdministrativeActivity;
+use App\Support\Appearance;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
@@ -51,7 +52,7 @@ class ListAdministrativeActivity
         $action = (string) ($filters['action'] ?? '');
         $from = (string) ($filters['from'] ?? '');
         $to = (string) ($filters['to'] ?? '');
-        $timezone = (string) config('app.timezone');
+        $timezone = Appearance::currentTimezone();
 
         return AdministrativeActivity::query()
             ->when($actor !== '', function ($query) use ($actor): void {
@@ -62,8 +63,8 @@ class ListAdministrativeActivity
                 });
             })
             ->when($action !== '', fn ($query) => $query->where('action', $action))
-            ->when($from !== '', fn ($query) => $query->where('occurred_at', '>=', Carbon::createFromFormat('!Y-m-d', $from, $timezone)->startOfDay()))
-            ->when($to !== '', fn ($query) => $query->where('occurred_at', '<=', Carbon::createFromFormat('!Y-m-d', $to, $timezone)->endOfDay()))
+            ->when($from !== '', fn ($query) => $query->where('occurred_at', '>=', Carbon::createFromFormat('!Y-m-d', $from, $timezone)->startOfDay()->setTimezone((string) config('app.timezone'))))
+            ->when($to !== '', fn ($query) => $query->where('occurred_at', '<=', Carbon::createFromFormat('!Y-m-d', $to, $timezone)->endOfDay()->setTimezone((string) config('app.timezone'))))
             ->orderByDesc('occurred_at')->orderByDesc('id')->paginate($perPage, ['*'], 'page', $page);
     }
 }

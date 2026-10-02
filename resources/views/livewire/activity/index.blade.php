@@ -23,7 +23,7 @@
         @forelse ($activities as $activity)
             <div wire:key="activity-{{ $activity->id }}" class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
                 <div class="grid gap-2 sm:grid-cols-4">
-                    <div><flux:text class="font-medium">{{ $activity->occurred_at->timezone(config('app.timezone'))->format('Y-m-d H:i:s') }}</flux:text></div>
+                    <div><flux:text class="font-medium">{{ $activity->occurred_at->timezone(\App\Support\Appearance::currentTimezone())->format('Y-m-d H:i:s') }}</flux:text></div>
                     <div><flux:text>{{ $activity->actor_name ?? __('Unknown actor') }}</flux:text><flux:text class="text-xs">{{ $activity->actor_email ?? '' }} @if ($activity->actor_id !== null) #{{ $activity->actor_id }} @endif</flux:text></div>
                     <div><flux:badge>{{ __(Illuminate\Support\Str::headline($activity->action->value)) }}</flux:badge></div>
                     <div><flux:text>{{ __(ucfirst($activity->resource_type)) }} #{{ $activity->resource_id }} · {{ $activity->resource_name ?? $activity->resource_email ?? '' }}</flux:text></div>

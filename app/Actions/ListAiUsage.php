@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Models\AiUsageEvent;
+use App\Support\Appearance;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
@@ -119,7 +120,7 @@ class ListAiUsage
         $status = (string) ($filters['status'] ?? '');
         $from = (string) ($filters['from'] ?? '');
         $to = (string) ($filters['to'] ?? '');
-        $timezone = (string) config('app.timezone');
+        $timezone = Appearance::currentTimezone();
 
         return AiUsageEvent::query()
             ->when($user !== '', function (Builder $query) use ($user): void {
@@ -139,7 +140,7 @@ class ListAiUsage
                 });
             })
             ->when($status !== '', fn (Builder $query) => $query->where('status', $status))
-            ->when($from !== '', fn (Builder $query) => $query->where('recorded_at', '>=', Carbon::createFromFormat('!Y-m-d', $from, $timezone)->startOfDay()))
-            ->when($to !== '', fn (Builder $query) => $query->where('recorded_at', '<=', Carbon::createFromFormat('!Y-m-d', $to, $timezone)->endOfDay()));
+            ->when($from !== '', fn (Builder $query) => $query->where('recorded_at', '>=', Carbon::createFromFormat('!Y-m-d', $from, $timezone)->startOfDay()->setTimezone((string) config('app.timezone'))))
+            ->when($to !== '', fn (Builder $query) => $query->where('recorded_at', '<=', Carbon::createFromFormat('!Y-m-d', $to, $timezone)->endOfDay()->setTimezone((string) config('app.timezone'))));
     }
 }
