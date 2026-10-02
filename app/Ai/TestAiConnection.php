@@ -60,6 +60,8 @@ class TestAiConnection
                 $agent,
                 'Connection test: reply with "ok".',
                 timeout: $agent->timeout(),
+                application: 'connection_test',
+                reservedTokens: $agent->maxTokens(),
             );
 
             return [

@@ -3,22 +3,32 @@
 namespace App\Ai;
 
 use App\Ai\Exceptions\AiNotConfiguredException;
+use App\Ai\Exceptions\AiQuotaExceededException;
 use App\Ai\Exceptions\ModelNotAllowedException;
 use App\Ai\Exceptions\UnsupportedCapabilityException;
+use App\Models\User;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Responses\AgentResponse;
+use Throwable;
 
 /**
  * Single entry point for AI requests.
  *
  * It enforces, server-side, that AI is enabled, the model is allowlisted and
  * the model declares every required capability before the provider is called.
+ * It also reserves local quota atomically and records consumption for every
+ * attempt, so a feature cannot bypass limits by calling the provider directly.
  * The provider and model are always passed explicitly, so the SDK never
  * switches to another provider or model without explicit configuration.
  */
 class AiGateway
 {
-    public function __construct(private readonly AiConfig $config) {}
+    public function __construct(
+        private readonly AiConfig $config,
+        private readonly AiQuota $quota,
+        private readonly RecordAiUsage $usage,
+        private readonly AiErrorCategorizer $categorizer,
+    ) {}
 
     /**
      * Whether the gateway is ready to serve requests, optionally for a model.
@@ -67,9 +77,11 @@ class AiGateway
     }
 
     /**
-     * Run a prompt through an agent, validated and without automatic failover.
+     * Run a prompt through an agent, validated, quota-controlled and recorded.
      *
      * @param  list<string>  $capabilities
+     *
+     * @throws AiQuotaExceededException when a local limit is reached before the call
      */
     public function prompt(
         Agent $agent,
@@ -77,14 +89,68 @@ class AiGateway
         ?string $model = null,
         array $capabilities = [],
         ?int $timeout = null,
+        ?string $application = null,
+        ?int $reservedTokens = null,
+        ?string $correlationId = null,
     ): AgentResponse {
         $resolved = $this->resolveModel($model, $capabilities);
 
-        return $agent->prompt(
-            $prompt,
-            provider: $this->config->provider(),
-            model: $resolved,
-            timeout: $timeout,
+        $application = $this->config->normalizeApplication($application);
+        $reservedTokens ??= $this->config->maxOutputTokens();
+        $correlationId ??= (string) str()->uuid();
+
+        $user = auth()->user();
+        $user = $user instanceof User ? $user : null;
+
+        try {
+            $reservation = $this->quota->reserve($user, $application, $reservedTokens, $correlationId);
+        } catch (AiQuotaExceededException $exception) {
+            $this->usage->blocked($correlationId, $user, $application, $resolved);
+
+            throw $exception;
+        }
+
+        $startedAt = microtime(true);
+
+        try {
+            $response = $agent->prompt(
+                $prompt,
+                provider: $this->config->provider(),
+                model: $resolved,
+                timeout: $timeout,
+            );
+        } catch (Throwable $exception) {
+            $this->quota->release($reservation);
+            $this->usage->failure(
+                $correlationId,
+                $user,
+                $application,
+                $resolved,
+                $this->elapsedMilliseconds($startedAt),
+                $this->categorizer->categorize($exception),
+            );
+
+            throw $exception;
+        }
+
+        $this->quota->reconcile($reservation, $response->usage->totalTokens());
+        $this->usage->success(
+            $correlationId,
+            $user,
+            $application,
+            $resolved,
+            $response,
+            $this->elapsedMilliseconds($startedAt),
         );
+
+        return $response;
+    }
+
+    /**
+     * Milliseconds elapsed since a start timestamp.
+     */
+    protected function elapsedMilliseconds(float $startedAt): int
+    {
+        return (int) round((microtime(true) - $startedAt) * 1000);
     }
 }
