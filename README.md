@@ -69,6 +69,14 @@ Se registran las altas por invitación, ediciones, cambios de rol, cambios admin
 
 Al desplegar, ejecutar `php artisan migrate --force` antes de servir el código nuevo. La migración permite borrar a quien emitió una invitación sin borrar la invitación. El historial comienza con la instalación de esta función: no reconstruye eventos anteriores, no tiene purga automática ni exportación. Quedan fuera el registro público, el perfil personal, accesos, seeders y cambios manuales de consola.
 
+## Centro de notificaciones
+
+La campana de las cabeceras abre `/notifications` para cualquier cuenta autenticada, incluso sin rol. El contador muestra los avisos pendientes y se actualiza al navegar o al marcar avisos como leídos; no hay actualización automática en segundo plano. La bandeja presenta los más recientes primero, diez por página, con fecha en la zona horaria de la cuenta. Abrirla no marca nada como leído. «Marcar todas como leídas» afecta también a las demás páginas.
+
+Aplicar `php artisan migrate --force` para crear la tabla estándar `notifications` antes de servir esta versión. Desde ese momento, un cambio administrativo efectivo de rol, incluida su retirada, genera un aviso dentro de la misma transacción que actualiza el usuario y registra la actividad. El aviso guarda los valores del rol anterior y nuevo, y los traduce cuando se consulta, por lo que sigue siendo legible al cambiar de idioma o al eliminar al administrador. No envía correo ni usa colas.
+
+Cada lectura y escritura de avisos se hace por las relaciones de la cuenta autenticada. Un ID ajeno o inexistente produce 404, también para `root`. Los tipos desconocidos muestran un texto genérico sin interpretar datos, HTML ni enlaces. Para añadir otro tipo interno, crear una clase `Notification` con canal `database`, guardar solo datos estables en `toDatabase()`, emitirla mediante `User::notify()` en la transacción del evento y añadir una rama explícita para traducirla en `App\Livewire\Notifications\Index::message()`. Si el tipo necesita un enlace en el futuro, comprobar la existencia del recurso y la autorización vigente al mostrarlo. No hay borrado, retención automática, filtros, preferencias de canales ni destinos genéricos.
+
 ## Suspensión de usuarios
 
 Root y administradores pueden suspender y reactivar usuarios desde **Usuarios**. Ambas acciones solicitan confirmación en un modal. La lista muestra el estado y permite filtrarlo junto con la búsqueda. También pueden gestionar otros administradores. Las cuentas root y la propia cuenta no se pueden suspender.

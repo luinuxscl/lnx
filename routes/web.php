@@ -8,6 +8,7 @@ use App\Livewire\Ai\Status as AiStatus;
 use App\Livewire\Ai\TextAssistantDemo as AiTextAssistantDemo;
 use App\Livewire\Ai\Usage as AiUsage;
 use App\Livewire\Dashboard;
+use App\Livewire\Notifications\Index as NotificationsIndex;
 use App\Livewire\Setup\Index as SetupIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,7 @@ Route::post('invitations/{invitation}/{token}', [AcceptInvitationController::cla
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', Dashboard::class)->name('dashboard');
+    Route::livewire('notifications', NotificationsIndex::class)->name('notifications.index');
 
     if (app()->environment(['local', 'testing']) && config('app.design_gallery_enabled')) {
         Route::view('design-gallery', 'design-gallery')
