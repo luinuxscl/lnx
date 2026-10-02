@@ -34,6 +34,9 @@
                         <flux:sidebar.item icon="clipboard-document-check" :href="route('admin.setup.index')" :current="request()->routeIs('admin.setup.*')" wire:navigate>
                             {{ __('Setup checklist') }}
                         </flux:sidebar.item>
+                        <flux:sidebar.item icon="sparkles" :href="route('admin.ai.index')" :current="request()->routeIs('admin.ai.*')" wire:navigate>
+                            {{ __('AI') }}
+                        </flux:sidebar.item>
 
                         <flux:sidebar.item icon="folder-git-2" href="https://github.com/luinuxscl/lnx" target="_blank">
                             {{ __('Repository') }}

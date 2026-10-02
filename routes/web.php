@@ -4,6 +4,7 @@ use App\Enums\Role;
 use App\Http\Controllers\AcceptInvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Livewire\Activity\Index as ActivityIndex;
+use App\Livewire\Ai\Status as AiStatus;
 use App\Livewire\Dashboard;
 use App\Livewire\Setup\Index as SetupIndex;
 use Illuminate\Support\Facades\Route;
@@ -36,3 +37,7 @@ Route::livewire('admin/activity', ActivityIndex::class)
 Route::livewire('admin/setup', SetupIndex::class)
     ->middleware(['auth', 'role:'.Role::Root->value])
     ->name('admin.setup.index');
+
+Route::livewire('admin/ai', AiStatus::class)
+    ->middleware(['auth', 'role:'.Role::Root->value])
+    ->name('admin.ai.index');

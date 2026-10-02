@@ -240,3 +240,34 @@ it('marks registration as verified and reflects the current mode', function () {
         ->assertSet('steps.registration.status', 'verified')
         ->assertSee('Solo invitaciones');
 });
+
+it('marks AI as pending while it is disabled', function () {
+    Livewire::actingAs(setupRoot())
+        ->test(SetupIndex::class)
+        ->assertSet('steps.ai.status', 'pending')
+        ->assertSet('steps.ai.enabled', false);
+});
+
+it('marks AI as verified with a key and an allowlisted model', function () {
+    config()->set('lnx_ai.enabled', true);
+    config()->set('lnx_ai.default_model', 'test/model');
+    config()->set('lnx_ai.allowed_models', ['test/model' => []]);
+    config()->set('ai.providers.openrouter.key', 'test-key');
+
+    Livewire::actingAs(setupRoot())
+        ->test(SetupIndex::class)
+        ->assertSet('steps.ai.status', 'verified')
+        ->assertSet('steps.ai.api_key_set', true)
+        ->assertSee('test/model');
+});
+
+it('marks AI as error when enabled but the model is not allowlisted', function () {
+    config()->set('lnx_ai.enabled', true);
+    config()->set('lnx_ai.default_model', 'not/allowed');
+    config()->set('lnx_ai.allowed_models', []);
+    config()->set('ai.providers.openrouter.key', 'test-key');
+
+    Livewire::actingAs(setupRoot())
+        ->test(SetupIndex::class)
+        ->assertSet('steps.ai.status', 'error');
+});

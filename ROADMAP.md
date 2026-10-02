@@ -6,14 +6,14 @@ Este documento conserva el orden global de trabajo. GitHub es la fuente del esta
 
 ## Próximo trabajo
 
-Comenzar por **#12** (base de IA con Laravel AI SDK y OpenRouter). #21 (MCP de lectura) quedó integrada en `develop` y `main`, y cerrada; su dependencia #18 ya estaba resuelta.
+Comenzar por **#13** (cuotas y consumo de IA). #12 (base de IA con Laravel AI SDK y OpenRouter) quedó integrada en `develop` y `main`, y cerrada, con verificación real contra OpenRouter. #21 (MCP de lectura) se cerró antes; su dependencia #18 ya estaba resuelta.
 
 ## Orden acordado
 
 | Etapa | Issues, en orden | Resultado y motivo | Esfuerzo relativo |
 | --- | --- | --- | --- |
 | 1. Conectar agentes con la aplicación | [#21 MCP de lectura](https://github.com/luinuxscl/lnx/issues/21) (cerrada) | Validar consultas autorizadas desde un cliente real. Dependencia #18 resuelta; no depende de consumir LLMs. | Alto |
-| 2. Entregar la primera función de IA | [#12 Integración](https://github.com/luinuxscl/lnx/issues/12) → [#13 Cuotas y consumo](https://github.com/luinuxscl/lnx/issues/13) → [#14 Asistente de texto](https://github.com/luinuxscl/lnx/issues/14) | Configurar OpenRouter, controlar consumo y mejorar, resumir o traducir con aceptación humana. Mantener esta secuencia como una entrega funcional completa. | Alto |
+| 2. Entregar la primera función de IA | [#12 Integración](https://github.com/luinuxscl/lnx/issues/12) (cerrada) → [#13 Cuotas y consumo](https://github.com/luinuxscl/lnx/issues/13) → [#14 Asistente de texto](https://github.com/luinuxscl/lnx/issues/14) | Configurar OpenRouter, controlar consumo y mejorar, resumir o traducir con aceptación humana. Mantener esta secuencia como una entrega funcional completa. | Alto |
 | 3. Mejorar la experiencia cotidiana | [#10 Preferencias](https://github.com/luinuxscl/lnx/issues/10) → [#9 Notificaciones](https://github.com/luinuxscl/lnx/issues/9) | Unificar idioma, fechas y apariencia antes de añadir la bandeja persistente. Es una conveniencia de implementación, no una dependencia obligatoria. | Medio |
 | 4. Consolidar procedimientos probados | [#22 Skills reutilizables](https://github.com/luinuxscl/lnx/issues/22) | Extraer procedimientos de entregas reales de funcionalidad, MCP y verificación. Sus dependencias #18–#21 están cerradas. | Medio |
 | 5. Llevar mejoras a proyectos derivados | [#23 Versionado y actualización](https://github.com/luinuxscl/lnx/issues/23) | Tras #22, validar actualizaciones, conflictos y reversión en un proyecto piloto autorizado antes de distribuir el núcleo. | Alto |
@@ -24,13 +24,14 @@ Comenzar por **#12** (base de IA con Laravel AI SDK y OpenRouter). #21 (MCP de l
 
 - #11 se integró y cerró tras resolver sus dependencias #4, #7 y #8. El resumen de consumo de IA se incorporará cuando exista #13.
 - #21 se integró y cerró: servidor MCP de lectura con transporte web, tokens revocables, autorización por policies y auditoría. Habilita el trabajo de #22 sin depender de consumir LLMs.
+- #12 se integró y cerró: base de IA con Laravel AI SDK y OpenRouter, allowlist de modelos con capacidades validada en servidor y prueba de conexión root sin exponer la clave. Habilita #13.
 - No habilitar funciones de IA para usuarios antes de disponer de los controles de #13.
 - No convertir la distribución del kit (#23) en requisito para implementar funcionalidades. Si un cliente necesita chat o documentos, se puede adelantar ese módulo respecto de #23 conservando sus dependencias.
 - #9 es una integración opcional para avisar del procesamiento de documentos; no bloquea #16.
 
 ## Estado de partida
 
-En la última revisión hay 11 issues abiertas: #9–#10, #12–#17, #22–#23 y #27. La mejora visual #27 está pendiente de priorización y no altera por ahora el próximo trabajo #12. Servidor MCP de lectura (#21), dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
+En la última revisión hay 10 issues abiertas: #9–#10, #13–#17, #22–#23 y #27. La mejora visual #27 está pendiente de priorización y no altera por ahora el próximo trabajo #13. Base de IA (#12), servidor MCP de lectura (#21), dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
 
 ## Mantenimiento
 

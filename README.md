@@ -236,16 +236,17 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 
 `root` y `admin` ven usuarios totales, activos (`suspended_at` nulo) y suspendidos (`suspended_at` presente). Los conteos incluyen **todas las cuentas**, también las de root y admin. Pueden abrir la lista completa, los filtros `status=active` y `status=suspended`, invitaciones y la creación de una invitación. Las invitaciones pendientes son las no aceptadas ni revocadas cuyo vencimiento es futuro, aunque haya fallado el envío; si no hay ninguna, el panel lo indica expresamente.
 
-Solo `root` ve el resumen compacto de las cuatro comprobaciones del checklist (verificadas, pendientes y con error), con accesos al checklist y a configuración general. `App\Actions\DiagnoseSetup` calcula los mismos estados para ambas pantallas. Al renderizar el panel root se comprueba el enlace público y se escribe, lee y elimina un archivo temporal en el disco `public`; los fallos muestran un estado de error recuperable. El envío del correo de prueba y su resultado persistido siguen gestionándose en el checklist. No hay sondeo periódico.
+Solo `root` ve el resumen compacto de las cinco comprobaciones del checklist (verificadas, pendientes y con error), con accesos al checklist y a configuración general. `App\Actions\DiagnoseSetup` calcula los mismos estados para ambas pantallas. Al renderizar el panel root se comprueba el enlace público y se escribe, lee y elimina un archivo temporal en el disco `public`; los fallos muestran un estado de error recuperable. El envío del correo de prueba y su resultado persistido siguen gestionándose en el checklist. No hay sondeo periódico.
 
 ## Checklist de puesta en marcha
 
-Vista en `/admin/setup` (`admin.setup.index`), accesible **solo para `root`** mediante el middleware `role:root` (`routes/web.php`). `App\Livewire\Setup\Index` muestra cuatro pasos para verificar que la instalación quedó utilizable:
+Vista en `/admin/setup` (`admin.setup.index`), accesible **solo para `root`** mediante el middleware `role:root` (`routes/web.php`). `App\Livewire\Setup\Index` muestra cinco pasos para verificar que la instalación quedó utilizable:
 
 1. **Identidad del sitio**: verificado cuando hay `site_title` y un `admin_email` con formato válido.
 2. **Correo de prueba**: botón que envía una notificación on-demand a `admin_email` (o al correo del root si no hay ninguno) y persiste el resultado en la fila `settings`. Limitado a cinco intentos por hora y por usuario; los fallos cuentan. Un éxito solo significa que el transporte aceptó el mensaje, nunca que llegó al buzón. Un fallo de transporte se registra con `report()` y jamás expone el mensaje de la excepción (puede filtrar credenciales).
 3. **Almacenamiento**: diagnóstico en vivo del enlace `public/storage` y de una escritura/lectura/borrado de prueba en el disco `public`; el archivo temporal se elimina siempre. Se puede re-ejecutar con «Re-check storage».
 4. **Modalidad de registro**: verificado cuando ya existe una fila persistida en `settings`, es decir, root guardó configuración al menos una vez.
+5. **IA**: pendiente mientras la integración está desactivada (una instalación nueva no tiene credenciales); verificado cuando está activada, hay clave y el modelo configurado figura en la lista permitida; con error cuando está activada pero mal configurada. Enlaza a `/admin/ai`.
 
 El estado de cada paso se recalcula al cargar la página desde el estado real del sistema; solo el resultado del correo de prueba se persiste (`test_email_sent_at`, `test_email_sent_to`, `test_email_failed_at` en `settings`). Si `admin_email` cambia desde el último envío exitoso, el paso vuelve a pendiente. En despliegue, la migración de esas columnas se aplica con `php artisan migrate --force`.
 
@@ -301,6 +302,48 @@ Las descripciones y mensajes de las herramientas van en inglés (consumidos por 
 - Usa credenciales distintas por entorno y revócalas al rotar. No reutilices el token de producción en desarrollo.
 - Prueba localmente con `php artisan mcp:inspector mcp` (usa un token real) o con el cliente MCP de tu agente apuntando a `POST` con `Authorization: Bearer <token>`; guarda la evidencia del caso real en el PR.
 
+## Integración de IA (Laravel AI SDK + OpenRouter)
+
+lnx integra el [Laravel AI SDK](https://laravel.com/framework/docs/13.x/ai-sdk) con **OpenRouter** como proveedor principal y una API key compartida del despliegue. No se usan claves directas de OpenAI, Anthropic o Google ni claves por usuario. La capa de aplicación vive en `app/Ai/` y `config/lnx_ai.php`.
+
+### Habilitación y configuración
+
+- La integración viene **desactivada**: `AI_ENABLED=false`. Mientras esté apagada ninguna función llama al proveedor y no se requiere credencial.
+- Variables (ver `config/lnx_ai.php`): `AI_ENABLED`, `AI_PROVIDER` (por defecto `openrouter`), `AI_MODEL`, `AI_TIMEOUT`, `AI_MAX_OUTPUT_TOKENS` y el bloque `AI_CONNECTION_TEST_*`.
+- La credencial se lee de `OPENROUTER_API_KEY` (config del SDK, `config/ai.php`). Nunca se muestra ni se envía al navegador; la UI solo indica si está configurada.
+- `AI_MODEL` debe estar además en la allowlist: `allowed_models` de `config/lnx_ai.php` o `AI_ALLOWED_MODELS` (JSON). Es una lista explícita de modelos con sus **capacidades** (`tools`, `structured`, `streaming`, `context`). No se fija ningún modelo comercial en el código: el despliegue declara los que usa.
+- No hay failover automático: `App\Ai\AiGateway` pasa siempre proveedor y modelo explícitos, así que el SDK nunca cambia de proveedor o modelo por su cuenta.
+
+### Activación en una instalación nueva
+
+1. `composer install` y arranca la app como siempre; todo funciona sin credenciales de IA.
+2. Declara el modelo en `config/lnx_ai.php` (`allowed_models`) o, sin tocar código, con `AI_ALLOWED_MODELS` (JSON). Ejemplo:
+
+   ```php
+   'allowed_models' => [
+       'vendor/model-id' => ['tools' => false, 'structured' => false, 'streaming' => true, 'context' => 128000],
+   ],
+   ```
+
+   ```dotenv
+   AI_ALLOWED_MODELS={"vendor/model-id":{"tools":false,"structured":false,"streaming":true,"context":128000}}
+   ```
+
+3. En `.env`: `AI_ENABLED=true`, `AI_MODEL=vendor/model-id` y `OPENROUTER_API_KEY=...`.
+4. Entra como `root` en **IA** (`/admin/ai`), revisa el estado y pulsa **Probar conexión**.
+
+### Estado y prueba de conexión
+
+`/admin/ai` (`admin.ai.index`) es exclusivo de `root`. Muestra proveedor, modelo, si la clave está configurada, límites y la lista permitida con sus capacidades, y permite lanzar **manualmente** una prueba de conexión limitada (timeout y salida acotados, limitada por frecuencia y por usuario). La prueba **nunca** se dispara al abrir la página y cada ejecución puede ser facturable. Los fallos se reducen a una categoría (autenticación, saldo/cuota, modelo incompatible, tiempo de espera, proveedor no disponible, límite de frecuencia) y se registran sin el mensaje de la excepción, para no filtrar secretos ni el cuerpo de la respuesta.
+
+### Validación y pruebas
+
+`App\Ai\AiConfig` valida en servidor que la IA esté activada, la credencial exista, el modelo esté permitido y declare las capacidades requeridas; `App\Ai\AiGateway` rechaza cualquier petición que no cumpla antes de llamar al proveedor. Las pruebas usan `ConnectionTestAgent::fake(...)` (respuestas simuladas) y no realizan llamadas externas.
+
+### Extender en un proyecto derivado
+
+Reutiliza `App\Ai\LnxAgent` como base de tus agentes (hereda proveedor, modelo, límite de salida y timeout de la configuración) y pasa por `App\Ai\AiGateway` para obtener validación y, más adelante, control de consumo. Añade tu modelo a `allowed_models` y cubre la acción nueva con pruebas de respuestas simuladas.
+
 ## Estrategia de ramas (Git Flow)
 
 - `main` — producción, siempre estable.
@@ -335,7 +378,7 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 
 Las reglas versionadas en `.ai/rules` expresan decisiones de lnx; las skills enseñan procedimientos; los comandos anteriores verifican el checkout y Boost es el servidor MCP disponible en la instalación de referencia. `boost.json`, `AGENTS.md`, `CLAUDE.md` y las copias de skills bajo carpetas de clientes son generados y están ignorados por Git. El núcleo del kit incluye los patrones de autorización, idioma, layout y tema; cada proyecto derivado decide su nombre, dominio, marca, contenido, credenciales, despliegue y cualquier regla local adicional.
 
-Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`), configuración global (`app/Livewire/Settings/`), checklist de puesta en marcha (`app/Livewire/Setup/`) y servidor MCP de lectura (`app/Mcp/`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
+Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`), configuración global (`app/Livewire/Settings/`), checklist de puesta en marcha (`app/Livewire/Setup/`), servidor MCP de lectura (`app/Mcp/`) y base de IA con OpenRouter (`app/Ai/`, `/admin/ai`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
 
 La instrucción explícita del usuario prevalece. Después se aplican las reglas del proyecto derivado para sus decisiones, las reglas de lnx para el núcleo que sigue usando y, finalmente, las recomendaciones de Boost y skills. Si dos instrucciones del mismo nivel chocan, detén solo la decisión afectada y pide una aclaración concreta; no escribas una regla nueva por inferencia. Las reglas permanentes se registran únicamente a petición explícita mediante `record-rule`.
 
@@ -362,9 +405,12 @@ La galería `/design-gallery` solo se registra en `local` y `testing`, tras aute
 ```
 app/Livewire/Settings/            Componentes de settings (incl. General de root)
 app/Mcp/                          Servidor MCP de lectura, herramientas y capacidades
+app/Ai/                           Base de IA (config, gateway, agentes, prueba de conexión)
+app/Livewire/Ai/                  Estado y prueba de conexión de IA (root)
 app/Livewire/Setup/               Checklist de puesta en marcha (root)
 app/Livewire/Users/               CRUD de usuarios (root/admin)
 app/Models/Setting.php            Configuración global cacheada (fila única)
+config/lnx_ai.php                 Configuración de IA (activación, modelo, allowlist, límites)
 app/Policies/                     Policies (UserPolicy, SettingPolicy)
 app/Http/Middleware/              SetLocale, ApplySiteSettings, CheckMaintenanceMode
 resources/views/layouts/          Layouts (app, auth)

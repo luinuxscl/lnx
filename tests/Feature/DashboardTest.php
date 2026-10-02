@@ -61,12 +61,12 @@ test('ordinary users see only their personal shortcuts and an escaped name', fun
         ->assertSee(route('security.edit'))
         ->assertDontSee('Usuarios totales')
         ->assertDontSee('Invitaciones pendientes')
-        ->assertDontSee('de 4 verificadas')
+        ->assertDontSee('de 5 verificadas')
         ->assertDontSee(route('admin.users.index'))
         ->assertDontSee(route('admin.setup.index'));
 
     $component = Livewire::actingAs($user)->test(Dashboard::class);
-    expect($component->html())->not->toContain('Usuarios totales', 'Invitaciones pendientes', 'de 4 verificadas');
+    expect($component->html())->not->toContain('Usuarios totales', 'Invitaciones pendientes', 'de 5 verificadas');
     expect(json_encode($component->effects))->not->toContain('userCounts', 'pendingInvitations', 'setup');
 });
 
@@ -92,7 +92,7 @@ test('admin sees all account counts and only actionable pending invitations', fu
         ->assertSee(route('admin.users.index', ['status' => 'suspended']))
         ->assertSee(route('admin.users.invitations'))
         ->assertSee(route('admin.users.create'))
-        ->assertDontSee('de 4 verificadas')
+        ->assertDontSee('de 5 verificadas')
         ->assertDontSee(route('admin.setup.index'))
         ->assertDontSee(route('admin.settings.edit'));
 
@@ -115,19 +115,23 @@ test('root sees pending setup checks without invented activity', function () {
     $this->app->bind(DiagnoseSetup::class, DashboardDiagnoseSetup::class);
 
     $this->actingAs($root)->get(route('dashboard'))
-        ->assertSee('1 de 4 verificadas')
-        ->assertSee('Pendientes: 3')
+        ->assertSee('1 de 5 verificadas')
+        ->assertSee('Pendientes: 4')
         ->assertSee('Con errores: 0');
 });
 
 test('root sees shared checklist summary and storage probe is cleaned', function () {
     $root = dashboardUser(Role::Root);
     Setting::factory()->create(['site_title' => 'Site', 'admin_email' => 'admin@example.com', 'test_email_sent_at' => now(), 'test_email_sent_to' => 'admin@example.com']);
+    config()->set('lnx_ai.enabled', true);
+    config()->set('lnx_ai.default_model', 'test/model');
+    config()->set('lnx_ai.allowed_models', ['test/model' => []]);
+    config()->set('ai.providers.openrouter.key', 'test-key');
     $this->app->bind(DiagnoseSetup::class, DashboardDiagnoseSetup::class);
 
     $response = $this->actingAs($root)->get(route('dashboard'));
 
-    $response->assertSee('4 de 4 verificadas')
+    $response->assertSee('5 de 5 verificadas')
         ->assertSee('Todas las comprobaciones están verificadas.')
         ->assertSee(route('admin.setup.index'))
         ->assertSee(route('admin.settings.edit'));
@@ -159,11 +163,11 @@ test('removing an admin role between Livewire requests hides admin data', functi
 
 test('removing root role between Livewire requests hides setup data', function () {
     $root = dashboardUser(Role::Root);
-    $component = Livewire::actingAs($root)->test(Dashboard::class)->assertSee('de 4 verificadas');
+    $component = Livewire::actingAs($root)->test(Dashboard::class)->assertSee('de 5 verificadas');
 
     $root->removeRole(Role::Root->value);
 
-    $component->call('$refresh')->assertDontSee('de 4 verificadas');
+    $component->call('$refresh')->assertDontSee('de 5 verificadas');
     expect(json_encode($component->effects))->not->toContain('setup');
 });
 
