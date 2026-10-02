@@ -65,6 +65,11 @@ class AppServiceProvider extends ServiceProvider
     protected function configureAuthorization(): void
     {
         Gate::before(fn (User $user, string $ability): ?bool => $user->hasRole(Role::Root) ? true : null);
+
+        // Extension point for the reusable text assistant. Derived projects
+        // define their own ability (a Gate or a policy ability) and pass it to
+        // the component; root bypasses this gate via Gate::before.
+        Gate::define('use-text-assistant', fn (User $user): bool => $user->hasRole(Role::Root));
     }
 
     /**
