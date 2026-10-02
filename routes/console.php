@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('mcp:prune-invocations')->daily();
+Schedule::command('ai:prune-usage')->daily();

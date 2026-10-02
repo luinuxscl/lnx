@@ -2,6 +2,7 @@
 
 namespace App\Ai;
 
+use App\Ai\Exceptions\AiQuotaExceededException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Laravel\Ai\Exceptions\InsufficientCreditsException;
@@ -34,11 +35,14 @@ class AiErrorCategorizer
 
     public const RATE_LIMITED = 'rate_limited';
 
+    public const LOCAL_QUOTA = 'quota';
+
     public const UNKNOWN = 'unknown';
 
     public function categorize(Throwable $exception): string
     {
         return match (true) {
+            $exception instanceof AiQuotaExceededException => self::LOCAL_QUOTA,
             $exception instanceof InsufficientCreditsException => self::CREDITS,
             $exception instanceof RateLimitedException => self::RATE_LIMITED,
             $exception instanceof ProviderOverloadedException => self::UNAVAILABLE,

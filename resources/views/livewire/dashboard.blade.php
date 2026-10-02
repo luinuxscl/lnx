@@ -67,6 +67,42 @@
         </section>
     @endif
 
+    @if ($aiUsage !== null)
+        <section aria-labelledby="dashboard-ai-heading">
+            <flux:card class="space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <flux:heading id="dashboard-ai-heading" level="2">{{ __('AI consumption this month') }}</flux:heading>
+                    <flux:button size="sm" :href="route('admin.ai.usage')" wire:navigate>{{ __('View consumption') }}</flux:button>
+                </div>
+                @if ($aiUsage['events'] === 0)
+                    <flux:text>{{ __('No AI consumption has been recorded this month.') }}</flux:text>
+                @else
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <div>
+                            <flux:text>{{ __('Attempts') }}</flux:text>
+                            <flux:heading level="3">{{ $aiUsage['events'] }}</flux:heading>
+                        </div>
+                        <div>
+                            <flux:text>{{ __('Tokens') }}</flux:text>
+                            <flux:heading level="3">{{ number_format($aiUsage['tokens']) }}</flux:heading>
+                        </div>
+                        <div>
+                            <flux:text>{{ __('Reported cost') }}</flux:text>
+                            <flux:heading level="3">{{ number_format($aiUsage['reported_cost'], 4) }} {{ $aiUsage['currency'] }}</flux:heading>
+                        </div>
+                        <div>
+                            <flux:text>{{ __('Estimated cost') }}</flux:text>
+                            <flux:heading level="3">{{ number_format($aiUsage['estimated_cost'], 4) }} {{ $aiUsage['currency'] }}</flux:heading>
+                        </div>
+                    </div>
+                    @if ($aiUsage['unknown_cost'] > 0 || $aiUsage['blocked'] > 0)
+                        <flux:text class="text-xs">{{ __('Unknown cost: :unknown · Blocked: :blocked', ['unknown' => $aiUsage['unknown_cost'], 'blocked' => $aiUsage['blocked']]) }}</flux:text>
+                    @endif
+                @endif
+            </flux:card>
+        </section>
+    @endif
+
     <section aria-labelledby="dashboard-account-heading" class="space-y-4">
         <flux:heading id="dashboard-account-heading" level="2">{{ __('Your account') }}</flux:heading>
         <div class="grid gap-4 sm:grid-cols-2">

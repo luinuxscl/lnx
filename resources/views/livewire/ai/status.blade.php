@@ -26,6 +26,7 @@
             'timeout' => __('Timeout'),
             'unavailable' => __('Provider unavailable'),
             'rate_limited' => __('Rate limited by the provider'),
+            'quota' => __('Local AI usage limit reached'),
             'unknown' => __('Unknown error'),
         ];
     @endphp
@@ -109,6 +110,48 @@
                     </table>
                 </div>
             @endif
+        </div>
+
+        <flux:separator />
+
+        {{-- Usage limits --}}
+        <div class="space-y-4 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <flux:heading level="2">{{ __('Usage limits') }}</flux:heading>
+                <flux:button size="sm" :href="route('admin.ai.usage')" wire:navigate icon="chart-bar">
+                    {{ __('View consumption') }}
+                </flux:button>
+            </div>
+            <flux:text>{{ __('Limits come from the environment and config/lnx_ai.php. A request must satisfy both the per-user and per-application limit before the provider is called.') }}</flux:text>
+
+            <div class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+                <table class="w-full text-sm">
+                    <thead class="bg-zinc-50 text-start dark:bg-zinc-800">
+                        <tr>
+                            <th class="px-4 py-2 text-start font-medium">{{ __('Scope') }}</th>
+                            <th class="px-4 py-2 text-start font-medium">{{ __('Window') }}</th>
+                            <th class="px-4 py-2 text-start font-medium">{{ __('Requests') }}</th>
+                            <th class="px-4 py-2 text-start font-medium">{{ __('Tokens') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-t border-zinc-200 dark:border-zinc-700">
+                            <td class="px-4 py-2">{{ __('Per user') }}</td>
+                            <td class="px-4 py-2">{{ $status['user_limit']['window'] }}</td>
+                            <td class="px-4 py-2">{{ $status['user_limit']['requests'] }}</td>
+                            <td class="px-4 py-2">{{ number_format($status['user_limit']['tokens']) }}</td>
+                        </tr>
+                        @foreach ($status['application_limits'] as $app => $limit)
+                            <tr wire:key="limit-{{ $app }}" class="border-t border-zinc-200 dark:border-zinc-700">
+                                <td class="px-4 py-2 font-mono text-xs">{{ $app }}</td>
+                                <td class="px-4 py-2">{{ $limit['window'] }}</td>
+                                <td class="px-4 py-2">{{ $limit['requests'] }}</td>
+                                <td class="px-4 py-2">{{ number_format($limit['tokens']) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <flux:separator />

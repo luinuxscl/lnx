@@ -20,6 +20,18 @@ class AiConfig
     public const CAPABILITIES = ['tools', 'structured', 'streaming', 'context'];
 
     /**
+     * Application key used when a feature does not declare one.
+     */
+    public const DEFAULT_APPLICATION = 'default';
+
+    /**
+     * Supported quota window units.
+     *
+     * @var list<string>
+     */
+    public const WINDOWS = ['minute', 'hour', 'day'];
+
+    /**
      * Whether AI features have been explicitly enabled.
      */
     public function enabled(): bool
@@ -163,6 +175,147 @@ class AiConfig
     }
 
     /**
+     * The per-user quota, normalized to a safe shape.
+     *
+     * @return array{window: string, requests: int, tokens: int}
+     */
+    public function userLimit(): array
+    {
+        return $this->normalizeLimit(config('lnx_ai.limits.user', []));
+    }
+
+    /**
+     * The quota for a feature, falling back to the default limit.
+     *
+     * @return array{window: string, requests: int, tokens: int}
+     */
+    public function applicationLimit(?string $application): array
+    {
+        $application = $this->normalizeApplication($application);
+
+        $limits = config('lnx_ai.limits.applications', []);
+        $limits = is_array($limits) ? $limits : [];
+
+        $limit = $limits[$application] ?? config('lnx_ai.limits.default', []);
+
+        return $this->normalizeLimit($limit);
+    }
+
+    /**
+     * Normalize an application key, using the default when none is given.
+     */
+    public function normalizeApplication(?string $application): string
+    {
+        $application = is_string($application) ? trim($application) : '';
+
+        return $application !== '' ? $application : self::DEFAULT_APPLICATION;
+    }
+
+    /**
+     * Normalize a raw limit definition into valid window, requests and tokens.
+     *
+     * @return array{window: string, requests: int, tokens: int}
+     */
+    protected function normalizeLimit(mixed $limit): array
+    {
+        $limit = is_array($limit) ? $limit : [];
+
+        $window = $limit['window'] ?? 'hour';
+        $window = is_string($window) && in_array($window, self::WINDOWS, true) ? $window : 'hour';
+
+        return [
+            'window' => $window,
+            'requests' => max(0, (int) ($limit['requests'] ?? 0)),
+            'tokens' => max(0, (int) ($limit['tokens'] ?? 0)),
+        ];
+    }
+
+    /**
+     * The declared cost rate for a model, or null when none is configured.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function pricingFor(?string $model): ?array
+    {
+        if ($model === null) {
+            return null;
+        }
+
+        $models = config('lnx_ai.pricing.models', []);
+        $models = is_array($models) ? $models : [];
+
+        $json = config('lnx_ai.pricing.models_json');
+
+        if (is_string($json) && trim($json) !== '') {
+            $decoded = json_decode($json, true);
+
+            if (is_array($decoded)) {
+                $models = array_replace($models, $decoded);
+            }
+        }
+
+        $rate = $models[$model] ?? null;
+
+        return is_array($rate) ? $rate : null;
+    }
+
+    /**
+     * Estimate a cost from configured rates, or null when none apply.
+     *
+     * @return array{amount: float, currency: string, version: string|null}|null
+     */
+    public function estimateCost(?string $model, int $inputTokens, int $outputTokens): ?array
+    {
+        $rate = $this->pricingFor($model);
+
+        if ($rate === null) {
+            return null;
+        }
+
+        $inputRate = $rate['input_per_million'] ?? null;
+        $outputRate = $rate['output_per_million'] ?? null;
+
+        if (! is_numeric($inputRate) || ! is_numeric($outputRate)) {
+            return null;
+        }
+
+        $amount = ($inputTokens / 1_000_000) * (float) $inputRate
+            + ($outputTokens / 1_000_000) * (float) $outputRate;
+
+        return [
+            'amount' => round($amount, 6),
+            'currency' => (string) config('lnx_ai.pricing.currency', 'USD'),
+            'version' => $this->pricingVersion(),
+        ];
+    }
+
+    /**
+     * The configured currency used to display estimated costs.
+     */
+    public function pricingCurrency(): string
+    {
+        $currency = config('lnx_ai.pricing.currency', 'USD');
+
+        return is_string($currency) && trim($currency) !== '' ? trim($currency) : 'USD';
+    }
+
+    /**
+     * The configured pricing version, falling back to its updated date.
+     */
+    public function pricingVersion(): ?string
+    {
+        $version = config('lnx_ai.pricing.version');
+
+        if (is_string($version) && trim($version) !== '') {
+            return trim($version);
+        }
+
+        $updatedAt = config('lnx_ai.pricing.updated_at');
+
+        return is_string($updatedAt) && trim($updatedAt) !== '' ? trim($updatedAt) : null;
+    }
+
+    /**
      * Whether AI is enabled, credentialed, and pointed at an allowed model.
      */
     public function isReady(?string $model = null): bool
@@ -228,8 +381,32 @@ class AiConfig
             'api_key_set' => $this->apiKeyPresent(),
             'timeout' => $this->timeout(),
             'max_output_tokens' => $this->maxOutputTokens(),
+            'user_limit' => $this->userLimit(),
+            'application_limits' => $this->applicationLimits(),
+            'pricing_version' => $this->pricingVersion(),
             'allowed_models' => $allowedModels,
             'issues' => $this->issues(),
         ];
+    }
+
+    /**
+     * Every configured application limit, keyed by application name.
+     *
+     * @return array<string, array{window: string, requests: int, tokens: int}>
+     */
+    public function applicationLimits(): array
+    {
+        $limits = config('lnx_ai.limits.applications', []);
+        $limits = is_array($limits) ? $limits : [];
+
+        $normalized = [];
+
+        foreach ($limits as $application => $limit) {
+            if (is_string($application) && $application !== '') {
+                $normalized[$application] = $this->normalizeLimit($limit);
+            }
+        }
+
+        return $normalized;
     }
 }

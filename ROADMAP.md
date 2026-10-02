@@ -6,7 +6,7 @@ Este documento conserva el orden global de trabajo. GitHub es la fuente del esta
 
 ## Próximo trabajo
 
-Comenzar por **#13** (cuotas y consumo de IA). #12 (base de IA con Laravel AI SDK y OpenRouter) quedó integrada en `develop` y `main`, y cerrada, con verificación real contra OpenRouter. #21 (MCP de lectura) se cerró antes; su dependencia #18 ya estaba resuelta.
+Comenzar por **#13** (cuotas y consumo de IA), implementada en la rama `feature/cuotas-consumo` y pendiente de integración. #12 (base de IA con Laravel AI SDK y OpenRouter) quedó integrada en `develop` y `main`, y cerrada, con verificación real contra OpenRouter. #21 (MCP de lectura) se cerró antes; su dependencia #18 ya estaba resuelta.
 
 ## Orden acordado
 
@@ -25,6 +25,7 @@ Comenzar por **#13** (cuotas y consumo de IA). #12 (base de IA con Laravel AI SD
 - #11 se integró y cerró tras resolver sus dependencias #4, #7 y #8. El resumen de consumo de IA se incorporará cuando exista #13.
 - #21 se integró y cerró: servidor MCP de lectura con transporte web, tokens revocables, autorización por policies y auditoría. Habilita el trabajo de #22 sin depender de consumir LLMs.
 - #12 se integró y cerró: base de IA con Laravel AI SDK y OpenRouter, allowlist de modelos con capacidades validada en servidor y prueba de conexión root sin exponer la clave. Habilita #13.
+- #13 (cuotas y consumo) está implementada en `feature/cuotas-consumo`: reserva atómica por usuario y aplicación, registro de consumo con coste reportado/estimado/desconocido, panel root en `/admin/ai/usage`, resumen en el dashboard y purga. Pendiente de revisión e integración; al integrarse habilitará #14.
 - No habilitar funciones de IA para usuarios antes de disponer de los controles de #13.
 - No convertir la distribución del kit (#23) en requisito para implementar funcionalidades. Si un cliente necesita chat o documentos, se puede adelantar ese módulo respecto de #23 conservando sus dependencias.
 - #9 es una integración opcional para avisar del procesamiento de documentos; no bloquea #16.
