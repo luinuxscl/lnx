@@ -8,6 +8,7 @@ use App\Concerns\ProfileValidationRules;
 use App\Enums\AdministrativeAction;
 use App\Enums\Role;
 use App\Models\User;
+use App\Notifications\RoleChanged;
 use Flux\Flux;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -88,6 +89,7 @@ class Edit extends Component
             $record->handle(auth()->user(), AdministrativeAction::UserUpdated, $user, $old, ['name' => $user->name, 'email' => $user->email]);
             if ($oldRole !== $newRole) {
                 $record->handle(auth()->user(), AdministrativeAction::UserRoleChanged, $user, ['role' => $oldRole], ['role' => $newRole]);
+                $user->notify(new RoleChanged($oldRole, $newRole));
             }
             if ($this->password !== '') {
                 $record->handle(auth()->user(), AdministrativeAction::UserPasswordChanged, $user);
