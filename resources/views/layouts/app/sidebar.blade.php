@@ -58,6 +58,7 @@
 
             <flux:spacer />
 
+            <livewire:notifications.bell />
             <livewire:locale-switcher />
 
             <flux:dropdown position="top" align="end">

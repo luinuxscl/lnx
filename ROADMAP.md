@@ -6,7 +6,7 @@ Este documento conserva el orden global de trabajo. GitHub es la fuente del esta
 
 ## Próximo trabajo
 
-Continuar con **#9** (centro de notificaciones persistentes), segunda de la etapa 3. #10 ya está cerrada, así que no hay dependencia pendiente entre ambas; #9 puede empezar directamente. Es una conveniencia de implementación, no una dependencia obligatoria.
+Integrar y validar **#9** (centro de notificaciones persistentes), segunda de la etapa 3. La implementación está en `feature/persistent-notifications`; la issue sigue abierta hasta revisar los criterios sobre la versión integrada.
 
 #14 (asistente de texto reutilizable con OpenRouter) se integró en `develop` y `main` y se cerró: agente y componente reutilizables con aceptación humana, límites y registro de consumo comunes, demo root activable y README con el ejemplo de integración. #10 (sincronizar idioma, zona horaria y apariencia por usuario) también se integró y cerró: preferencias por cuenta con validación en servidor, fechas y filtros en la zona del usuario, traducciones es/en, pruebas y README. #13 (cuotas y consumo de IA) y #12 (base de IA) siguen cerradas, junto con #21 (MCP de lectura).
 
@@ -30,13 +30,14 @@ Continuar con **#9** (centro de notificaciones persistentes), segunda de la etap
 - #13 se integró y cerró: cuotas por usuario y aplicación con reserva atómica antes de llamar al proveedor, registro de consumo con coste reportado/estimado/desconocido, panel root en `/admin/ai/usage`, resumen en el dashboard y purga `ai:prune-usage`. Habilitó #14.
 - #14 se integró y cerró: asistente de texto reutilizable (mejorar, resumir, traducir) sobre la capa de IA, con aceptación humana, límites y registro de consumo comunes, demo root activable en `/admin/ai/text-assistant` y README con el ejemplo de integración. Completa la primera entrega de IA y habilita la etapa 3.
 - #10 se integró y cerró: idioma, zona horaria, tema y modo guardados por cuenta y aplicados al iniciar sesión y al renderizar fechas, con validación en servidor, comportamiento local para visitantes y navegación Livewire estable. Habilita #9.
+- #9 está implementada en la rama `feature/persistent-notifications`: bandeja persistente y avisos de cambio efectivo de rol. Quedan la integración y la comprobación de sus criterios sobre `develop` antes de cerrar la issue.
 - Las funciones de IA ya pueden habilitarse para usuarios: los controles de #13 están disponibles.
 - No convertir la distribución del kit (#23) en requisito para implementar funcionalidades. Si un cliente necesita chat o documentos, se puede adelantar ese módulo respecto de #23 conservando sus dependencias.
-- #9 es una integración opcional para avisar del procesamiento de documentos; no bloquea #16.
+- #9 no bloquea #16; su primer evento es el cambio administrativo de rol, no el procesamiento de documentos.
 
 ## Estado de partida
 
-En la última revisión hay 7 issues abiertas: #9, #15–#17, #22–#23 y #27. La mejora visual #27 está pendiente de priorización y no altera por ahora el próximo trabajo #9. Preferencias por usuario (#10), asistente de texto (#14), cuotas y consumo de IA (#13), base de IA (#12), servidor MCP de lectura (#21), dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
+En la última revisión hay 7 issues abiertas: #9, #15–#17, #22–#23 y #27. #9 continúa abierta mientras su rama no se integre y se verifiquen sus criterios; la mejora visual #27 sigue pendiente de priorización. Preferencias por usuario (#10), asistente de texto (#14), cuotas y consumo de IA (#13), base de IA (#12), servidor MCP de lectura (#21), dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
 
 ## Mantenimiento
 

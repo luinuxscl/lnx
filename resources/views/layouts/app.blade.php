@@ -11,6 +11,8 @@
 
             <flux:spacer />
 
+            <livewire:notifications.bell />
+
             <flux:button
                 x-data
                 x-on:click="$flux.dark = ! $flux.dark"

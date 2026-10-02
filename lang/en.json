@@ -532,5 +532,17 @@
     "The AI request timed out. Your text is unchanged.": "The AI request timed out. Your text is unchanged.",
     "The AI provider is unavailable. Try again later.": "The AI provider is unavailable. Try again later.",
     "The configured AI model is not compatible. Your text is unchanged.": "The configured AI model is not compatible. Your text is unchanged.",
-    "The assistant could not process the text. Your text is unchanged.": "The assistant could not process the text. Your text is unchanged."
+    "The assistant could not process the text. Your text is unchanged.": "The assistant could not process the text. Your text is unchanged.",
+    "Mark all as read": "Mark all as read",
+    "Mark as read": "Mark as read",
+    "Mark notification as read": "Mark notification as read",
+    "Notifications": "Notifications",
+    "Notifications, :count unread": "Notifications, :count unread",
+    "Read": "Read",
+    "Unknown role": "Unknown role",
+    "Unread": "Unread",
+    "You have a new notification.": "You have a new notification.",
+    "You have no notifications yet.": "You have no notifications yet.",
+    "Your account notifications are saved here.": "Your account notifications are saved here.",
+    "Your role changed from :previous to :new.": "Your role changed from :previous to :new."
 }

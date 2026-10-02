@@ -532,5 +532,17 @@
     "The AI request timed out. Your text is unchanged.": "La solicitud de IA agotó el tiempo de espera. Tu texto no ha cambiado.",
     "The AI provider is unavailable. Try again later.": "El proveedor de IA no está disponible. Inténtalo de nuevo más tarde.",
     "The configured AI model is not compatible. Your text is unchanged.": "El modelo de IA configurado no es compatible. Tu texto no ha cambiado.",
-    "The assistant could not process the text. Your text is unchanged.": "El asistente no pudo procesar el texto. Tu texto no ha cambiado."
+    "The assistant could not process the text. Your text is unchanged.": "El asistente no pudo procesar el texto. Tu texto no ha cambiado.",
+    "Mark all as read": "Marcar todas como leídas",
+    "Mark as read": "Marcar como leída",
+    "Mark notification as read": "Marcar notificación como leída",
+    "Notifications": "Notificaciones",
+    "Notifications, :count unread": "Notificaciones, :count sin leer",
+    "Read": "Leída",
+    "Unknown role": "Rol desconocido",
+    "Unread": "Sin leer",
+    "You have a new notification.": "Tienes una nueva notificación.",
+    "You have no notifications yet.": "Aún no tienes notificaciones.",
+    "Your account notifications are saved here.": "Las notificaciones de tu cuenta se guardan aquí.",
+    "Your role changed from :previous to :new.": "Tu rol cambió de :previous a :new."
 }
