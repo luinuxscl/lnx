@@ -349,6 +349,8 @@
                 </div>
             @endif
         </section>
+
+        <livewire:settings.mcp-tokens />
     </x-settings.layout>
 
     @if ($canManageSessions)
