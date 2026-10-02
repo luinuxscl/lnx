@@ -7,21 +7,16 @@
 
         <div
             x-data="{
-                themes: @js([
-                    ['value' => 'orange', 'label' => __('Orange')],
-                    ['value' => 'teal', 'label' => __('Teal')],
-                    ['value' => 'rose', 'label' => __('Rose')],
-                    ['value' => 'violet', 'label' => __('Violet')],
-                    ['value' => 'blue', 'label' => __('Blue')],
-                    ['value' => 'emerald', 'label' => __('Emerald')],
-                ]),
-                theme: localStorage.getItem('flux.theme') ?? 'orange',
+                themes: @js(array_map(fn ($theme) => ['value' => $theme, 'label' => __(ucfirst($theme))], $themes)),
+                theme: @js($theme),
                 select(value) {
                     this.theme = value;
 
                     localStorage.setItem('flux.theme', value);
 
                     window.applyFluxTheme();
+
+                    $wire.saveTheme(value);
                 },
             }"
         >
@@ -55,10 +50,37 @@
         <flux:heading size="sm" class="mb-2">{{ __('Color scheme') }}</flux:heading>
         <flux:text class="mb-4">{{ __('Select between light, dark and system color schemes.') }}</flux:text>
 
-        <flux:radio.group x-data variant="segmented" x-model="$flux.appearance">
+        <flux:radio.group
+            x-data="{ hydrated: false }"
+            variant="segmented"
+            x-model="$flux.appearance"
+            x-effect="if (hydrated) { $wire.saveColorScheme($flux.appearance) } else { hydrated = true }"
+        >
             <flux:radio value="light" icon="sun">{{ __('Light') }}</flux:radio>
             <flux:radio value="dark" icon="moon">{{ __('Dark') }}</flux:radio>
             <flux:radio value="system" icon="computer-desktop">{{ __('System') }}</flux:radio>
         </flux:radio.group>
+
+        <flux:separator class="my-6" />
+
+        <flux:heading size="sm" class="mb-2">{{ __('Language') }}</flux:heading>
+        <flux:text class="mb-4">{{ __('Select the language used throughout the application.') }}</flux:text>
+
+        <flux:select wire:model.live="locale" :aria-label="__('Language')">
+            @foreach (config('app.available_locales') as $code => $label)
+                <flux:select.option value="{{ $code }}">{{ $label }}</flux:select.option>
+            @endforeach
+        </flux:select>
+
+        <flux:separator class="my-6" />
+
+        <flux:heading size="sm" class="mb-2">{{ __('Time zone') }}</flux:heading>
+        <flux:text class="mb-4">{{ __('Select the time zone used to display dates.') }}</flux:text>
+
+        <flux:select wire:model.live="timezone" :aria-label="__('Time zone')">
+            @foreach ($timezones as $timezone)
+                <flux:select.option value="{{ $timezone }}">{{ $timezone }}</flux:select.option>
+            @endforeach
+        </flux:select>
     </x-settings.layout>
 </section>

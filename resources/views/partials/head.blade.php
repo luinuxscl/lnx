@@ -31,6 +31,26 @@
 @fonts
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+@auth
+    @php
+        $accountTheme = auth()->user()->theme;
+        $accountColorScheme = auth()->user()->color_scheme;
+    @endphp
+
+    @if (in_array($accountTheme, \App\Support\Appearance::THEMES, true))
+        <script>
+            window.localStorage.setItem('flux.theme', @json($accountTheme));
+        </script>
+    @endif
+
+    @if (in_array($accountColorScheme, \App\Support\Appearance::COLOR_SCHEMES, true))
+        <script>
+            window.localStorage.setItem('flux.appearance', @json($accountColorScheme));
+        </script>
+    @endif
+@endauth
+
 @fluxAppearance
 
 <script>

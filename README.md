@@ -63,7 +63,7 @@ php artisan serve
 
 ## Historial de actividad administrativa
 
-La página **Actividad administrativa** (`/admin/activity`) está disponible exclusivamente para `root`. Muestra actor, fecha, acción y recurso, permite desplegar valores anteriores/nuevos y combina filtros por actor histórico, acción y días desde/hasta. Los filtros se conservan en la URL; la página muestra 10 registros por vez. Las fechas se interpretan en `config('app.timezone')` (UTC por defecto) y abarcan los días completos.
+La página **Actividad administrativa** (`/admin/activity`) está disponible exclusivamente para `root`. Muestra actor, fecha, acción y recurso, permite desplegar valores anteriores/nuevos y combina filtros por actor histórico, acción y días desde/hasta. Los filtros se conservan en la URL; la página muestra 10 registros por vez. Las fechas se presentan y los filtros de días se interpretan en la zona horaria del usuario autenticado (`users.timezone`); sin preferencia se usa `config('app.timezone')` (UTC por defecto) y abarcan los días completos.
 
 Se registran las altas por invitación, ediciones, cambios de rol, cambios administrativos de contraseña (solo el hecho), eliminaciones, suspensiones y reactivaciones de usuarios; cambios de configuración e imágenes; y creación, renovación, revocación, aceptación y resultado de envío de invitaciones. Los registros conservan identificadores y copias del nombre y correo del actor y recurso aunque se eliminen. La aceptación se atribuye al destinatario y el alta queda vinculada con su invitación. El historial no contiene contraseñas, hashes de tokens, enlaces de aceptación, secretos 2FA, credenciales de passkeys ni excepciones; para imágenes solo conserva rutas relativas.
 
@@ -101,7 +101,9 @@ La función requiere `SESSION_DRIVER=database`; con otros drivers se muestra un 
 La aplicación soporta selección de tema (color de acento) y modo claro/oscuro/sistema desde **Settings → Appearance**:
 
 - **Colores de acento**: Naranja (por defecto), Teal, Rosa, Violeta, Azul, Esmeralda.
-- **Modo**: Light, Dark, System (persistido por navegador en `localStorage`).
+- **Modo**: Light, Dark, System.
+
+Ambas preferencias se guardan en la cuenta y en `localStorage`, de modo que siguen al usuario entre dispositivos. Los visitantes conservan solo el valor local del navegador.
 
 ### Cómo funciona
 
@@ -111,7 +113,22 @@ La aplicación soporta selección de tema (color de acento) y modo claro/oscuro/
 - El modo claro/oscuro lo gestiona Flux vía `localStorage['flux.appearance']`.
 - Tras cada navegación SPA (`wire:navigate`), el tema y el modo claro/oscuro se re-aplican al escuchar `livewire:navigated` en `resources/views/partials/head.blade.php`. Esto evita que el servidor (que renderiza `class="dark"`) elimine las clases `theme-{color}` cuando sustituye los atributos del elemento `<html>` durante la navegación.
 
-Para añadir un nuevo color de acento: agrega la entrada en el arreglo `themes` de `resources/views/livewire/settings/appearance.blade.php` y define `.theme-{color}` (+ `.dark.theme-{color}`) en `resources/css/app.css`.
+Para añadir un nuevo color de acento: agrega el valor en la constante `App\Support\Appearance::THEMES` y define `.theme-{color}` (+ `.dark.theme-{color}`) en `resources/css/app.css`.
+
+## Preferencias por usuario (idioma, zona horaria y apariencia)
+
+Cada cuenta guarda su idioma (`locale`), zona horaria (`timezone`), tema (`theme`) y modo claro/oscuro/sistema (`color_scheme`) en columnas **nullable** de `users`. Se editan en **Settings → Appearance**, donde el servidor valida cada valor: el idioma debe estar en `config('app.available_locales')`, el tema en `App\Support\Appearance::THEMES`, el modo en `App\Support\Appearance::COLOR_SCHEMES` y la zona debe ser un identificador IANA válido (regla `timezone` de Laravel, opciones desde `DateTimeZone::listIdentifiers()`).
+
+### Cómo se sincroniza
+
+- **Al iniciar sesión y en cada carga autenticada**, `resources/views/partials/head.blade.php` siembra `localStorage['flux.theme']` y `localStorage['flux.appearance']` desde la cuenta antes de que Flux aplique el tema, de modo que las preferencias de la cuenta prevalecen sobre valores antiguos del navegador.
+- **Idioma**: `SetLocale` usa primero `users.locale`; el `LocaleSwitcher` y `LocaleController` lo persisten en la cuenta cuando hay sesión iniciada. Los invitados mantienen el idioma de sesión.
+- **Modo sistema**: se guarda como `color_scheme = 'system'` y Flux sigue el esquema del dispositivo actual.
+- **Zona horaria**: no cambia el almacenamiento (los timestamps siguen en UTC/app tz). Solo afecta la presentación de fechas y los límites de los filtros por día; el helper es `App\Support\Appearance::currentTimezone()`, que cae a `config('app.timezone')` cuando no hay preferencia.
+- **Navegación Livewire**: el tema y el idioma se re-aplican en `livewire:navigated` desde el mismo partial.
+- Las páginas de ajustes mantienen la autorización existente (`auth` + `verified`); no se introducen permisos nuevos.
+
+Al desplegar, aplicar la migración `add_preferences_to_users_table` con `php artisan migrate --force`.
 
 ## Layout de la aplicación
 
@@ -132,7 +149,7 @@ Los avatares se guardan en el disco `public` (`storage/app/public/avatars`). La 
 
 ## Localización (i18n)
 
-La aplicación es bilingüe: **español (por defecto)** e **inglés**. El idioma se guarda en la sesión y se aplica en cada request mediante `App\Http\Middleware\SetLocale`.
+La aplicación es bilingüe: **español (por defecto)** e **inglés**. Los visitantes guardan el idioma en la sesión; los usuarios autenticados lo guardan además en su cuenta. Se aplica en cada request mediante `App\Http\Middleware\SetLocale`, que da prioridad al idioma de la cuenta sobre la sesión.
 
 ### Configuración
 

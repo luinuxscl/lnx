@@ -97,7 +97,7 @@
                         };
                     @endphp
                     <tr wire:key="ai-usage-{{ $event->id }}" class="border-t border-zinc-200 dark:border-zinc-700">
-                        <td class="whitespace-nowrap px-3 py-2">{{ $event->recorded_at->timezone(config('app.timezone'))->format('Y-m-d H:i:s') }}</td>
+                        <td class="whitespace-nowrap px-3 py-2">{{ $event->recorded_at->timezone(\App\Support\Appearance::currentTimezone())->format('Y-m-d H:i:s') }}</td>
                         <td class="px-3 py-2">
                             {{ $event->user_name ?? __('Unknown user') }}
                             @if ($event->user_id !== null)
