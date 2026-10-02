@@ -67,6 +67,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Environment allowlist
+    |--------------------------------------------------------------------------
+    |
+    | Optional JSON object merged over the allowlist above, so a deployment can
+    | declare its models without editing this file. Format:
+    | {"vendor/model-id":{"tools":false,"structured":false,"streaming":true,"context":128000}}
+    |
+    */
+
+    'allowed_models_json' => env('AI_ALLOWED_MODELS'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Request limits
     |--------------------------------------------------------------------------
     |

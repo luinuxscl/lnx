@@ -311,18 +311,22 @@ lnx integra el [Laravel AI SDK](https://laravel.com/framework/docs/13.x/ai-sdk) 
 - La integración viene **desactivada**: `AI_ENABLED=false`. Mientras esté apagada ninguna función llama al proveedor y no se requiere credencial.
 - Variables (ver `config/lnx_ai.php`): `AI_ENABLED`, `AI_PROVIDER` (por defecto `openrouter`), `AI_MODEL`, `AI_TIMEOUT`, `AI_MAX_OUTPUT_TOKENS` y el bloque `AI_CONNECTION_TEST_*`.
 - La credencial se lee de `OPENROUTER_API_KEY` (config del SDK, `config/ai.php`). Nunca se muestra ni se envía al navegador; la UI solo indica si está configurada.
-- `AI_MODEL` debe estar además en `allowed_models` de `config/lnx_ai.php`. Es una lista explícita de modelos con sus **capacidades** (`tools`, `structured`, `streaming`, `context`). No se fija ningún modelo comercial en el código: el despliegue declara los que usa.
+- `AI_MODEL` debe estar además en la allowlist: `allowed_models` de `config/lnx_ai.php` o `AI_ALLOWED_MODELS` (JSON). Es una lista explícita de modelos con sus **capacidades** (`tools`, `structured`, `streaming`, `context`). No se fija ningún modelo comercial en el código: el despliegue declara los que usa.
 - No hay failover automático: `App\Ai\AiGateway` pasa siempre proveedor y modelo explícitos, así que el SDK nunca cambia de proveedor o modelo por su cuenta.
 
 ### Activación en una instalación nueva
 
 1. `composer install` y arranca la app como siempre; todo funciona sin credenciales de IA.
-2. Añade a `config/lnx_ai.php` el modelo que vayas a usar:
+2. Declara el modelo en `config/lnx_ai.php` (`allowed_models`) o, sin tocar código, con `AI_ALLOWED_MODELS` (JSON). Ejemplo:
 
    ```php
    'allowed_models' => [
        'vendor/model-id' => ['tools' => false, 'structured' => false, 'streaming' => true, 'context' => 128000],
    ],
+   ```
+
+   ```dotenv
+   AI_ALLOWED_MODELS={"vendor/model-id":{"tools":false,"structured":false,"streaming":true,"context":128000}}
    ```
 
 3. En `.env`: `AI_ENABLED=true`, `AI_MODEL=vendor/model-id` y `OPENROUTER_API_KEY=...`.

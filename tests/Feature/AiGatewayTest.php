@@ -40,3 +40,14 @@ it('resolves an allowed model that declares the required capabilities', function
 
     expect(app(AiGateway::class)->resolveModel('test/model', ['tools']))->toBe('test/model');
 });
+
+it('resolves a model declared through the environment allowlist', function () {
+    config()->set('lnx_ai.enabled', true);
+    config()->set('lnx_ai.default_model', 'test/model');
+    config()->set('lnx_ai.allowed_models', []);
+    config()->set('lnx_ai.allowed_models_json', '{"test/model":{"tools":false,"streaming":true}}');
+    config()->set('ai.providers.openrouter.key', 'test-key');
+
+    expect(app(AiGateway::class)->resolveModel('test/model'))->toBe('test/model')
+        ->and(app(AiGateway::class)->resolveModel('test/model', ['streaming']))->toBe('test/model');
+});

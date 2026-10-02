@@ -85,8 +85,19 @@ class AiConfig
     public function allowedModels(): array
     {
         $models = config('lnx_ai.allowed_models', []);
+        $models = is_array($models) ? $models : [];
 
-        return is_array($models) ? $models : [];
+        $json = config('lnx_ai.allowed_models_json');
+
+        if (is_string($json) && trim($json) !== '') {
+            $decoded = json_decode($json, true);
+
+            if (is_array($decoded)) {
+                $models = array_replace($models, $decoded);
+            }
+        }
+
+        return $models;
     }
 
     /**
