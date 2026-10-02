@@ -145,5 +145,39 @@
                 </flux:button>
             </div>
         </div>
+
+        <flux:separator />
+
+        {{-- Step 5: AI --}}
+        <div class="space-y-4 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+            <div class="flex items-start justify-between gap-4">
+                <flux:heading level="2">{{ __('AI') }}</flux:heading>
+                @php $aiBadge = $badge($steps['ai']['status']); @endphp
+                <flux:badge :color="$aiBadge['color']" :icon="$aiBadge['icon']">{{ $aiBadge['label'] }}</flux:badge>
+            </div>
+
+            <flux:text>{{ __('AI features use OpenRouter. They stay disabled until configured, and the API key is never shown.') }}</flux:text>
+
+            <dl class="grid gap-2 text-sm sm:grid-cols-2">
+                <div>
+                    <dt class="font-medium text-zinc-500 dark:text-zinc-400">{{ __('Provider') }}</dt>
+                    <dd>{{ $steps['ai']['provider'] }}</dd>
+                </div>
+                <div>
+                    <dt class="font-medium text-zinc-500 dark:text-zinc-400">{{ __('Default model') }}</dt>
+                    <dd>{{ $steps['ai']['model'] ?: __('Not set') }}</dd>
+                </div>
+                <div>
+                    <dt class="font-medium text-zinc-500 dark:text-zinc-400">{{ __('API key') }}</dt>
+                    <dd>{{ $steps['ai']['api_key_set'] ? __('Set') : __('Not set') }}</dd>
+                </div>
+            </dl>
+
+            <div class="flex flex-wrap gap-2">
+                <flux:button :href="route('admin.ai.index')" wire:navigate icon="sparkles">
+                    {{ __('Open AI settings') }}
+                </flux:button>
+            </div>
+        </div>
     </div>
 </section>

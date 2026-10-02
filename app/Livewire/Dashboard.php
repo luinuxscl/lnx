@@ -43,6 +43,7 @@ class Dashboard extends Component
         if ($canViewSetup) {
             $steps = app(DiagnoseSetup::class)->handle($user);
             $setup = [
+                'total' => count($steps),
                 'verified' => count(array_filter($steps, fn (array $step): bool => $step['status'] === 'verified')),
                 'pending' => count(array_filter($steps, fn (array $step): bool => $step['status'] === 'pending')),
                 'error' => count(array_filter($steps, fn (array $step): bool => $step['status'] === 'error')),
