@@ -29,7 +29,7 @@ Comenzar por **#21** (MCP de lectura). #11 quedó integrada en `develop` y cerra
 
 ## Estado de partida
 
-En la última revisión hay 11 issues abiertas: #9–#10, #12–#17 y #21–#23. Dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
+En la última revisión hay 12 issues abiertas: #9–#10, #12–#17, #21–#23 y #27. La mejora visual #27 está pendiente de priorización y no altera por ahora el próximo trabajo #21. Dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
 
 ## Mantenimiento
 
