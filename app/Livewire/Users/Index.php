@@ -4,6 +4,7 @@ namespace App\Livewire\Users;
 
 use App\Actions\ReactivateUser;
 use App\Actions\RecordAdministrativeActivity;
+use App\Actions\SearchUsers;
 use App\Actions\SuspendUser;
 use App\Enums\AdministrativeAction;
 use App\Enums\Role;
@@ -56,7 +57,7 @@ class Index extends Component
 
     private function normalizeStatus(): void
     {
-        if (! in_array($this->status, ['all', 'active', 'suspended'], true)) {
+        if (! in_array($this->status, SearchUsers::STATUSES, true)) {
             $this->status = 'all';
         }
     }
@@ -144,18 +145,7 @@ class Index extends Component
         $this->authorize('viewAny', User::class);
         $this->normalizeStatus();
 
-        $users = User::query()
-            ->with('roles')
-            ->when($this->status === 'active', fn ($query) => $query->whereNull('suspended_at'))
-            ->when($this->status === 'suspended', fn ($query) => $query->whereNotNull('suspended_at'))
-            ->when(
-                $this->search !== '',
-                fn ($query) => $query->where(fn ($query) => $query
-                    ->where('name', 'like', "%{$this->search}%")
-                    ->orWhere('email', 'like', "%{$this->search}%")),
-            )
-            ->orderBy('name')
-            ->paginate(10);
+        $users = app(SearchUsers::class)->handle($this->search, $this->status);
 
         return view('livewire.users.index', ['users' => $users])
             ->layout('layouts.app', [

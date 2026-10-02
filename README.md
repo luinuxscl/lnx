@@ -249,6 +249,58 @@ Vista en `/admin/setup` (`admin.setup.index`), accesible **solo para `root`** me
 
 El estado de cada paso se recalcula al cargar la página desde el estado real del sistema; solo el resultado del correo de prueba se persiste (`test_email_sent_at`, `test_email_sent_to`, `test_email_failed_at` en `settings`). Si `admin_email` cambia desde el último envío exitoso, el paso vuelve a pendiente. En despliegue, la migración de esas columnas se aplica con `php artisan migrate --force`.
 
+## Servidor MCP (lectura)
+
+lnx expone un servidor [Laravel MCP](https://laravel.com/docs/mcp) de **solo lectura** para que agentes externos consulten la aplicación con operaciones estables y autorizadas. No traslada herramientas de consola, base de datos ni acceso a archivos: no expone ejecución de PHP/SQL/shell ni lectura genérica de ficheros. El piloto cubre cuatro capacidades y no permite escrituras.
+
+### Habilitación y transporte
+
+- El servidor viene **desactivado**: `MCP_SERVER_ENABLED=false`. Mientras esté apagado, la ruta responde `404` y ninguna credencial sirve.
+- Al activarlo se sirve un transporte **web** en `POST /{MCP_SERVER_PATH}` (por defecto `/mcp`). Las rutas MCP no usan el grupo `web`: no hay sesión ni CSRF, solo el token.
+- Variables (ver `config/mcp_server.php`): `MCP_SERVER_ENABLED`, `MCP_SERVER_PATH`, `MCP_SERVER_PER_PAGE`, `MCP_SERVER_MAX_PER_PAGE`, `MCP_SERVER_RATE_LIMIT`, `MCP_SERVER_AUDIT_RETENTION_DAYS`, `MCP_SERVER_TOKEN_EXPIRES_DAYS`.
+- Se registra además `routes/ai.php`, cargado automáticamente por el paquete `laravel/mcp`.
+
+### Autenticación y credenciales
+
+Cada conexión se autentica con un **token Bearer propio, revocable y ligado a un usuario**:
+
+- Se crean y revocan en **Ajustes → Seguridad → MCP access tokens**. El texto plano se muestra una sola vez; en la base solo se guarda `sha256`.
+- Ausencia de token, token inválido, revocado o vencido → `401`. Cuenta suspendida → `403`. El servidor comprueba el estado en **cada** invocación, no solo al conectar.
+- La expiración es opcional (`MCP_SERVER_TOKEN_EXPIRES_DAYS`); sin valor, el token vive hasta revocarse.
+- Límite de frecuencia por identidad (`MCP_SERVER_RATE_LIMIT` por minuto) → `429` con `Retry-After`.
+- No se admite el transporte `stdio` local: no ofrece identidad por conexión ni revocación.
+
+### Capacidades y autorización
+
+Las reglas vigentes (policies) se reutilizan en servidor en el descubrimiento y en cada consulta, así que una herramienta no autorizada ni siquiera aparece:
+
+| Herramienta | Rol | Contenido |
+| --- | --- | --- |
+| `list-capabilities` | cualquiera autenticado | Capacidades disponibles para el actor. |
+| `get-public-configuration` | `root` | Lista blanca explícita de configuración no sensible (identidad, idioma, zona horaria, registro, mantenimiento). Nunca secretos ni valores de entorno. |
+| `search-users` | `root`/`admin` | Búsqueda de usuarios por nombre/correo y estado, con paginación (sin contraseñas, 2FA ni tokens). |
+| `get-administrative-activity` | `root` | Historial administrativo con filtros y paginación. |
+
+### Auditoría y retención
+
+Cada invocación registra en `mcp_tool_invocations` actor (con copia de nombre/correo), herramienta, fecha, resultado (`success`/`denied`/`invalid`/`unauthenticated`) y un `correlation_id` (también devuelto en la cabecera `X-Correlation-Id`). Se guarda solo contexto estructural no sensible (paginación, estado, fechas); **nunca** el texto libre de búsqueda ni el contenido de la respuesta. La retención se controla con `MCP_SERVER_AUDIT_RETENTION_DAYS` y la purga `php artisan mcp:prune-invocations`, programada a diario.
+
+### Añadir una herramienta
+
+1. Crea la clase en `app/Mcp/Tools` extendiendo `App\Mcp\Tools\ReadOnlyTool` (ya aplica `#[IsReadOnly]`).
+2. Define `authorize(User $user)` reutilizando una policy (`$user->can('viewAny', Modelo::class)`), `perform(Request $request)` con `Response::structured(...)`, y `shouldRegister(Request $request)` con la misma comprobación para el descubrimiento.
+3. Añade `schema()`/`outputSchema()`, `#[Name('...')]` y `#[Description('...')]`, y valida argumentos con `$request->validate(...)`.
+4. Regístrala en `App\Mcp\Servers\LnxServer::$tools` y descríbela en `App\Mcp\Capabilities` si debe aparecer en el descubrimiento.
+5. Reutiliza acciones/policies existentes para no duplicar ni debilitar validaciones, y añade tests de acceso permitido/denegado, contratos y auditoría.
+
+Las descripciones y mensajes de las herramientas van en inglés (consumidos por el agente); la UI y los mensajes de error de la aplicación siguen siendo bilingües.
+
+### Desarrollo y producción
+
+- Mantén el servidor **apagado por defecto** y actívalo solo donde deba operar; en producción exige HTTPS para que el token no viaje en claro.
+- Usa credenciales distintas por entorno y revócalas al rotar. No reutilices el token de producción en desarrollo.
+- Prueba localmente con `php artisan mcp:inspector mcp` (usa un token real) o con el cliente MCP de tu agente apuntando a `POST` con `Authorization: Bearer <token>`; guarda la evidencia del caso real en el PR.
+
 ## Estrategia de ramas (Git Flow)
 
 - `main` — producción, siempre estable.
@@ -278,12 +330,12 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 | Reglas por ruta | `.ai/rules/index.md`, luego los archivos indicados |
 | Skills propias | `.ai/skills/`; Boost las distribuye a los clientes configurados |
 | Skills de paquetes instalados | `php artisan boost:list-skills --no-interaction`; pueden variar por instalación |
-| MCP | `php artisan boost:mcp` (Laravel Boost) cuando el cliente lo configure; no presupone plugins personales |
+| MCP | Laravel Boost (`php artisan boost:mcp`) cuando el cliente lo configure; el servidor de aplicación de lectura se documenta en **Servidor MCP (lectura)** y no presupone plugins personales |
 | Verificación | `php artisan test --compact`, `vendor/bin/pint --dirty --format agent`, `composer types:check`, `npm run build`, `python3 scripts/check-agent-context.py` |
 
 Las reglas versionadas en `.ai/rules` expresan decisiones de lnx; las skills enseñan procedimientos; los comandos anteriores verifican el checkout y Boost es el servidor MCP disponible en la instalación de referencia. `boost.json`, `AGENTS.md`, `CLAUDE.md` y las copias de skills bajo carpetas de clientes son generados y están ignorados por Git. El núcleo del kit incluye los patrones de autorización, idioma, layout y tema; cada proyecto derivado decide su nombre, dominio, marca, contenido, credenciales, despliegue y cualquier regla local adicional.
 
-Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`), configuración global (`app/Livewire/Settings/`) y checklist de puesta en marcha (`app/Livewire/Setup/`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
+Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`), configuración global (`app/Livewire/Settings/`), checklist de puesta en marcha (`app/Livewire/Setup/`) y servidor MCP de lectura (`app/Mcp/`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
 
 La instrucción explícita del usuario prevalece. Después se aplican las reglas del proyecto derivado para sus decisiones, las reglas de lnx para el núcleo que sigue usando y, finalmente, las recomendaciones de Boost y skills. Si dos instrucciones del mismo nivel chocan, detén solo la decisión afectada y pide una aclaración concreta; no escribas una regla nueva por inferencia. Las reglas permanentes se registran únicamente a petición explícita mediante `record-rule`.
 
@@ -309,6 +361,7 @@ La galería `/design-gallery` solo se registra en `local` y `testing`, tras aute
 
 ```
 app/Livewire/Settings/            Componentes de settings (incl. General de root)
+app/Mcp/                          Servidor MCP de lectura, herramientas y capacidades
 app/Livewire/Setup/               Checklist de puesta en marcha (root)
 app/Livewire/Users/               CRUD de usuarios (root/admin)
 app/Models/Setting.php            Configuración global cacheada (fila única)
