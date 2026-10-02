@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Ai\AiConfig;
 use App\Enums\Role;
 use App\Models\Setting;
 use App\Models\User;
@@ -22,6 +23,7 @@ class DiagnoseSetup
             'email' => $this->diagnoseEmail($user),
             'storage' => $this->diagnoseStorage($user),
             'registration' => $this->diagnoseRegistration(),
+            'ai' => $this->diagnoseAi(),
         ];
     }
 
@@ -109,6 +111,41 @@ class DiagnoseSetup
             'status' => $configured ? 'verified' : 'pending',
             'configured' => $configured,
             'mode' => $settings->registration_mode ?? 'open',
+        ];
+    }
+
+    /**
+     * Diagnose the AI configuration step.
+     *
+     * A disabled integration is pending, not an error: a fresh install has no
+     * AI credentials. Once enabled, missing credentials or an unlisted model
+     * are errors until configured.
+     *
+     * @return array<string, mixed>
+     */
+    protected function diagnoseAi(): array
+    {
+        $config = app(AiConfig::class);
+        $issues = $config->issues();
+        $ready = $config->isReady();
+
+        $status = match (true) {
+            $ready => 'verified',
+            ! $config->enabled() => 'pending',
+            in_array('missing_api_key', $issues, true),
+            in_array('provider_not_configured', $issues, true),
+            in_array('missing_model', $issues, true) => 'pending',
+            default => 'error',
+        };
+
+        return [
+            'status' => $status,
+            'ready' => $ready,
+            'enabled' => $config->enabled(),
+            'provider' => $config->providerName(),
+            'model' => $config->defaultModel(),
+            'api_key_set' => $config->apiKeyPresent(),
+            'issues' => $issues,
         ];
     }
 

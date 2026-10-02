@@ -47,11 +47,11 @@
             <flux:card class="space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-4">
                     <flux:heading id="dashboard-setup-heading" level="2">{{ __('Setup checklist') }}</flux:heading>
-                    <flux:badge :color="$setup['verified'] === 4 ? 'green' : ($setup['error'] > 0 ? 'red' : 'amber')">
-                        {{ __(':count of 4 verified', ['count' => $setup['verified']]) }}
+                    <flux:badge :color="$setup['verified'] === $setup['total'] ? 'green' : ($setup['error'] > 0 ? 'red' : 'amber')">
+                        {{ __(':count of :total verified', ['count' => $setup['verified'], 'total' => $setup['total']]) }}
                     </flux:badge>
                 </div>
-                @if ($setup['verified'] === 4)
+                @if ($setup['verified'] === $setup['total'])
                     <flux:text>{{ __('All setup checks are verified.') }}</flux:text>
                 @else
                     <div class="flex flex-wrap gap-4">
