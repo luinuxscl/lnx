@@ -352,8 +352,9 @@ Reutiliza `App\Ai\LnxAgent` como base de tus agentes (hereda proveedor, modelo, 
 
 - Cada petición debe cumplir **dos dimensiones**: el límite **por usuario** (`limits.user`) y el límite de la **aplicación/función** (`limits.applications`, con `limits.default` como respaldo).
 - Cada límite declara `window` (`minute`, `hour` o `day`), `requests` y `tokens`. Un valor `0` desactiva esa métrica. Las ventanas son fijas (inicio de minuto/hora/día), no deslizantes.
-- Variables (ver `config/lnx_ai.php` y `.env.example`): `AI_USER_LIMIT_*`, `AI_DEFAULT_LIMIT_*` y `AI_CONNECTION_TEST_LIMIT_*`. No hay límites fijos en el código.
+- Variables (ver `config/lnx_ai.php` y `.env.example`): `AI_USER_LIMIT_*`, `AI_DEFAULT_LIMIT_*`, `AI_CONNECTION_TEST_LIMIT_*` y `AI_TEXT_ASSISTANT_LIMIT_*`. No hay límites fijos en el código.
 - La prueba de conexión (#12) es la aplicación `connection_test` y tiene sus propios límites; además conserva su límite de frecuencia por minuto.
+- El asistente de texto (#14) es la aplicación `text_assistant` y tiene sus propios límites.
 
 ### Reserva atómica y reconciliación
 
@@ -386,6 +387,35 @@ Cada intento se guarda en `ai_usage_events` con actor (id y copia de nombre/corr
 ### Verificación
 
 Las pruebas usan `ConnectionTestAgent::fake(...)` y respuestas simuladas, sin llamadas externas, y cubren bloqueo por límite, concurrencia de la reserva, reconciliación en éxito y fallo, coste reportado/estimado/desconocido, autorización del panel y purga.
+
+## Asistente de texto (mejorar, resumir, traducir)
+
+El kit incluye un asistente de texto reutilizable construido sobre la capa de IA. El usuario autorizado elige **mejorar**, **resumir** o **traducir** (con idioma de destino), genera una propuesta y decide aceptarla o descartarla. La generación nunca guarda: el cambio llega al formulario solo al aceptar y descartar conserva el texto original.
+
+### Uso en un formulario
+
+El componente es un Livewire anidado que se enlaza con `wire:model` a una propiedad del componente contenedor. Solo envía el texto enlazado, la acción y el idioma: **nunca lee otros campos del formulario**.
+
+```blade
+<livewire:ai.text-assistant wire:model="description" ability="use-text-assistant" />
+```
+
+- **Autorización**: `ability` es una habilidad de `Gate` que define el proyecto. El kit declara `use-text-assistant` como solo `root`; los proyectos derivados pueden pasar su propia habilidad (Gate o policy) para abrirlo a otros roles o usuarios. `root` la omite vía `Gate::before`. La comprobación se repite en servidor al generar, aceptar y renderizar.
+- **Aceptar y descartar**: aceptar escribe la propuesta en la propiedad enlazada (el formulario la recibe); descartar conserva el texto. La generación no persiste nada por sí sola.
+- **Límites y seguridad**: el servidor valida tamaño de entrada, acción e idioma, y limita la salida con `max_output_tokens`. La salida se renderiza como texto escapado, sin ejecutar HTML. Editar el texto o cambiar de acción/idioma invalida una propuesta pendiente, y las respuestas tardías o repetidas no sobrescriben una edición posterior.
+- **Errores**: si falta configuración, se alcanza un límite local o el proveedor falla, se muestra el motivo por categoría y el texto original permanece intacto.
+
+Cada llamada usa la aplicación `text_assistant`, así que aplican la allowlist, el control de cuota y el registro de consumo comunes. Nunca se registra el texto ni el prompt.
+
+### Activación y configuración
+
+- Variables (ver `config/lnx_ai.php`): `AI_TEXT_ASSISTANT_TIMEOUT`, `AI_TEXT_ASSISTANT_MAX_OUTPUT_TOKENS`, `AI_TEXT_ASSISTANT_MAX_INPUT_CHARS` y `AI_TEXT_ASSISTANT_LIMIT_*` para los límites propios de la función.
+- Los idiomas de destino se declaran en `text_assistant.languages` (por defecto `es` y `en`).
+- La pantalla de demostración se habilita con `AI_TEXT_ASSISTANT_DEMO_ENABLED=true` y queda disponible, solo para `root`, en `/admin/ai/text-assistant` (enlazada desde `/admin/ai`). Usa un campo de prueba y no toca datos de negocio.
+
+### Extender en un proyecto derivado
+
+Define tu habilidad (por ejemplo una policy) y pásala en `ability`; coloca `<livewire:ai.text-assistant wire:model="tuCampo" ability="tu-habilidad" />` donde estaba tu campo de texto. El componente reutiliza `App\Ai\Agents\TextAssistantAgent` y `App\Ai\TextAssistant`; para variantes nuevas declara su propia aplicación y límites y pásalos al gateway.
 
 ## Estrategia de ramas (Git Flow)
 
@@ -421,7 +451,7 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 
 Las reglas versionadas en `.ai/rules` expresan decisiones de lnx; las skills enseñan procedimientos; los comandos anteriores verifican el checkout y Boost es el servidor MCP disponible en la instalación de referencia. `boost.json`, `AGENTS.md`, `CLAUDE.md` y las copias de skills bajo carpetas de clientes son generados y están ignorados por Git. El núcleo del kit incluye los patrones de autorización, idioma, layout y tema; cada proyecto derivado decide su nombre, dominio, marca, contenido, credenciales, despliegue y cualquier regla local adicional.
 
-Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`), configuración global (`app/Livewire/Settings/`), checklist de puesta en marcha (`app/Livewire/Setup/`), servidor MCP de lectura (`app/Mcp/`) y base de IA con OpenRouter (`app/Ai/`, `/admin/ai`, `/admin/ai/usage`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
+Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`), configuración global (`app/Livewire/Settings/`), checklist de puesta en marcha (`app/Livewire/Setup/`), servidor MCP de lectura (`app/Mcp/`) y base de IA con OpenRouter (`app/Ai/`, `/admin/ai`, `/admin/ai/usage`, asistente de texto `app/Livewire/Ai/TextAssistant.php`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
 
 La instrucción explícita del usuario prevalece. Después se aplican las reglas del proyecto derivado para sus decisiones, las reglas de lnx para el núcleo que sigue usando y, finalmente, las recomendaciones de Boost y skills. Si dos instrucciones del mismo nivel chocan, detén solo la decisión afectada y pide una aclaración concreta; no escribas una regla nueva por inferencia. Las reglas permanentes se registran únicamente a petición explícita mediante `record-rule`.
 
@@ -449,7 +479,10 @@ La galería `/design-gallery` solo se registra en `local` y `testing`, tras aute
 app/Livewire/Settings/            Componentes de settings (incl. General de root)
 app/Mcp/                          Servidor MCP de lectura, herramientas y capacidades
 app/Ai/                           Base de IA (config, gateway, cuota, registro de consumo, agentes)
-app/Livewire/Ai/                  Estado, prueba de conexión y panel de consumo de IA (root)
+app/Ai/Agents/TextAssistantAgent.php  Agente del asistente de texto
+app/Ai/TextAssistant.php          Asistente de texto (validación, prompt y resultado seguro)
+app/Livewire/Ai/                  Estado, prueba de conexión, panel de consumo y asistente de texto (root)
+app/Livewire/Ai/TextAssistantDemo.php  Pantalla de demostración del asistente (root, activable)
 app/Livewire/Setup/               Checklist de puesta en marcha (root)
 app/Livewire/Users/               CRUD de usuarios (root/admin)
 app/Models/Setting.php            Configuración global cacheada (fila única)

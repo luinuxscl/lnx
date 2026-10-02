@@ -5,6 +5,7 @@ use App\Http\Controllers\AcceptInvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Livewire\Activity\Index as ActivityIndex;
 use App\Livewire\Ai\Status as AiStatus;
+use App\Livewire\Ai\TextAssistantDemo as AiTextAssistantDemo;
 use App\Livewire\Ai\Usage as AiUsage;
 use App\Livewire\Dashboard;
 use App\Livewire\Setup\Index as SetupIndex;
@@ -46,3 +47,9 @@ Route::livewire('admin/ai', AiStatus::class)
 Route::livewire('admin/ai/usage', AiUsage::class)
     ->middleware(['auth', 'role:'.Role::Root->value])
     ->name('admin.ai.usage');
+
+if (config('lnx_ai.text_assistant.demo_enabled')) {
+    Route::livewire('admin/ai/text-assistant', AiTextAssistantDemo::class)
+        ->middleware(['auth', 'role:'.Role::Root->value])
+        ->name('admin.ai.text-assistant');
+}
