@@ -2,6 +2,14 @@
     <flux:heading level="1">{{ __('AI') }}</flux:heading>
     <flux:text class="mt-1">{{ __('Configure and check the OpenRouter integration used by AI features.') }}</flux:text>
 
+    @if (config('lnx_ai.text_assistant.demo_enabled'))
+        <div class="mt-4">
+            <flux:button size="sm" :href="route('admin.ai.text-assistant')" wire:navigate icon="sparkles">
+                {{ __('Open text assistant demo') }}
+            </flux:button>
+        </div>
+    @endif
+
     @php
         $status = $status;
         $badge = fn (bool $ready, bool $enabled): array => match (true) {

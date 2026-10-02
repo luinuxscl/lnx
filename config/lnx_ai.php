@@ -111,6 +111,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Text assistant
+    |--------------------------------------------------------------------------
+    |
+    | Limits for the reusable text assistant (improve, summarize, translate).
+    | Input size, output size and timeout are capped independently so a single
+    | request stays bounded. Only the explicitly provided text is sent; the
+    | component never forwards other form fields. The demo screen is opt-in.
+    |
+    */
+
+    'text_assistant' => [
+        'timeout' => (int) env('AI_TEXT_ASSISTANT_TIMEOUT', 30),
+        'max_output_tokens' => (int) env('AI_TEXT_ASSISTANT_MAX_OUTPUT_TOKENS', 1200),
+        'max_input_chars' => (int) env('AI_TEXT_ASSISTANT_MAX_INPUT_CHARS', 8000),
+        'languages' => ['es', 'en'],
+        'demo_enabled' => (bool) env('AI_TEXT_ASSISTANT_DEMO_ENABLED', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Usage limits
     |--------------------------------------------------------------------------
     |
@@ -148,6 +168,12 @@ return [
                 'window' => (string) env('AI_CONNECTION_TEST_LIMIT_WINDOW', 'hour'),
                 'requests' => (int) env('AI_CONNECTION_TEST_LIMIT_REQUESTS', 5),
                 'tokens' => (int) env('AI_CONNECTION_TEST_LIMIT_TOKENS', 2000),
+            ],
+
+            'text_assistant' => [
+                'window' => (string) env('AI_TEXT_ASSISTANT_LIMIT_WINDOW', 'hour'),
+                'requests' => (int) env('AI_TEXT_ASSISTANT_LIMIT_REQUESTS', 30),
+                'tokens' => (int) env('AI_TEXT_ASSISTANT_LIMIT_TOKENS', 100000),
             ],
         ],
     ],

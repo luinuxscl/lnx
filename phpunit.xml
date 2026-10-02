@@ -23,6 +23,7 @@
         <env name="AI_ENABLED" value="false"/>
         <env name="AI_MODEL" value=""/>
         <env name="AI_ALLOWED_MODELS" value=""/>
+        <env name="AI_TEXT_ASSISTANT_DEMO_ENABLED" value="true"/>
         <env name="OPENROUTER_API_KEY" value=""/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
