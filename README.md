@@ -342,7 +342,50 @@ lnx integra el [Laravel AI SDK](https://laravel.com/framework/docs/13.x/ai-sdk) 
 
 ### Extender en un proyecto derivado
 
-Reutiliza `App\Ai\LnxAgent` como base de tus agentes (hereda proveedor, modelo, límite de salida y timeout de la configuración) y pasa por `App\Ai\AiGateway` para obtener validación y, más adelante, control de consumo. Añade tu modelo a `allowed_models` y cubre la acción nueva con pruebas de respuestas simuladas.
+Reutiliza `App\Ai\LnxAgent` como base de tus agentes (hereda proveedor, modelo, límite de salida y timeout de la configuración) y pasa siempre por `App\Ai\AiGateway`: aplica la validación y, desde #13, el **control de cuota y el registro de consumo**. Declara tu función como una `application` (por ejemplo `text_assistant`) para que tenga sus propios límites y aparezca en el panel. Añade tu modelo a `allowed_models` y cubre la acción nueva con pruebas de respuestas simuladas.
+
+## Cuotas y consumo de IA
+
+`App\Ai\AiGateway` es el único punto por el que pasan las funciones de IA, y desde ahí se aplican los **límites locales** y se registra el **consumo**. Nada se envía al proveedor sin superar antes la reserva de cuota.
+
+### Límites
+
+- Cada petición debe cumplir **dos dimensiones**: el límite **por usuario** (`limits.user`) y el límite de la **aplicación/función** (`limits.applications`, con `limits.default` como respaldo).
+- Cada límite declara `window` (`minute`, `hour` o `day`), `requests` y `tokens`. Un valor `0` desactiva esa métrica. Las ventanas son fijas (inicio de minuto/hora/día), no deslizantes.
+- Variables (ver `config/lnx_ai.php` y `.env.example`): `AI_USER_LIMIT_*`, `AI_DEFAULT_LIMIT_*` y `AI_CONNECTION_TEST_LIMIT_*`. No hay límites fijos en el código.
+- La prueba de conexión (#12) es la aplicación `connection_test` y tiene sus propios límites; además conserva su límite de frecuencia por minuto.
+
+### Reserva atómica y reconciliación
+
+Antes de llamar al proveedor, `App\Ai\AiQuota` reserva **una solicitud y el máximo de tokens de salida** en la tabla `ai_quota_counters` dentro de una transacción con la fila bloqueada, de modo que peticiones concurrentes no pueden superar un límite en el borde de la ventana. Al responder el proveedor:
+
+- **Éxito**: se libera la reserva y se suman los tokens reales (`input + output`) al contador de consumo.
+- **Fallo o consumo desconocido**: se libera la reserva, pero el intento queda registrado y cuenta como solicitud, porque pudo generar consumo. Así un fallo no bloquea peticiones posteriores y los reintentos no multiplican el límite.
+
+La reserva usa el máximo de salida porque el consumo real se conoce solo después de la llamada; el contador de tokens combina consumo real más reservas en vuelo. Los límites locales **no** garantizan un tope exacto en la factura de OpenRouter.
+
+### Registro de consumo
+
+Cada intento se guarda en `ai_usage_events` con actor (id y copia de nombre/correo), aplicación/función, proveedor, modelo solicitado y efectivo, tokens, duración, estado, categoría de error y `correlation_id`. Los intentos que comparten `correlation_id` forman una **única petición lógica**: los reintentos se numeran por `attempt` y no duplican el registro lógico. Nunca se guardan credenciales ni el contenido de los prompts.
+
+### Coste
+
+- **Reportado**: OpenRouter informa `usage.cost` en la respuesta; se guarda tal cual (USD).
+- **Estimado**: si no hay coste reportado pero el despliegue declara tarifas en `pricing.models` (con `pricing.version`/`pricing.updated_at` y `pricing.currency`), se estima a partir de los tokens y se registra la moneda y la versión de tarifas aplicada.
+- **Desconocido**: sin coste reportado ni tarifas, el coste queda **vacío**, nunca cero. Una estimación nunca se presenta como factura.
+
+### Panel y dashboard
+
+- **Consumo de IA** (`/admin/ai/usage`, `admin.ai.usage`) es exclusivo de `root` y está separado del historial administrativo. Permite filtrar por período, usuario, función, modelo y estado, y muestra solicitudes, tokens, coste reportado, estimado y desconocido. Se enlaza desde `/admin/ai`.
+- El dashboard de `root` muestra un resumen del **mes en curso** con enlace al panel, sin duplicar sus datos.
+
+### Retención
+
+`AI_USAGE_RETENTION_DAYS` (por defecto 90) controla la retención. El comando `ai:prune-usage`, programado a diario, elimina los registros más antiguos; `0` desactiva la purga.
+
+### Verificación
+
+Las pruebas usan `ConnectionTestAgent::fake(...)` y respuestas simuladas, sin llamadas externas, y cubren bloqueo por límite, concurrencia de la reserva, reconciliación en éxito y fallo, coste reportado/estimado/desconocido, autorización del panel y purga.
 
 ## Estrategia de ramas (Git Flow)
 
@@ -378,7 +421,7 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 
 Las reglas versionadas en `.ai/rules` expresan decisiones de lnx; las skills enseñan procedimientos; los comandos anteriores verifican el checkout y Boost es el servidor MCP disponible en la instalación de referencia. `boost.json`, `AGENTS.md`, `CLAUDE.md` y las copias de skills bajo carpetas de clientes son generados y están ignorados por Git. El núcleo del kit incluye los patrones de autorización, idioma, layout y tema; cada proyecto derivado decide su nombre, dominio, marca, contenido, credenciales, despliegue y cualquier regla local adicional.
 
-Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`), configuración global (`app/Livewire/Settings/`), checklist de puesta en marcha (`app/Livewire/Setup/`), servidor MCP de lectura (`app/Mcp/`) y base de IA con OpenRouter (`app/Ai/`, `/admin/ai`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
+Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`), configuración global (`app/Livewire/Settings/`), checklist de puesta en marcha (`app/Livewire/Setup/`), servidor MCP de lectura (`app/Mcp/`) y base de IA con OpenRouter (`app/Ai/`, `/admin/ai`, `/admin/ai/usage`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
 
 La instrucción explícita del usuario prevalece. Después se aplican las reglas del proyecto derivado para sus decisiones, las reglas de lnx para el núcleo que sigue usando y, finalmente, las recomendaciones de Boost y skills. Si dos instrucciones del mismo nivel chocan, detén solo la decisión afectada y pide una aclaración concreta; no escribas una regla nueva por inferencia. Las reglas permanentes se registran únicamente a petición explícita mediante `record-rule`.
 
@@ -405,12 +448,14 @@ La galería `/design-gallery` solo se registra en `local` y `testing`, tras aute
 ```
 app/Livewire/Settings/            Componentes de settings (incl. General de root)
 app/Mcp/                          Servidor MCP de lectura, herramientas y capacidades
-app/Ai/                           Base de IA (config, gateway, agentes, prueba de conexión)
-app/Livewire/Ai/                  Estado y prueba de conexión de IA (root)
+app/Ai/                           Base de IA (config, gateway, cuota, registro de consumo, agentes)
+app/Livewire/Ai/                  Estado, prueba de conexión y panel de consumo de IA (root)
 app/Livewire/Setup/               Checklist de puesta en marcha (root)
 app/Livewire/Users/               CRUD de usuarios (root/admin)
 app/Models/Setting.php            Configuración global cacheada (fila única)
-config/lnx_ai.php                 Configuración de IA (activación, modelo, allowlist, límites)
+app/Models/AiUsageEvent.php       Registro de consumo de IA (un intento por fila)
+app/Models/AiQuotaCounter.php     Contadores de cuota por ventana (reserva atómica)
+config/lnx_ai.php                 Configuración de IA (activación, modelo, allowlist, límites, tarifas)
 app/Policies/                     Policies (UserPolicy, SettingPolicy)
 app/Http/Middleware/              SetLocale, ApplySiteSettings, CheckMaintenanceMode
 resources/views/layouts/          Layouts (app, auth)

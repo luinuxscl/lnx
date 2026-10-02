@@ -109,4 +109,88 @@ return [
         'per_minute' => (int) env('AI_CONNECTION_TEST_RATE_LIMIT', 5),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Usage limits
+    |--------------------------------------------------------------------------
+    |
+    | Quotas enforced before any provider call. Every request must satisfy
+    | both dimensions: the per-user limit and the per-application limit. Each
+    | limit declares a sliding-window unit (minute, hour or day) and a maximum
+    | number of requests and tokens inside that window.
+    |
+    | "applications" are the AI features of the kit (for example
+    | connection_test or a future text_assistant). A feature without an
+    | explicit entry falls back to "default". A limit of 0 disables that
+    | dimension. No limit is pinned in code: a deployment declares its own.
+    |
+    | Tokens are reserved before the call using the maximum output size, then
+    | reconciled with the actual usage once the provider reports it, so
+    | concurrent requests cannot slip past the limit.
+    |
+    */
+
+    'limits' => [
+        'user' => [
+            'window' => (string) env('AI_USER_LIMIT_WINDOW', 'hour'),
+            'requests' => (int) env('AI_USER_LIMIT_REQUESTS', 60),
+            'tokens' => (int) env('AI_USER_LIMIT_TOKENS', 200000),
+        ],
+
+        'default' => [
+            'window' => (string) env('AI_DEFAULT_LIMIT_WINDOW', 'hour'),
+            'requests' => (int) env('AI_DEFAULT_LIMIT_REQUESTS', 60),
+            'tokens' => (int) env('AI_DEFAULT_LIMIT_TOKENS', 200000),
+        ],
+
+        'applications' => [
+            'connection_test' => [
+                'window' => (string) env('AI_CONNECTION_TEST_LIMIT_WINDOW', 'hour'),
+                'requests' => (int) env('AI_CONNECTION_TEST_LIMIT_REQUESTS', 5),
+                'tokens' => (int) env('AI_CONNECTION_TEST_LIMIT_TOKENS', 2000),
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cost estimation
+    |--------------------------------------------------------------------------
+    |
+    | Optional rates used only to estimate a cost when the provider does not
+    | report one. Rates are never pinned in code: a deployment declares them
+    | (by environment or in the array below) together with a version/date and
+    | a currency, and both are recorded on every estimated row. A missing rate
+    | means the cost stays unknown, never zero.
+    |
+    | Format (rates are per one million tokens):
+    | 'vendor/model-id' => ['input_per_million' => 3, 'output_per_million' => 15],
+    |
+    */
+
+    'pricing' => [
+        'version' => env('AI_PRICING_VERSION'),
+        'updated_at' => env('AI_PRICING_UPDATED_AT'),
+        'currency' => (string) env('AI_PRICING_CURRENCY', 'USD'),
+        'models' => [
+            //
+        ],
+        'models_json' => env('AI_PRICING_MODELS'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Usage record retention
+    |--------------------------------------------------------------------------
+    |
+    | Number of days AI consumption records are retained. Older rows are
+    | removed by the ai:prune-usage command, scheduled daily. Set 0 to keep
+    | records indefinitely.
+    |
+    */
+
+    'usage' => [
+        'retention_days' => (int) env('AI_USAGE_RETENTION_DAYS', 90),
+    ],
+
 ];
