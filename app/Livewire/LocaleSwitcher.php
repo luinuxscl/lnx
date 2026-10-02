@@ -2,7 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Models\User;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class LocaleSwitcher extends Component
@@ -19,6 +21,9 @@ class LocaleSwitcher extends Component
 
     /**
      * Persist the selected locale and refresh the current page in real time.
+     *
+     * Authenticated users also store the choice on their account so it follows
+     * them across devices; guests keep the session-only behavior.
      */
     public function setLocale(string $locale): void
     {
@@ -27,6 +32,12 @@ class LocaleSwitcher extends Component
         }
 
         session(['locale' => $locale]);
+
+        $user = Auth::user();
+
+        if ($user instanceof User) {
+            $user->update(['locale' => $locale]);
+        }
 
         App::setLocale($locale);
 

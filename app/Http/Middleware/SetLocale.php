@@ -10,19 +10,26 @@ use Symfony\Component\HttpFoundation\Response;
 class SetLocale
 {
     /**
-     * Set the application locale from the session for the current request.
+     * Set the application locale for the current request.
+     *
+     * Authenticated users follow the locale stored on their account, so their
+     * choice travels across devices. Guests keep the session preference.
      *
      * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = $request->session()->get('locale');
+        $available = array_keys((array) config('app.available_locales'));
 
-        if (! is_string($locale) || ! array_key_exists($locale, config('app.available_locales'))) {
-            $locale = config('app.locale');
-        }
+        $candidates = [
+            $request->user()?->locale,
+            $request->session()->get('locale'),
+        ];
 
-        App::setLocale($locale);
+        $locale = collect($candidates)
+            ->first(fn ($candidate) => is_string($candidate) && in_array($candidate, $available, true));
+
+        App::setLocale($locale ?? config('app.locale'));
 
         return $next($request);
     }
