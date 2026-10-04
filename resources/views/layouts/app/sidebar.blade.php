@@ -11,10 +11,6 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.item icon="chat-bubble-left-right" :href="route('support.index')" :current="request()->routeIs('support.*')" wire:navigate>{{ __('My requests') }}</flux:sidebar.item>
-                @if (auth()->user()->hasRole(\App\Enums\Role::Root))
-                    <flux:sidebar.item icon="inbox" :href="route('support.index')" wire:navigate>{{ __('Support inbox') }}</flux:sidebar.item>
-                @endif
                 <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
@@ -36,7 +32,10 @@
 
             @if (auth()->user()->hasAnyRole([\App\Enums\Role::Root, \App\Enums\Role::Admin]))
                 <flux:sidebar.nav>
-                    <flux:sidebar.group :heading="__('Administration')" icon="cog-6-tooth" expandable :expanded="request()->routeIs('admin.*')">
+                    <flux:sidebar.group :heading="__('Administration')" icon="cog-6-tooth" expandable :expanded="request()->routeIs('admin.*') || (request()->routeIs('support.index') && request()->query('mine') !== '1')">
+                        @if (auth()->user()->hasRole(\App\Enums\Role::Root))
+                            <flux:sidebar.item icon="inbox" :href="route('support.index')" :current="request()->routeIs('support.index') && request()->query('mine') !== '1'" wire:navigate>{{ __('Support inbox') }}</flux:sidebar.item>
+                        @endif
                         <flux:sidebar.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')" wire:navigate>
                             {{ __('Users') }}
                         </flux:sidebar.item>
@@ -76,6 +75,13 @@
 
             <flux:spacer />
 
+            <flux:dropdown position="bottom" align="end">
+                <flux:button type="button" variant="ghost" size="sm" square icon="message-circle-question-mark" :aria-label="__('Feedback and support')" :title="__('Feedback and support')" />
+                <flux:menu>
+                    <flux:menu.item icon="plus" x-data x-on:click="$dispatch('support-open')">{{ __('Create request') }}</flux:menu.item>
+                    <flux:menu.item icon="list-bullet" :href="route('support.index', ['mine' => 1])" wire:navigate>{{ __('View my requests') }}</flux:menu.item>
+                </flux:menu>
+            </flux:dropdown>
             <livewire:notifications.bell />
             <livewire:locale-switcher />
 
@@ -128,7 +134,7 @@
 
         {{ $slot }}
 
-        <div class="fixed bottom-4 right-4 z-40 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"><livewire:support.panel /></div>
+        <livewire:support.panel />
 
         @persist('toast')
             <flux:toast.group>
