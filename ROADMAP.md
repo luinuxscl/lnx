@@ -24,6 +24,8 @@ Priorizar y abordar la mejora visual **#27** (o la siguiente issue acordada con 
 
 ## Decisiones de secuencia
 
+- Nueva secuencia acordada: implementar soporte y feedback para usuarios, gestionado exclusivamente por root, antes de [#34 Mensajería interna](https://github.com/luinuxscl/lnx/issues/34) (abierta). Soporte funcionará inicialmente con su conversación y las notificaciones existentes, emitiendo eventos de creación, respuesta y cambio de estado. #34 incorporará mensajería entre usuarios, sistema e IA, envíos individuales/grupales de root/admin e integración con soporte mediante respuestas y acciones autorizadas, conservando un único historial. Esta secuencia no cambia la prioridad relativa de #27.
+
 - #31 se completó: `Number::useLocale('es')` en `AppServiceProvider`, helper `App\Support\NumberFormat`, vistas y componentes numéricos actualizados, suite de pruebas Pest y documentación en `README.md`.
 - #17 se completó: ingesta y chunking de documentos de conocimiento, almacenamiento vectorial integrado con OpenRouter embeddings, herramienta RAG `KnowledgeSearchTool`, filtrado por policies, respuestas con citas verificables, interfaz bilingüe `/knowledge`, suite de pruebas completada y documentación en `README.md`.
 - #16 se completó: almacenamiento de archivos privados, extracción de texto plano/PDF, procesamiento con `AiGateway` en la aplicación `document_extraction`, validación de esquema con alertas por campos incompletos, revisión humana y confirmación con emisión de `DocumentExtractionConfirmed`, suite de pruebas Pest completada y documentación en `README.md`.
