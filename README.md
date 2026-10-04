@@ -455,7 +455,7 @@ Define tu habilidad (por ejemplo una policy) y pásala en `ability`; coloca `<li
 
 - `README.md` — este archivo, panorámica del proyecto.
 - `.ai/rules/` — reglas permanentes del proyecto (git flow, documentación).
-- `.ai/skills/` — skills propias versionadas (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `update-agent-kit`); Boost las distribuye a los clientes configurados.
+- `.ai/skills/` — skills propias versionadas (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`); Boost las distribuye a los clientes configurados.
 - `.ai/kit-manifest.json` — manifiesto versionado del kit para agentes (versión, origen, compatibilidad y componentes mantenidos).
 - `.ai/CHANGELOG.md` — registro de cambios y notas de migración del kit de agentes.
 - `git-closeout` — skill global (fuera del repo) para cerrar el ciclo: documentación, commits, integración de ramas y push.
@@ -471,7 +471,7 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 | Dependencias JS | `package.json` y `npm ls --depth=0` |
 | Módulos, rutas y estructura | `app/`, `routes/`, `resources/`; `php artisan route:list --except-vendor` |
 | Reglas por ruta | `.ai/rules/index.md`, luego los archivos indicados |
-| Skills propias | `.ai/skills/` (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `update-agent-kit`); Boost las distribuye a los clientes configurados |
+| Skills propias | `.ai/skills/` (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`); Boost las distribuye a los clientes configurados |
 | Skills de paquetes instalados | `php artisan boost:list-skills --no-interaction`; pueden variar por instalación |
 | Actualización del kit de agentes | `.ai/kit-manifest.json`; `python3 scripts/update-agent-kit.py --preview` (previsualizar) o `--apply` (aplicar) |
 | MCP | Laravel Boost (`php artisan boost:mcp`) cuando el cliente lo configure; el servidor de aplicación de lectura se documenta en **Servidor MCP (lectura)** y no presupone plugins personales |
@@ -496,6 +496,12 @@ La referencia de tokens es `resources/css/app.css`: Instrument Sans, escala de e
 | Carga y error | `resources/views/design-gallery.blade.php` y `resources/views/livewire/users/invitations.blade.php` |
 
 La galería `/design-gallery` solo se registra en `local` y `testing`, tras autenticación y con rol `root`. `DESIGN_GALLERY_ENABLED=false` la desactiva también en esos entornos; producción nunca la registra. No aparece en la navegación. Muestra estados de carga, vacío, error, validación y acciones con componentes Flux existentes. Para revisar una pantalla, comparar móvil estrecho y escritorio, temas claro/oscuro, los seis acentos, navegación por teclado y foco visible; anotar capturas y correcciones en el PR. El selector de acento en `resources/views/livewire/settings/appearance.blade.php` es el primer caso aplicado: sus botones muestran un contorno de foco explícito. Si cambia un patrón, actualizar implementación, ejemplo de galería y esta guía en el mismo cambio. La skill `.ai/skills/design-screen/SKILL.md` indica el recorrido de revisión sin duplicar estas decisiones.
+
+### Componentes desde capturas
+
+La skill `.ai/skills/create-ui-component/SKILL.md` guía la adaptación de una captura a un componente Blade o Livewire reutilizable. Con la captura y su propósito prepara una ficha breve de estructura, datos, acciones, estados y ancho responsivo antes de implementar. El contenedor asigna columnas de una grilla de 12; por ejemplo, una tarjeta de estadísticas puede ocupar `col-span-12 md:col-span-6 xl:col-span-3`. El componente no recibe una prop de ancho. Cada componente nuevo se muestra en `/design-gallery` con las variantes pertinentes y un ejemplo de invocación. Empieza en esta aplicación y puede ser usado por packages diseñados para ella; su extracción a un package se decide cuando la API esté estabilizada.
+
+La skill usa `tailwind-design-system` de [wshobson/agents](https://github.com/wshobson/agents), fijada a una revisión en `skills-lock.json`. En un checkout nuevo, restáurala con `npx skills experimental_install` y sincroniza las skills propias con `php artisan boost:update --no-discover --no-interaction`.
 
 ### Coherencia de instrucciones
 
