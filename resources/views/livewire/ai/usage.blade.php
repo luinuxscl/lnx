@@ -37,27 +37,27 @@
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <flux:card class="space-y-1">
                 <flux:text>{{ __('Attempts') }}</flux:text>
-                <flux:heading level="3">{{ $summary['events'] }}</flux:heading>
+                <flux:heading level="3">{{ \Illuminate\Support\Number::format($summary['events']) }}</flux:heading>
             </flux:card>
             <flux:card class="space-y-1">
                 <flux:text>{{ __('Tokens') }}</flux:text>
-                <flux:heading level="3">{{ number_format($summary['tokens']) }}</flux:heading>
+                <flux:heading level="3">{{ \Illuminate\Support\Number::format($summary['tokens']) }}</flux:heading>
             </flux:card>
             <flux:card class="space-y-1">
                 <flux:text>{{ __('Reported cost') }}</flux:text>
-                <flux:heading level="3">{{ number_format($summary['reported_cost'], 4) }} {{ $currency }}</flux:heading>
+                <flux:heading level="3">{{ \App\Support\NumberFormat::currency($summary['reported_cost'], $currency, 4) }}</flux:heading>
             </flux:card>
             <flux:card class="space-y-1">
                 <flux:text>{{ __('Estimated cost') }}</flux:text>
-                <flux:heading level="3">{{ number_format($summary['estimated_cost'], 4) }} {{ $currency }}</flux:heading>
+                <flux:heading level="3">{{ \App\Support\NumberFormat::currency($summary['estimated_cost'], $currency, 4) }}</flux:heading>
             </flux:card>
             <flux:card class="space-y-1">
                 <flux:text>{{ __('Unknown cost') }}</flux:text>
-                <flux:heading level="3">{{ $summary['unknown_cost'] }}</flux:heading>
+                <flux:heading level="3">{{ \Illuminate\Support\Number::format($summary['unknown_cost']) }}</flux:heading>
             </flux:card>
             <flux:card class="space-y-1">
                 <flux:text>{{ __('Blocked / errors') }}</flux:text>
-                <flux:heading level="3">{{ $summary['blocked'] }} / {{ $summary['errors'] }}</flux:heading>
+                <flux:heading level="3">{{ \Illuminate\Support\Number::format($summary['blocked']) }} / {{ \Illuminate\Support\Number::format($summary['errors']) }}</flux:heading>
             </flux:card>
         </div>
         @if ($priceNote !== null)
@@ -86,8 +86,8 @@
                         $effective = $event->effective_model ?? $event->requested_model;
                         $cost = $event->reported_cost ?? $event->estimated_cost;
                         $costLabel = match (true) {
-                            $event->reported_cost !== null => number_format((float) $event->reported_cost, 6).' '.($event->cost_currency ?? $currency),
-                            $event->estimated_cost !== null => '≈ '.number_format((float) $event->estimated_cost, 6).' '.($event->cost_currency ?? $currency),
+                            $event->reported_cost !== null => \App\Support\NumberFormat::currency($event->reported_cost, $event->cost_currency ?? $currency, 6),
+                            $event->estimated_cost !== null => '≈ '.\App\Support\NumberFormat::currency($event->estimated_cost, $event->cost_currency ?? $currency, 6),
                             default => '—',
                         };
                         $costSource = match ($event->cost_source) {
@@ -111,7 +111,7 @@
                                 <span class="block text-zinc-500">{{ __('Requested') }}: {{ $event->requested_model }}</span>
                             @endif
                         </td>
-                        <td class="px-3 py-2">{{ $event->total_tokens !== null ? number_format((int) $event->total_tokens) : '—' }}</td>
+                        <td class="px-3 py-2">{{ $event->total_tokens !== null ? \Illuminate\Support\Number::format((int) $event->total_tokens) : '—' }}</td>
                         <td class="px-3 py-2 whitespace-nowrap">
                             {{ $costLabel }}
                             <span class="block text-xs text-zinc-500">{{ $costSource }}</span>
@@ -128,7 +128,7 @@
                                 <span class="block text-xs text-zinc-500">{{ __(Illuminate\Support\Str::headline($event->error_category)) }}</span>
                             @endif
                         </td>
-                        <td class="px-3 py-2">{{ $event->duration_ms !== null ? $event->duration_ms.' ms' : '—' }}</td>
+                        <td class="px-3 py-2">{{ $event->duration_ms !== null ? \Illuminate\Support\Number::format($event->duration_ms).' ms' : '—' }}</td>
                         <td class="px-3 py-2 text-xs text-zinc-500" title="{{ $event->correlation_id }}">#{{ $event->attempt }}</td>
                     </tr>
                 @empty

@@ -188,6 +188,17 @@ Se usa la estrategia de Laravel de **"translation strings as keys"**: la clave e
 
 Toda vista nueva o modificada debe crearse **siempre en ambos idiomas**: envuelve los textos en `__()` y añade la clave con su traducción en `lang/es.json` y `lang/en.json`. Los títulos de página pasan por `__($title)` en `resources/views/partials/head.blade.php`, por lo que `#[Title('Profile settings')]` también se traduce.
 
+## Formato numérico estándar
+
+La aplicación estandariza el formateo de números en toda la interfaz utilizando **punto (`.`) para separadores de miles** y **coma (`,`) para separadores decimales** (ejemplo: `1.234.567,89`).
+
+- **Configuración global**: `AppServiceProvider` establece `Illuminate\Support\Number::useLocale('es')` por defecto para que las utilidades nativas de Laravel (`Number::format()`, `Number::currency()`, `Number::fileSize()`, etc.) apliquen esta convención automáticamente.
+- **Helper de formato**: La clase `App\Support\NumberFormat` proporciona métodos estáticos convenientes:
+  - `NumberFormat::format($value, ?int $precision = null)` — formatea enteros o decimales (ej. `1.234,56`).
+  - `NumberFormat::currency($value, string $currency = 'USD', int $precision = 4)` — formatea montos monetarios (ej. `1.234,5678 USD`).
+  - `NumberFormat::fileSize($bytes, int $precision = 1)` — formatea tamaños de archivos (ej. `1,5 MB` o `1.024,0 KB`).
+- **Regla en vistas**: Al presentar contadores, métricas, tablas, uso de IA o montos numéricos en Blade y Livewire, utiliza `Number::format()` o `App\Support\NumberFormat` para mantener la consistencia en todos los idiomas.
+
 ## Autorización (roles)
 
 La app usa **spatie/laravel-permission** y trabaja **por roles, no por permisos granulares**. Roles por defecto (`App\Enums\Role`):

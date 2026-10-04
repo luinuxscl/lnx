@@ -55,7 +55,7 @@
         <div class="col-span-12 lg:col-span-5 flex flex-col gap-6">
             <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                 <div class="flex items-center justify-between mb-4">
-                    <flux:heading size="lg">{{ __('Indexed Chunks') }} ({{ $document->chunk_count }})</flux:heading>
+                    <flux:heading size="lg">{{ __('Indexed Chunks') }} ({{ \Illuminate\Support\Number::format($document->chunk_count) }})</flux:heading>
                 </div>
 
                 @if ($document->chunks->isEmpty())
@@ -65,8 +65,8 @@
                         @foreach ($document->chunks as $chunk)
                             <div class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700 dark:bg-zinc-800/50">
                                 <div class="flex items-center justify-between text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-2">
-                                    <span>{{ __('Chunk #') }}{{ $chunk->chunk_index }}</span>
-                                    <span>{{ $chunk->tokens ?? 'N/A' }} {{ __('tokens') }}</span>
+                                    <span>{{ __('Chunk #') }}{{ \Illuminate\Support\Number::format($chunk->chunk_index) }}</span>
+                                    <span>{{ $chunk->tokens !== null ? \Illuminate\Support\Number::format($chunk->tokens) : 'N/A' }} {{ __('tokens') }}</span>
                                 </div>
                                 <div class="text-xs font-mono whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">
                                     {{ $chunk->content }}

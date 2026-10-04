@@ -64,7 +64,7 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-xs">
-                                    {{ $doc->chunk_count }}
+                                    {{ \Illuminate\Support\Number::format($doc->chunk_count) }}
                                 </td>
                                 <td class="px-4 py-3 text-xs">
                                     {{ $doc->user ? $doc->user->name : __('Global') }}

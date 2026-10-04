@@ -75,7 +75,7 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-xs">
-                                    {{ number_format($doc->file_size / 1024, 1) }} KB
+                                    {{ \App\Support\NumberFormat::fileSize($doc->file_size) }}
                                 </td>
                                 <td class="px-4 py-3 text-xs">
                                     {{ $doc->created_at->diffForHumans() }}

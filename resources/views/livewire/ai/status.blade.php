@@ -146,15 +146,15 @@
                         <tr class="border-t border-zinc-200 dark:border-zinc-700">
                             <td class="px-4 py-2">{{ __('Per user') }}</td>
                             <td class="px-4 py-2">{{ $status['user_limit']['window'] }}</td>
-                            <td class="px-4 py-2">{{ $status['user_limit']['requests'] }}</td>
-                            <td class="px-4 py-2">{{ number_format($status['user_limit']['tokens']) }}</td>
+                            <td class="px-4 py-2">{{ \Illuminate\Support\Number::format($status['user_limit']['requests']) }}</td>
+                            <td class="px-4 py-2">{{ \Illuminate\Support\Number::format($status['user_limit']['tokens']) }}</td>
                         </tr>
                         @foreach ($status['application_limits'] as $app => $limit)
                             <tr wire:key="limit-{{ $app }}" class="border-t border-zinc-200 dark:border-zinc-700">
                                 <td class="px-4 py-2 font-mono text-xs">{{ $app }}</td>
                                 <td class="px-4 py-2">{{ $limit['window'] }}</td>
-                                <td class="px-4 py-2">{{ $limit['requests'] }}</td>
-                                <td class="px-4 py-2">{{ number_format($limit['tokens']) }}</td>
+                                <td class="px-4 py-2">{{ \Illuminate\Support\Number::format($limit['requests']) }}</td>
+                                <td class="px-4 py-2">{{ \Illuminate\Support\Number::format($limit['tokens']) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -182,9 +182,9 @@
                     <flux:callout.text>
                         {{ $categoryLabels[$result['category'] ?? 'unknown'] ?? __('Unknown error') }}
                         @if ($succeeded)
-                            &mdash; {{ $result['model'] }} ({{ $result['duration_ms'] }} ms)
+                            &mdash; {{ $result['model'] }} ({{ \Illuminate\Support\Number::format($result['duration_ms']) }} ms)
                             @if ($result['input_tokens'] !== null)
-                                &mdash; {{ $result['input_tokens'] }} + {{ $result['output_tokens'] }} {{ __('tokens') }}
+                                &mdash; {{ \Illuminate\Support\Number::format($result['input_tokens']) }} + {{ \Illuminate\Support\Number::format($result['output_tokens']) }} {{ __('tokens') }}
                             @endif
                         @endif
                     </flux:callout.text>

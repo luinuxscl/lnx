@@ -155,11 +155,11 @@
                     </div>
                     <div class="flex justify-between border-b border-zinc-100 pb-1 dark:border-zinc-800">
                         <dt class="text-zinc-500">{{ __('Page count') }}:</dt>
-                        <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ $document->page_count ?? 1 }}</dd>
+                        <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ \Illuminate\Support\Number::format($document->page_count ?? 1) }}</dd>
                     </div>
                     <div class="flex justify-between border-b border-zinc-100 pb-1 dark:border-zinc-800">
                         <dt class="text-zinc-500">{{ __('File size') }}:</dt>
-                        <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ number_format($document->file_size / 1024, 1) }} KB</dd>
+                        <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ \App\Support\NumberFormat::fileSize($document->file_size) }}</dd>
                     </div>
                     @if ($document->correlation_id)
                         <div class="flex justify-between">

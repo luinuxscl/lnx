@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Number;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -78,6 +79,7 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+        Number::useLocale('es');
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),
