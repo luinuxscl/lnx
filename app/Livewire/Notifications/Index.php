@@ -3,7 +3,9 @@
 namespace App\Livewire\Notifications;
 
 use App\Enums\Role;
+use App\Models\SupportTicket;
 use App\Notifications\RoleChanged;
+use App\Notifications\SupportTicketUpdated;
 use App\Support\Appearance;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\View\View;
@@ -33,6 +35,15 @@ class Index extends Component
 
     public function message(DatabaseNotification $notification): string
     {
+        if ($notification->type === SupportTicketUpdated::class) {
+            return match ($notification->data['action'] ?? '') {
+                'created' => __('A new support request was created.'),
+                'reply' => __('A support request has a new reply.'),
+                'status' => __('A support request changed status.'),
+                'reopened' => __('A support request was reopened.'),
+                default => __('A support request was updated.'),
+            };
+        }
         if ($notification->type !== RoleChanged::class) {
             return __('You have a new notification.');
         }
@@ -41,6 +52,20 @@ class Index extends Component
         $new = $this->roleLabel($notification->data['new_role'] ?? null);
 
         return __('Your role changed from :previous to :new.', ['previous' => $old, 'new' => $new]);
+    }
+
+    public function supportLink(DatabaseNotification $notification): ?string
+    {
+        if ($notification->type !== SupportTicketUpdated::class) {
+            return null;
+        }
+
+        $query = SupportTicket::query()->whereKey($notification->data['ticket_id'] ?? 0);
+        if (! auth()->user()->hasRole(Role::Root)) {
+            $query->where('user_id', auth()->id());
+        }
+
+        return $query->exists() ? route('support.show', $notification->data['ticket_id']) : null;
     }
 
     private function roleLabel(mixed $value): string

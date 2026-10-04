@@ -11,6 +11,10 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
+                <flux:sidebar.item icon="chat-bubble-left-right" :href="route('support.index')" :current="request()->routeIs('support.*')" wire:navigate>{{ __('My requests') }}</flux:sidebar.item>
+                @if (auth()->user()->hasRole(\App\Enums\Role::Root))
+                    <flux:sidebar.item icon="inbox" :href="route('support.index')" wire:navigate>{{ __('Support inbox') }}</flux:sidebar.item>
+                @endif
                 <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
@@ -123,6 +127,8 @@
         </flux:header>
 
         {{ $slot }}
+
+        <div class="fixed bottom-4 right-4 z-40 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"><livewire:support.panel /></div>
 
         @persist('toast')
             <flux:toast.group>

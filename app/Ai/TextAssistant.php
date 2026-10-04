@@ -23,7 +23,7 @@ class TextAssistant
      *
      * @var list<string>
      */
-    public const ACTIONS = ['improve', 'summarize', 'translate'];
+    public const ACTIONS = ['improve', 'summarize', 'translate', 'support'];
 
     public function __construct(
         private readonly AiGateway $gateway,
@@ -154,6 +154,7 @@ class TextAssistant
         $instruction = match ($action) {
             'summarize' => 'Summarize the text concisely, preserving its key ideas.',
             'translate' => 'Translate the text into '.$this->languageLabel((string) $language).'.',
+            'support' => 'Improve this support request and suggest a short title. Return exactly two lines: Title: <title> and Description: <improved text>. Preserve the original language. Do not invent facts, steps, causes or outcomes.',
             default => 'Rewrite the text to be clearer and more correct, preserving its meaning.',
         };
 

@@ -17,6 +17,9 @@
                     <div class="space-y-2">
                         <flux:badge :color="$notification->read_at === null ? 'amber' : 'zinc'">{{ $notification->read_at === null ? __('Unread') : __('Read') }}</flux:badge>
                         <flux:text>{{ $this->message($notification) }}</flux:text>
+                        @if ($supportLink = $this->supportLink($notification))
+                            <flux:button size="sm" :href="$supportLink" wire:navigate>{{ __('View request') }}</flux:button>
+                        @endif
                         <flux:text class="text-xs"><time datetime="{{ $notification->created_at->toIso8601String() }}">{{ $notification->created_at->copy()->timezone($timezone)->format('Y-m-d H:i') }}</time> · {{ $timezone }}</flux:text>
                     </div>
 
