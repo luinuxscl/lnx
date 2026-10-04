@@ -2,6 +2,18 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.2.0] - 2026-10-04
+
+### Añadido
+- Referencia viva de estilos para componentes aprobados: tipografía, títulos, espaciado, superficies e interacción.
+- Revisión opcional del procedimiento tras incorporar un componente a la biblioteca, basada en aprendizajes reutilizables.
+
+## [1.1.0] - 2026-10-04
+
+### Añadido
+- Skill versionada `create-ui-component` para adaptar capturas a componentes Blade o Livewire reutilizables, con ficha previa, anchos definidos por el contenedor y ejemplos en la galería.
+- Dependencia reproducible de `tailwind-design-system` registrada en `skills-lock.json`.
+
 ## [1.0.0] - 2026-10-04
 
 ### Añadido
