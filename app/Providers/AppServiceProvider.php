@@ -3,11 +3,17 @@
 namespace App\Providers;
 
 use App\Enums\Role;
+use App\Events\SupportPublicReplyAdded;
+use App\Events\SupportTicketCreated;
+use App\Events\SupportTicketStatusChanged;
+use App\Listeners\SyncSupportTicketToMessaging;
+use App\Models\InternalConversation;
 use App\Models\User;
 use App\Support\DevRootCredentials;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Number;
@@ -32,6 +38,14 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->configureAuthorization();
         $this->guardAgainstDevRootCredentials();
+        $this->registerSupportMessagingSync();
+    }
+
+    protected function registerSupportMessagingSync(): void
+    {
+        Event::listen(SupportTicketCreated::class, [SyncSupportTicketToMessaging::class, 'handleTicketCreated']);
+        Event::listen(SupportPublicReplyAdded::class, [SyncSupportTicketToMessaging::class, 'handlePublicReplyAdded']);
+        Event::listen(SupportTicketStatusChanged::class, [SyncSupportTicketToMessaging::class, 'handleStatusChanged']);
     }
 
     /**
@@ -61,11 +75,24 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Configure role-based authorization.
      *
-     * The root role is a superuser: it bypasses every gate and policy check.
+     * The root role is a superuser: it bypasses every gate and policy check,
+     * except for private internal conversations which require participation.
      */
     protected function configureAuthorization(): void
     {
-        Gate::before(fn (User $user, string $ability): ?bool => $user->hasRole(Role::Root) ? true : null);
+        Gate::before(function (User $user, string $ability, array $arguments = []): ?bool {
+            if (! $user->hasRole(Role::Root)) {
+                return null;
+            }
+
+            // Root does not bypass privacy on non-support internal conversations.
+            $target = $arguments[0] ?? null;
+            if ($target instanceof InternalConversation && ! $target->isSupport()) {
+                return null;
+            }
+
+            return true;
+        });
 
         // Extension point for the reusable text assistant. Derived projects
         // define their own ability (a Gate or a policy ability) and pass it to

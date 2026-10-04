@@ -15,6 +15,10 @@
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
 
+                <flux:sidebar.item icon="envelope" :href="route('messages.index')" :current="request()->routeIs('messages.*')" wire:navigate>
+                    {{ __('Messages') }}
+                </flux:sidebar.item>
+
                 <flux:sidebar.group :heading="__('AI Tools')" icon="sparkles" expandable :expanded="request()->routeIs('chat*', 'knowledge.*', 'documents.*')">
                     <flux:sidebar.item icon="chat-bubble-left-right" :href="route('chat')" :current="request()->routeIs('chat*')" wire:navigate>
                         {{ __('Chat') }}
