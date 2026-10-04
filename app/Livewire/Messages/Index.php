@@ -24,6 +24,8 @@ class Index extends Component
 
     public string $search = '';
 
+    public string $tab = 'chats';
+
     public string $newMessageBody = '';
 
     // New conversation modal state
@@ -76,6 +78,20 @@ class Index extends Component
         $messagingService->markAsRead($user, $conversation);
         $this->resetValidation();
         $this->newMessageBody = '';
+    }
+
+    public function selectContactUser(int $userId, MessagingService $messagingService): void
+    {
+        $actor = auth()->user();
+        if ($actor->id === $userId) {
+            return;
+        }
+
+        $recipient = User::findOrFail($userId);
+        $conversation = $messagingService->createDirectConversation($actor, $recipient);
+
+        $this->tab = 'chats';
+        $this->selectConversation($conversation->id, $messagingService);
     }
 
     public function sendMessage(MessagingService $messagingService): void

@@ -78,5 +78,30 @@
                 <flux:button variant="ghost" :href="route('admin.users.index')" wire:navigate>{{ __('Cancel') }}</flux:button>
             </div>
         </flux:card>
+
+        <section class="space-y-4" aria-label="{{ __('Messaging components') }}">
+            <flux:heading level="2">{{ __('Messaging components') }}</flux:heading>
+            <flux:card class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <flux:heading level="3">{{ __('Chat stream sample') }}</flux:heading>
+                    <flux:button size="sm" variant="primary" :href="route('messages.index')" wire:navigate>
+                        {{ __('Open Messages') }}
+                    </flux:button>
+                </div>
+                <div class="space-y-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                    <div class="flex flex-col items-start">
+                        <div class="max-w-md rounded-2xl rounded-tl-xs border border-zinc-200 bg-white p-3 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                            <span class="block text-xs font-bold text-zinc-500">Felecia Rower</span>
+                            {{ __('Hey, I am looking for the best admin template.') }}
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <div class="max-w-md rounded-2xl rounded-tr-xs bg-gradient-to-r from-indigo-600 to-violet-600 p-3 text-sm text-white">
+                            {{ __('How can we help? We are here for you!') }}
+                        </div>
+                    </div>
+                </div>
+            </flux:card>
+        </section>
     </section>
 </x-layouts::app>
