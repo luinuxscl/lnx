@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "kit_version": "1.2.0",
+  "kit_version": "1.2.1",
   "source": "https://github.com/luinuxscl/lnx",
-  "updated_at": "2026-10-04T11:58:08Z",
+  "updated_at": "2026-10-04T12:56:11Z",
   "stack_compatibility": {
     "php": ">=8.5",
     "laravel": "^13.0",
@@ -53,9 +53,9 @@
     ".ai/skills/update-agent-kit/SKILL.md": "e2c727998136bca6bb3d4ffc0f8550a1c28d7777579e5846b52ad681cef26267",
     "scripts/check-agent-context.py": "0eb22d53a722a578bc910f535e0a6e27e6fdca63c4b67092bbf6ba32e9e29bbd",
     "scripts/update-agent-kit.py": "3c9c7d1cc5edab1d929103620b19103d68965caea2588d60018d7916bab1d295",
-    ".ai/CHANGELOG.md": "939682c5e3e4fa74db647ccee8fa818902c52261e066be175ffd250734647eab",
-    ".ai/skills/create-ui-component/SKILL.md": "72c032a1ba485772108dbfdce9ce960fcaa9fa57431db3b423015fdbc6fee3f7",
+    ".ai/CHANGELOG.md": "5a0e61bba46bc02634861b2c1b5eb0714143f876f2ad9370eb2a025bd2d21d9b",
+    ".ai/skills/create-ui-component/SKILL.md": "4d3a2888906828242d49ebbc8ea4dc42b0dc1c19e389f9d965b406534739d72a",
     "skills-lock.json": "44f584c57ad33c4221e104c14760856c0db111a1c273f9f19ef924aa9b9cc31f",
-    ".ai/skills/create-ui-component/references/style-foundations.md": "204c18d76679de4f684aa5434d5d3eb86bd74db931538cd35a26aa7acad34626"
+    ".ai/skills/create-ui-component/references/style-foundations.md": "a74bf53cbe9139c3b215e94d77f79c36e1b0af49e3c6d2e6aad9cbdf5600f351"
   }
 }
