@@ -17,13 +17,13 @@
 
                 <flux:sidebar.group :heading="__('AI Tools')" icon="sparkles" expandable :expanded="request()->routeIs('chat*', 'knowledge.*', 'documents.*')">
                     <flux:sidebar.item icon="chat-bubble-left-right" :href="route('chat')" :current="request()->routeIs('chat*')" wire:navigate>
-                        {{ __('Interactive Chat') }}
+                        {{ __('Chat') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="book-open" :href="route('knowledge.index')" :current="request()->routeIs('knowledge.*')" wire:navigate>
-                        {{ __('Knowledge Base') }}
+                        {{ __('RAG') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="document-text" :href="route('documents.index')" :current="request()->routeIs('documents.*')" wire:navigate>
-                        {{ __('Document extraction') }}
+                        {{ __('Document AI') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
@@ -39,13 +39,13 @@
 
                         @if (auth()->user()->hasRole(\App\Enums\Role::Root))
                             <flux:sidebar.item icon="clock" :href="route('admin.activity.index')" :current="request()->routeIs('admin.activity.*')" wire:navigate>
-                                {{ __('Administrative activity') }}
+                                {{ __('Activity') }}
                             </flux:sidebar.item>
                             <flux:sidebar.item icon="cog" :href="route('admin.settings.edit')" :current="request()->routeIs('admin.settings.*')" wire:navigate>
-                                {{ __('General settings') }}
+                                {{ __('Settings') }}
                             </flux:sidebar.item>
                             <flux:sidebar.item icon="clipboard-document-check" :href="route('admin.setup.index')" :current="request()->routeIs('admin.setup.*')" wire:navigate>
-                                {{ __('Setup checklist') }}
+                                {{ __('Checklist') }}
                             </flux:sidebar.item>
                             <flux:sidebar.item icon="sparkles" :href="route('admin.ai.index')" :current="request()->routeIs('admin.ai.*')" wire:navigate>
                                 {{ __('AI') }}

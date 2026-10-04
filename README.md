@@ -185,7 +185,8 @@ Se usa la estrategia de Laravel de **"translation strings as keys"**: la clave e
 
 ### Regla de trabajo
 
-Toda vista nueva o modificada debe crearse **siempre en ambos idiomas**: envuelve los textos en `__()` y añade la clave con su traducción en `lang/es.json` y `lang/en.json`. Los títulos de página pasan por `__($title)` en `resources/views/partials/head.blade.php`, por lo que `#[Title('Profile settings')]` también se traduce.
+Toda vista nueva o modificada debe crearse **siempre en ambos idiomas**: envuelve los textos en `__()` y añade la clave con su traducción en `lang/es.json` y `lang/en.json`. Los títulos de página pasan por `__($title)` en `resources/views/partials/head.blade.php`, por lo que `#[Title('Profile settings')]` también se traduce. Se preservan los anglicismos y acrónimos estándar de la industria tecnológica (`Dashboard`, `Passkeys`, `Chatbot`, `RAG`, `2FA`, `MCP`, `API`, `Tokens`) sin traducirlos literalmente en la interfaz en español.
+
 
 ## Formato numérico estándar
 
