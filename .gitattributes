@@ -6,5 +6,5 @@
 *.md diff=markdown
 *.php diff=php
 
-CHANGELOG.md export-ignore
+/CHANGELOG.md export-ignore
 .github/workflows/browser-tests.yml export-ignore
