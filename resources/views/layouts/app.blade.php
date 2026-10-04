@@ -11,6 +11,16 @@
 
             <flux:spacer />
 
+            <flux:dropdown position="bottom" align="end">
+                <flux:button type="button" variant="ghost" size="sm" icon="message-circle-question-mark" icon-trailing="chevron-down">
+                    {{ __('Feedback and support') }}
+                </flux:button>
+                <flux:menu>
+                    <flux:menu.item icon="plus" x-data x-on:click="$dispatch('support-open')">{{ __('Create request') }}</flux:menu.item>
+                    <flux:menu.item icon="list-bullet" :href="route('support.index', ['mine' => 1])" wire:navigate>{{ __('View my requests') }}</flux:menu.item>
+                </flux:menu>
+            </flux:dropdown>
+
             <livewire:notifications.bell />
 
             <flux:button

@@ -30,7 +30,6 @@
         if (item) { const file = item.getAsFile(); if (file) $wire.upload('image', file) }
     }
 }" x-on:support-open.window="open()" x-on:paste="paste($event)">
-    <flux:button type="button" variant="ghost" icon="chat-bubble-left-right" x-on:click="open()">{{ __('Feedback and support') }}</flux:button>
     <div x-ref="panel">
         <flux:modal name="support-panel" wire:model.self="showPanel" class="max-w-xl">
             <form wire:submit="submit" class="space-y-5">
@@ -49,7 +48,7 @@
                     <flux:select.option value="0">{{ __('No') }}</flux:select.option>
                 </flux:select>
                 <div class="flex flex-wrap gap-3">
-                    <flux:button type="button" wire:click="suggest" icon="sparkles">{{ __('Improve writing with AI') }}</flux:button>
+                    <flux:button type="button" wire:click="suggest" wire:loading.attr="disabled" wire:target="suggest" icon="sparkles">{{ __('Improve writing with AI') }}</flux:button>
                     <flux:button type="button" x-on:click="capture()">{{ __('Capture screen') }}</flux:button>
                 </div>
                 <flux:text class="text-xs">{{ __('Only the description is sent to AI. Images are never sent to AI.') }}</flux:text>
@@ -66,7 +65,7 @@
                 <flux:field><flux:label>{{ __('Attach an image') }}</flux:label><input type="file" accept="image/png,image/jpeg,image/webp" wire:model="image" class="block w-full text-sm"><flux:error name="image" /></flux:field>
                 @if ($image && in_array($image->getMimeType(), ['image/png', 'image/jpeg', 'image/webp'], true))<img src="{{ $image->temporaryUrl() }}" alt="{{ __('Attachment preview') }}" class="max-h-40 rounded border">@endif
                 @if ($image)<flux:button type="button" wire:click="$set('image', null)">{{ __('Discard attachment') }}</flux:button>@endif
-                <div class="flex justify-end gap-3"><flux:button type="button" x-on:click="$wire.showPanel = false">{{ __('Cancel') }}</flux:button><flux:button type="submit" variant="primary" wire:loading.attr="disabled">{{ __('Send request') }}</flux:button></div>
+                <div class="flex justify-end gap-3"><flux:button type="button" x-on:click="$wire.showPanel = false">{{ __('Cancel') }}</flux:button><flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="submit">{{ __('Send request') }}</flux:button></div>
             </form>
         </flux:modal>
     </div>

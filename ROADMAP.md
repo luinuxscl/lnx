@@ -8,6 +8,8 @@ Este documento conserva el orden global de trabajo. GitHub es la fuente del esta
 
 Feedback y soporte funciona como módulo independiente. La issue [#34](https://github.com/luinuxscl/lnx/issues/34) permanece abierta: consumirá los eventos y operaciones autorizadas de soporte para integrar mensajería futura sin duplicar historiales.
 
+La mejora de UI/UX del circuito de tickets se registró en [#35](https://github.com/luinuxscl/lnx/issues/35) y permanece abierta sin prioridad asignada.
+
 Priorizar y abordar la mejora visual **#27** (o la siguiente issue acordada con el mantenedor). Las etapas 1 a 7 del roadmap inicial están completas, incluyendo la consulta con fuentes propios RAG (**#17**) y la estandarización del formato numérico con punto para miles y coma para decimales (**#31**).
 
 ## Orden acordado

@@ -70,7 +70,8 @@ it('shows administration domain group to admin and root users', function () {
         ->assertOk()
         ->assertSee('AI Tools')
         ->assertSee('Administración')
-        ->assertSee('Usuarios');
+        ->assertSee('Usuarios')
+        ->assertDontSee('Bandeja de soporte');
 
     $root = User::factory()->create();
     $root->assignRole(Role::Root->value);
@@ -80,6 +81,7 @@ it('shows administration domain group to admin and root users', function () {
         ->assertOk()
         ->assertSee('AI Tools')
         ->assertSee('Administración')
+        ->assertSee('Bandeja de soporte')
         ->assertSee('Configuración');
 });
 
