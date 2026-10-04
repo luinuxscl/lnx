@@ -1,6 +1,6 @@
 ---
 name: create-ui-component
-description: Crea componentes Blade o Livewire reutilizables para lnx a partir de capturas o referencias visuales. Úsala cuando el usuario quiera adaptar un componente visto en otra web, añadirlo al catálogo visual o estandarizar un patrón de interfaz; para diseñar una pantalla completa usa design-screen.
+description: Crea y mejora componentes Blade o Livewire reutilizables para lnx a partir de capturas o referencias visuales. Úsala al adaptar un componente de otra web, aprobarlo para la biblioteca o consolidar estilos de componentes; para diseñar una pantalla completa usa design-screen.
 ---
 
 # Crear un componente de interfaz
@@ -9,7 +9,7 @@ Convierte una referencia visual en un componente propio de lnx. La captura y el 
 
 ## Preparación
 
-1. Lee la sección «Trabajo con agentes» y el contrato visual de `README.md`, `.ai/rules/index.md` y las reglas de las rutas que vayas a cambiar. Inspecciona `resources/css/app.css`, un componente similar, la pantalla de destino y `resources/views/design-gallery.blade.php`.
+1. Lee la sección «Trabajo con agentes» y el contrato visual de `README.md`, `.ai/rules/index.md` y las reglas de las rutas que vayas a cambiar. Inspecciona `resources/css/app.css`, los [fundamentos de estilo](references/style-foundations.md), un componente similar, la pantalla de destino y `resources/views/design-gallery.blade.php`.
 2. Aplica la skill instalada `tailwind-design-system` para tokens, composición, responsividad y accesibilidad en Tailwind CSS 4. Usa las skills de Flux, Livewire y `design-screen` cuando correspondan. Las recomendaciones genéricas de otra skill se adaptan a las decisiones de lnx: Flux, temas existentes y textos es/en.
 3. Busca primero componentes Flux y Blade existentes. Identifica en la captura estructura, jerarquía, datos, acciones y estados; distingue lo visible de lo que no se puede inferir. Adapta colores, tipografía, iconos y espaciado al tema de la aplicación.
 
@@ -31,10 +31,16 @@ Para el ancho ofrece `12/12`, `6/12`, `4/12` y `3/12`, explicando cuántas pieza
 
 Espera la respuesta del usuario a las decisiones pendientes antes de implementar. Si la solicitud ya las resolvió, muestra la ficha y continúa con lo autorizado.
 
-## Construcción y catálogo
+## Construcción y revisión
 
 - Crea primero una pieza Blade con props y slots cuando solo presenta contenido. Usa Alpine para interacción local que no necesita servidor; reserva Livewire para estado, validación o acciones del servidor. Deja las consultas, reglas de acceso y datos de negocio en el consumidor o en la capa que corresponda. Mantén una API pequeña y explícita.
 - Guarda los componentes en la estructura existente de Blade o Livewire de esta app. Los packages diseñados para lnx pueden invocarlos desde la aplicación anfitriona. Considera extraer un package independiente solo cuando el patrón y su API sean estables y el usuario lo solicite.
 - Reutiliza Flux y los tokens de `resources/css/app.css`. Mantén las clases de Tailwind detectables por el build; evita ensamblar nombres de utilidades dinámicamente. Respeta los temas claro/oscuro, las variantes de acento, foco visible, semántica y navegación por teclado. Traduce el texto visible según las reglas del proyecto.
-- Añade a la galería local una vista previa del componente, sus variantes y los estados pertinentes, junto a un ejemplo copiable de invocación con datos de muestra. Si también se integra en una pantalla real, usa la misma API allí.
-- Verifica la presentación en español e inglés, móvil y escritorio, modos claro/oscuro y acentos disponibles. Comprueba la interacción por teclado. Ejecuta el build de frontend; cuando exista comportamiento, añade y ejecuta pruebas enfocadas. Documenta el patrón nuevo en `README.md` y comunica la ruta, la invocación y las comprobaciones realizadas.
+- Prepara una vista previa local del candidato, sus variantes y estados pertinentes, junto a un ejemplo copiable de invocación con datos de muestra. Si también se integra en una pantalla real, usa la misma API allí.
+- Verifica la presentación en español e inglés, móvil y escritorio, modos claro/oscuro y acentos disponibles. Comprueba la interacción por teclado. Ejecuta el build de frontend; cuando exista comportamiento, añade y ejecuta pruebas enfocadas. Muestra el resultado concreto al usuario para que decida si lo aprueba para la biblioteca.
+
+## Aprobación y aprendizaje
+
+1. Tras aprobarse el componente para la biblioteca, deja su ejemplo definitivo en `resources/views/design-gallery.blade.php`, documenta el patrón y comunica la ruta, la invocación y las verificaciones. Si aún no se aprueba, conserva el candidato y aplica los cambios solicitados antes de catalogarlo.
+2. Actualiza los [fundamentos de estilo](references/style-foundations.md) solo con decisiones visuales aprobadas que sirvan a otros componentes: espaciado, tipografía, títulos, superficies, foco o distribución. Indica el componente que las demuestra. Si hace falta un token real de CSS, cámbialo en `resources/css/app.css`, que sigue siendo la fuente de verdad; evita duplicar valores CSS en la referencia.
+3. Revisa brevemente qué parte del procedimiento causó dudas, retrabajo o una mejora repetible. Si hay un aprendizaje generalizable, ofrece abrir una mejora de esta skill con el problema observado y la corrección propuesta. Si el usuario acepta, modifica solo lo necesario y comprueba el procedimiento con el caso que reveló el problema y otro caso representativo; después valida la skill y sincronízala con Boost. Si el caso fue específico de ese componente, no amplíes la skill. Esta revisión opcional no bloquea la incorporación del componente aprobado.
