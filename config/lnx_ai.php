@@ -164,6 +164,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Knowledge Base (RAG)
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for internal knowledge retrieval-augmented generation.
+    |
+    */
+
+    'knowledge' => [
+        'enabled' => (bool) env('AI_KNOWLEDGE_ENABLED', false),
+        'embedding_model' => env('AI_KNOWLEDGE_EMBEDDING_MODEL', 'google/gemini-embedding-001'),
+        'chunk_size' => (int) env('AI_KNOWLEDGE_CHUNK_SIZE', 500),
+        'chunk_overlap' => (int) env('AI_KNOWLEDGE_CHUNK_OVERLAP', 50),
+        'max_chunks' => (int) env('AI_KNOWLEDGE_MAX_CHUNKS', 5),
+        'min_similarity' => (float) env('AI_KNOWLEDGE_MIN_SIMILARITY', 0.2),
+        'storage' => env('AI_KNOWLEDGE_STORAGE', 'database'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Usage limits
     |--------------------------------------------------------------------------
     |
@@ -219,6 +238,18 @@ return [
                 'window' => (string) env('AI_DOCUMENT_LIMIT_WINDOW', 'hour'),
                 'requests' => (int) env('AI_DOCUMENT_LIMIT_REQUESTS', 20),
                 'tokens' => (int) env('AI_DOCUMENT_LIMIT_TOKENS', 100000),
+            ],
+
+            'knowledge_indexing' => [
+                'window' => (string) env('AI_KNOWLEDGE_INDEXING_LIMIT_WINDOW', 'hour'),
+                'requests' => (int) env('AI_KNOWLEDGE_INDEXING_LIMIT_REQUESTS', 30),
+                'tokens' => (int) env('AI_KNOWLEDGE_INDEXING_LIMIT_TOKENS', 150000),
+            ],
+
+            'knowledge_query' => [
+                'window' => (string) env('AI_KNOWLEDGE_QUERY_LIMIT_WINDOW', 'hour'),
+                'requests' => (int) env('AI_KNOWLEDGE_QUERY_LIMIT_REQUESTS', 60),
+                'tokens' => (int) env('AI_KNOWLEDGE_QUERY_LIMIT_TOKENS', 150000),
             ],
         ],
     ],

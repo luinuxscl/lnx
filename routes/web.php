@@ -12,6 +12,8 @@ use App\Livewire\Ai\Usage as AiUsage;
 use App\Livewire\Dashboard;
 use App\Livewire\Documents\Index as DocumentsIndex;
 use App\Livewire\Documents\Show as DocumentsShow;
+use App\Livewire\Knowledge\Index;
+use App\Livewire\Knowledge\Show;
 use App\Livewire\Notifications\Index as NotificationsIndex;
 use App\Livewire\Setup\Index as SetupIndex;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +30,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', Dashboard::class)->name('dashboard');
     Route::livewire('notifications', NotificationsIndex::class)->name('notifications.index');
     Route::livewire('chat/{conversation?}', AiChat::class)->name('chat');
+    Route::livewire('knowledge', Index::class)->name('knowledge.index');
+    Route::livewire('knowledge/{document}', Show::class)->name('knowledge.show');
     Route::livewire('documents', DocumentsIndex::class)->name('documents.index');
     Route::livewire('documents/{document}', DocumentsShow::class)->name('documents.show');
     Route::get('documents/{document}/download', [DocumentDownloadController::class, 'download'])->name('documents.download');

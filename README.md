@@ -487,6 +487,49 @@ lnx incluye un módulo de extracción de datos de documentos con IA en `/documen
 - **Confirmación**: Al pulsar "Confirmar documento", el servidor valida los datos, actualiza el estado a `confirmed` y dispara el evento de dominio `App\Events\DocumentExtractionConfirmed`.
 - **Extensión en proyectos derivados**: Para integrar la extracción con modelos de negocio (por ejemplo crear facturas), escucha el evento `DocumentExtractionConfirmed` en un Listener o extiende `App\Ai\DocumentExtractor\SampleExtractionSchema` y `ExtractionValidator` con el esquema propio del dominio.
 
+## Base de Conocimiento e Integración RAG (Consultar conocimiento propio)
+
+lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`knowledge.index`, `knowledge.show`) integrado con el chat interactivo contextual (`/chat`). Permite incorporar manuales, guías o catálogos, dividirlos en fragmentos (chunks), generar embeddings vectoriales mediante OpenRouter y responder preguntas con referencias verificables.
+
+### Infraestructura opcional y almacenamiento vectorial
+
+- **Almacenamiento vectorial integrado**: Los vectores y fragmentos se guardan directamente en las tablas `knowledge_documents` y `knowledge_chunks` de la base de datos de la aplicación (SQLite/PostgreSQL). No se exige una base vectorial externa (Pinecone/Qdrant/pgvector).
+- **Módulo inactivo por defecto**: `AI_KNOWLEDGE_ENABLED=false` mantiene el módulo apagado por defecto. La instalación básica de SQLite funciona sin depender del módulo.
+
+### Embeddings con OpenRouter
+
+- Los embeddings se generan vía Laravel AI SDK (`Embeddings::for(...)`) utilizando OpenRouter con la clave del despliegue (`OPENROUTER_API_KEY`).
+- Modelo predeterminado: `google/gemini-embedding-001` (configurable vía `AI_KNOWLEDGE_EMBEDDING_MODEL` dentro de la lista de modelos permitidos).
+
+### Ingesta, reindexación y retiro de contenido
+
+- **Formatos soportados**: Entrada directa de texto plano o carga de archivos `.txt`, `.md`, `.json`, `.csv`.
+- **Reindexación idempotente**: La reindexación reemplaza atómicamente los fragmentos existentes en base de datos.
+- **Retiro inmediato**: Marcar un documento como retirado (`withdrawn_at`) o eliminarlo impide inmediatamente recuperar sus fragmentos en cualquier consulta de conocimiento.
+
+### Filtrado por autorización (Authorization-first)
+
+- El motor de búsqueda `KnowledgeSearchService` aplica la política `KnowledgeDocumentPolicy` y el scope `accessibleTo($user)` **antes** de enviar fragmentos al LLM. Un usuario nunca puede recuperar fragmentos de documentos a los que no tiene permiso.
+- Las instrucciones contenidas dentro de fragmentos de documentos se tratan estrictamente como texto pasivo de lectura, previniendo inyecciones de prompt.
+
+### Respuestas con citas verificables e integración con Chat
+
+- Las respuestas generadas por el chat citan expresamente las fuentes recuperadas mediante etiquetas `[Fuente: Título (Fragmento #)]`.
+- Cuando las fuentes disponibles no contienen suficiente información para responder a la consulta, el asistente indica explícitamente la falta de sustento.
+- Incluye la herramienta `App\Ai\Tools\KnowledgeSearchTool` accesible para agentes y chats interactivos.
+
+### Cuotas y registro de consumo
+
+- Las peticiones de embeddings y generación de respuestas utilizan las aplicaciones `knowledge_indexing` y `knowledge_query` a través del `AiGateway`, aplicando cuotas locales por usuario/aplicación y registrando el consumo en `ai_usage_events`.
+
+### Evaluación manual de calidad
+
+1. Ingesta de un manual técnico o procedimiento en `/knowledge`.
+2. Verificación de que la indexación genere fragmentos coherentes.
+3. Consulta en `/chat` comprobando que la respuesta incluya citas precisas a la fuente.
+4. Prueba con una pregunta ajena al corpus comprobando que el asistente informe que las fuentes no sustentan la respuesta.
+5. Retiro del documento comprobando la imposibilidad inmediata de recuperar sus fragmentos.
+
 ## Estrategia de ramas (Git Flow)
 
 - `main` — producción, siempre estable.
