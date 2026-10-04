@@ -423,6 +423,14 @@ Cada intento se guarda en `ai_usage_events` con actor (id y copia de nombre/corr
 
 Las pruebas usan `ConnectionTestAgent::fake(...)` y respuestas simuladas, sin llamadas externas, y cubren bloqueo por límite, concurrencia de la reserva, reconciliación en éxito y fallo, coste reportado/estimado/desconocido, autorización del panel y purga.
 
+## Feedback y soporte
+
+Todas las vistas autenticadas incluyen el botón «Feedback y soporte». Abre un panel sobre la pantalla actual para enviar un problema, idea de mejora o consulta, con título, descripción y una indicación opcional de bloqueo. Al abrirlo se registran la ruta con nombre, fecha, usuario, versión de la aplicación si existe, dimensiones de ventana, idioma y tema. No se leen parámetros de URL ni valores de formularios. La captura de pantalla requiere la acción y permiso del usuario, ofrece vista previa y puede descartarse; pegar o cargar una imagen es una alternativa. Se admiten PNG, JPEG y WebP hasta 5 MB. Los archivos se guardan en el disco privado `local` y se entregan únicamente mediante una ruta que comprueba el ticket y la visibilidad de la nota.
+
+«Mis solicitudes» muestra el historial propio. Root ve además la bandeja completa con filtros por estado, tipo, prioridad, autor y pantalla; puede responder, escribir notas internas, asignar prioridad, resolver o cerrar con explicación. Admin solo tiene acceso a sus propias solicitudes. El solicitante puede responder a un ticket no cerrado y reabrir uno resuelto. Las transiciones y la autorización viven en `App\Support\TicketService`, compartido por los componentes Livewire y disponible para una futura integración de mensajería. Los eventos `SupportTicketCreated`, `SupportPublicReplyAdded` y `SupportTicketStatusChanged` señalan cambios explícitos; el ticket sigue siendo la fuente oficial del historial. Las notas internas nunca aparecen en la vista del solicitante ni generan avisos para él.
+
+El asistente de texto ofrece una propuesta de título y redacción para la descripción, que el usuario acepta o descarta. Solo la descripción se envía al proveedor mediante la cuota y registro de uso existentes; una captura adjunta nunca se envía a IA. Si falla, el envío manual sigue disponible. Los avisos se guardan en el centro de notificaciones de la aplicación; no se envía correo. La mensajería general de [#34](https://github.com/luinuxscl/lnx/issues/34) queda pendiente.
+
 ## Asistente de texto (mejorar, resumir, traducir)
 
 El kit incluye un asistente de texto reutilizable construido sobre la capa de IA. El usuario autorizado elige **mejorar**, **resumir** o **traducir** (con idioma de destino), genera una propuesta y decide aceptarla o descartarla. La generación nunca guarda: el cambio llega al formulario solo al aceptar y descartar conserva el texto original.
