@@ -528,6 +528,8 @@ La biblioteca incluye `x-stat` (`label`, `value`, `icon` Flux y `color`), `x-sta
 
 `x-trend-card` muestra una métrica con línea de tendencia y tiene ejemplos aprobados en `/design-gallery`. Recibe `label`, `value` y `change` ya formateados y traducidos, `series` como arreglo de cifras ordenadas y `color` (`accent`, `emerald`, `amber` o `rose`). Dibuja una línea decorativa si hay al menos dos puntos válidos; sin ellos mantiene el texto de la métrica. El contenedor asigna su ancho, normalmente `col-span-12 md:col-span-6 xl:col-span-4` para tres tarjetas por fila en escritorio.
 
+El dashboard usa `x-stat` dentro de las tarjetas de usuarios que incluyen acciones y `x-stat-card` para las métricas de consumo de IA. Los estados vacíos y los enlaces siguen en la pantalla; `x-trend-card` se reserva para datos que tengan una serie histórica real.
+
 ```blade
 <x-statistics-panel :title="__('Statistics')" :updated-at="__('Updated 1 month ago')">
     <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
