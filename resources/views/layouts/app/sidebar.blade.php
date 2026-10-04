@@ -11,50 +11,59 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
+                <flux:sidebar.item icon="chat-bubble-left-right" :href="route('support.index')" :current="request()->routeIs('support.*')" wire:navigate>{{ __('My requests') }}</flux:sidebar.item>
+                @if (auth()->user()->hasRole(\App\Enums\Role::Root))
+                    <flux:sidebar.item icon="inbox" :href="route('support.index')" wire:navigate>{{ __('Support inbox') }}</flux:sidebar.item>
+                @endif
                 <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="chat-bubble-left-right" :href="route('chat')" :current="request()->routeIs('chat*')" wire:navigate>
-                    {{ __('Interactive Chat') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="book-open" :href="route('knowledge.index')" :current="request()->routeIs('knowledge.*')" wire:navigate>
-                    {{ __('Knowledge Base') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="document-text" :href="route('documents.index')" :current="request()->routeIs('documents.*')" wire:navigate>
-                    {{ __('Document extraction') }}
-                </flux:sidebar.item>
+
+                <flux:sidebar.group :heading="__('AI Tools')" icon="sparkles" expandable :expanded="request()->routeIs('chat*', 'knowledge.*', 'documents.*')">
+                    <flux:sidebar.item icon="chat-bubble-left-right" :href="route('chat')" :current="request()->routeIs('chat*')" wire:navigate>
+                        {{ __('Interactive Chat') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="book-open" :href="route('knowledge.index')" :current="request()->routeIs('knowledge.*')" wire:navigate>
+                        {{ __('Knowledge Base') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="document-text" :href="route('documents.index')" :current="request()->routeIs('documents.*')" wire:navigate>
+                        {{ __('Document extraction') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
             </flux:sidebar.nav>
 
             <flux:spacer />
 
             @if (auth()->user()->hasAnyRole([\App\Enums\Role::Root, \App\Enums\Role::Admin]))
                 <flux:sidebar.nav>
-                    <flux:sidebar.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')" wire:navigate>
-                        {{ __('Users') }}
-                    </flux:sidebar.item>
-
-                    @if (auth()->user()->hasRole(\App\Enums\Role::Root))
-                        <flux:sidebar.item icon="clock" :href="route('admin.activity.index')" :current="request()->routeIs('admin.activity.*')" wire:navigate>
-                            {{ __('Administrative activity') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="cog" :href="route('admin.settings.edit')" :current="request()->routeIs('admin.settings.*')" wire:navigate>
-                            {{ __('General settings') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="clipboard-document-check" :href="route('admin.setup.index')" :current="request()->routeIs('admin.setup.*')" wire:navigate>
-                            {{ __('Setup checklist') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="sparkles" :href="route('admin.ai.index')" :current="request()->routeIs('admin.ai.*')" wire:navigate>
-                            {{ __('AI') }}
+                    <flux:sidebar.group :heading="__('Administration')" icon="cog-6-tooth" expandable :expanded="request()->routeIs('admin.*')">
+                        <flux:sidebar.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')" wire:navigate>
+                            {{ __('Users') }}
                         </flux:sidebar.item>
 
-                        <flux:sidebar.item icon="folder-git-2" href="https://github.com/luinuxscl/lnx" target="_blank">
-                            {{ __('Repository') }}
-                        </flux:sidebar.item>
-                    @endif
+                        @if (auth()->user()->hasRole(\App\Enums\Role::Root))
+                            <flux:sidebar.item icon="clock" :href="route('admin.activity.index')" :current="request()->routeIs('admin.activity.*')" wire:navigate>
+                                {{ __('Administrative activity') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="cog" :href="route('admin.settings.edit')" :current="request()->routeIs('admin.settings.*')" wire:navigate>
+                                {{ __('General settings') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="clipboard-document-check" :href="route('admin.setup.index')" :current="request()->routeIs('admin.setup.*')" wire:navigate>
+                                {{ __('Setup checklist') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="sparkles" :href="route('admin.ai.index')" :current="request()->routeIs('admin.ai.*')" wire:navigate>
+                                {{ __('AI') }}
+                            </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="book-open-text">
-                        {{ __('Documentation') }}
-                    </flux:sidebar.item>
+                            <flux:sidebar.item icon="folder-git-2" href="https://github.com/luinuxscl/lnx" target="_blank">
+                                {{ __('Repository') }}
+                            </flux:sidebar.item>
+                        @endif
+
+                        <flux:sidebar.item icon="book-open-text">
+                            {{ __('Documentation') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
                 </flux:sidebar.nav>
             @endif
 
@@ -118,6 +127,8 @@
         </flux:header>
 
         {{ $slot }}
+
+        <div class="fixed bottom-4 right-4 z-40 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"><livewire:support.panel /></div>
 
         @persist('toast')
             <flux:toast.group>

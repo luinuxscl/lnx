@@ -71,6 +71,7 @@ class AppServiceProvider extends ServiceProvider
         // define their own ability (a Gate or a policy ability) and pass it to
         // the component; root bypasses this gate via Gate::before.
         Gate::define('use-text-assistant', fn (User $user): bool => $user->hasRole(Role::Root));
+        Gate::define('use-support-assistant', fn (User $user): bool => ! $user->isSuspended());
     }
 
     /**

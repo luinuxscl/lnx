@@ -140,9 +140,8 @@ Al desplegar, aplicar la migración `add_preferences_to_users_table` con `php ar
 
 ## Layout de la aplicación
 
-El layout activo es `resources/views/layouts/app.blade.php` → `layouts/app/sidebar.blade.php`.
-
-- **Sidebar colapsable** (desktop): el `<flux:sidebar collapsible>` se colapsa a barra de iconos. El estado se persiste en `localStorage['flux-sidebar-collapsed-desktop']` (gestionado por Flux). `resources/views/partials/head.blade.php` siembra el valor `true` en la primera visita, por lo que arranca **colapsado por defecto**; cada toggle posterior lo sobrescribe. En móvil conserva el overlay.
+- **Menú agrupado por dominios**: el sidebar organiza las opciones principales en dominios lógicos usando `<flux:sidebar.group>`. La navegación superior incluye `Dashboard` y el grupo **Herramientas de IA** (`AI Tools`) con Chat interactivo, Base de conocimiento y Extracción de documentos. Tras el espaciador, la sección **Administración** (`Administration`) agrupa los controles de usuarios, actividad, configuración global, checklist e IA según los roles del usuario (`root` y `admin`).
+- **Sidebar colapsable** (desktop): el `<flux:sidebar collapsible>` se colapsa a barra de iconos. El estado se persiste en `localStorage['flux-sidebar-collapsed-desktop']` (gestionado por Flux). `resources/views/partials/head.blade.php` siembra el valor `true` en la primera visita, por lo que arranca **colapsado por defecto**; cada toggle posterior lo sobrescribe. En móvil conserva el overlay. Al colapsar en escritorio, los grupos desplegables (`<flux:sidebar.group>`) se convierten automáticamente en un flyout dropdown hover.
 - **Botón de colapso en el sidebar**: `<flux:sidebar.collapse>` en el header del sidebar (patrón oficial de Flux). Al colapsar, el logo se oculta al hacer hover y es sustituido por el botón de expansión; por eso el botón debe estar presente en desktop (no usar `lg:hidden`).
 - **Marca del sidebar**: junto al logo, `x-app-logo` muestra el título en negrita y, si existe, `site_tagline` debajo en texto más pequeño. Sin lema, solo se muestra el título; si falta el título configurado, se usa `APP_NAME`. Los textos largos se truncan para dejar disponible el botón de colapso.
 - **Header de contenido** (solo desktop, `max-lg:hidden`): se renderiza dentro de `<flux:main>` en `layouts/app.blade.php` con el breadcrumb (`flux:breadcrumbs`) a la izquierda y, a la derecha, el botón de modo claro/oscuro (`$flux.dark`) y el selector de idioma. El colapso del sidebar se controla solo desde su propio botón en el header del sidebar.
@@ -423,6 +422,14 @@ Cada intento se guarda en `ai_usage_events` con actor (id y copia de nombre/corr
 ### Verificación
 
 Las pruebas usan `ConnectionTestAgent::fake(...)` y respuestas simuladas, sin llamadas externas, y cubren bloqueo por límite, concurrencia de la reserva, reconciliación en éxito y fallo, coste reportado/estimado/desconocido, autorización del panel y purga.
+
+## Feedback y soporte
+
+Todas las vistas autenticadas incluyen el botón «Feedback y soporte». Abre un panel sobre la pantalla actual para enviar un problema, idea de mejora o consulta, con título, descripción y una indicación opcional de bloqueo. Al abrirlo se registran la ruta con nombre, fecha, usuario, versión de la aplicación si existe, dimensiones de ventana, idioma y tema. No se leen parámetros de URL ni valores de formularios. La captura de pantalla requiere la acción y permiso del usuario, ofrece vista previa y puede descartarse; pegar o cargar una imagen es una alternativa. Se admiten PNG, JPEG y WebP hasta 5 MB. Los archivos se guardan en el disco privado `local` y se entregan únicamente mediante una ruta que comprueba el ticket y la visibilidad de la nota.
+
+«Mis solicitudes» muestra el historial propio. Root ve además la bandeja completa con filtros por estado, tipo, prioridad, autor y pantalla; puede responder, escribir notas internas, asignar prioridad, resolver o cerrar con explicación. Admin solo tiene acceso a sus propias solicitudes. El solicitante puede responder a un ticket no cerrado y reabrir uno resuelto. Las transiciones y la autorización viven en `App\Support\TicketService`, compartido por los componentes Livewire y disponible para una futura integración de mensajería. Los eventos `SupportTicketCreated`, `SupportPublicReplyAdded` y `SupportTicketStatusChanged` señalan cambios explícitos; el ticket sigue siendo la fuente oficial del historial. Las notas internas nunca aparecen en la vista del solicitante ni generan avisos para él.
+
+El asistente de texto ofrece una propuesta de título y redacción para la descripción, que el usuario acepta o descarta. Solo la descripción se envía al proveedor mediante la cuota y registro de uso existentes; una captura adjunta nunca se envía a IA. Si falla, el envío manual sigue disponible. Los avisos se guardan en el centro de notificaciones de la aplicación; no se envía correo. La mensajería general de [#34](https://github.com/luinuxscl/lnx/issues/34) queda pendiente.
 
 ## Asistente de texto (mejorar, resumir, traducir)
 
