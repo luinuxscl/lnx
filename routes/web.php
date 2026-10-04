@@ -15,6 +15,7 @@ use App\Livewire\Documents\Index as DocumentsIndex;
 use App\Livewire\Documents\Show as DocumentsShow;
 use App\Livewire\Knowledge\Index;
 use App\Livewire\Knowledge\Show;
+use App\Livewire\Messages\Index as MessagesIndex;
 use App\Livewire\Notifications\Index as NotificationsIndex;
 use App\Livewire\Setup\Index as SetupIndex;
 use App\Livewire\Support\Index as SupportIndex;
@@ -31,6 +32,7 @@ Route::post('invitations/{invitation}/{token}', [AcceptInvitationController::cla
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', Dashboard::class)->name('dashboard');
+    Route::livewire('messages', MessagesIndex::class)->name('messages.index');
     Route::livewire('notifications', NotificationsIndex::class)->name('notifications.index');
     Route::livewire('chat/{conversation?}', AiChat::class)->name('chat');
     Route::livewire('knowledge', Index::class)->name('knowledge.index');

@@ -4,6 +4,7 @@ namespace App\Livewire\Notifications;
 
 use App\Enums\Role;
 use App\Models\SupportTicket;
+use App\Notifications\NewInternalMessage;
 use App\Notifications\RoleChanged;
 use App\Notifications\SupportTicketUpdated;
 use App\Support\Appearance;
@@ -44,6 +45,15 @@ class Index extends Component
                 default => __('A support request was updated.'),
             };
         }
+        if ($notification->type === NewInternalMessage::class) {
+            $sender = $notification->data['sender_name'] ?? __('Unknown');
+            $preview = $notification->data['body_preview'] ?? '';
+
+            return match ($notification->data['type'] ?? '') {
+                'announcement' => __('Announcement from :sender: :preview', ['sender' => $sender, 'preview' => $preview]),
+                default => __('New message from :sender: :preview', ['sender' => $sender, 'preview' => $preview]),
+            };
+        }
         if ($notification->type !== RoleChanged::class) {
             return __('You have a new notification.');
         }
@@ -52,6 +62,17 @@ class Index extends Component
         $new = $this->roleLabel($notification->data['new_role'] ?? null);
 
         return __('Your role changed from :previous to :new.', ['previous' => $old, 'new' => $new]);
+    }
+
+    public function messageLink(DatabaseNotification $notification): ?string
+    {
+        if ($notification->type !== NewInternalMessage::class) {
+            return null;
+        }
+
+        $conversationId = $notification->data['conversation_id'] ?? null;
+
+        return $conversationId ? route('messages.index', ['conversation' => $conversationId]) : route('messages.index');
     }
 
     public function supportLink(DatabaseNotification $notification): ?string
