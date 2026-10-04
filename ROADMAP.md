@@ -35,9 +35,9 @@ Continuar con **#15** (Chat interactivo) o **#16** (Extracción documental), cor
 - No convertir la distribución del kit (#23) en requisito para implementar funcionalidades. Si un cliente necesita chat o documentos, se puede adelantar ese módulo respecto de #23 conservando sus dependencias.
 - #9 no bloquea #16; su primer evento es el cambio administrativo de rol, no el procesamiento de documentos.
 
-## Estado de partida
+## Estado actual
 
-En la última revisión hay 5 issues abiertas: #15–#17, #23 y #27. #23 es el próximo trabajo; la mejora visual #27 sigue pendiente de priorización. Skills reutilizables (#22), notificaciones (#9), preferencias por usuario (#10), asistente de texto (#14), cuotas y consumo de IA (#13), base de IA (#12), servidor MCP de lectura (#21), dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
+GitHub registra 4 issues abiertas: #15–#17 y #27. #23 ya está cerrada; la mejora visual #27 sigue pendiente de priorización. Skills reutilizables (#22), notificaciones (#9), preferencias por usuario (#10), asistente de texto (#14), cuotas y consumo de IA (#13), base de IA (#12), servidor MCP de lectura (#21), dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
 
 ## Mantenimiento
 
