@@ -6,7 +6,7 @@ Este documento conserva el orden global de trabajo. GitHub es la fuente del esta
 
 ## Próximo trabajo
 
-Continuar con **#15** (Chat interactivo) o **#16** (Extracción documental), correspondientes a la etapa 6. #23 (versionado y actualización de proyectos derivados) se implementó: manifiesto `.ai/kit-manifest.json`, actualizador `scripts/update-agent-kit.py`, skill `update-agent-kit`, pruebas unitarias y actualización de la creación de proyectos y documentación. #22 (skills reutilizables para implementar y verificar funcionalidades) también está cerrada.
+Continuar con **#16** (Extracción documental) o **#17** (Consulta con fuentes), correspondientes a las etapas 6 y 7. #15 (Chat interactivo) se implementó: conversaciones privadas por usuario, aislamiento por policy, respuestas progresivas en streaming vía `AiGateway`, herramientas de lectura con re-validación de autorización (`ProductHelpSearchTool`), cuotas y consumo de la aplicación `chat`, componente Livewire `/chat`, suite de pruebas completada y documentación actualizada.
 
 ## Orden acordado
 
@@ -17,10 +17,12 @@ Continuar con **#15** (Chat interactivo) o **#16** (Extracción documental), cor
 | 3. Mejorar la experiencia cotidiana | [#10 Preferencias](https://github.com/luinuxscl/lnx/issues/10) (cerrada) → [#9 Notificaciones](https://github.com/luinuxscl/lnx/issues/9) (cerrada) | Preferencias por cuenta y bandeja persistente integradas. | Medio |
 | 4. Consolidar procedimientos probados | [#22 Skills reutilizables](https://github.com/luinuxscl/lnx/issues/22) (cerrada) | Extraer procedimientos de entregas reales de funcionalidad, MCP y verificación. Sus dependencias #18–#21 están cerradas. | Medio |
 | 5. Llevar mejoras a proyectos derivados | [#23 Versionado y actualización](https://github.com/luinuxscl/lnx/issues/23) (cerrada) | Manifiesto versionado, herramienta de actualización determinista con previsualización, preservación de personalizaciones locales, reversión y pruebas. | Alto |
-| 6. Ampliar IA según demanda | [#15 Chat](https://github.com/luinuxscl/lnx/issues/15) y [#16 Extracción documental](https://github.com/luinuxscl/lnx/issues/16) | Elegir primero el que tenga un caso concreto en un proyecto derivado. Ambos requieren #12 y #13; son independientes entre sí. | Alto por módulo |
-| 7. Incorporar conocimiento propio | [#17 Consulta con fuentes](https://github.com/luinuxscl/lnx/issues/17) | Requiere #12, #13 y #15. Validar con documentos reales la recuperación, los permisos y la calidad de las referencias; no requiere #16. | Muy alto |
+| 6. Ampliar IA según demanda | [#15 Chat](https://github.com/luinuxscl/lnx/issues/15) (cerrada) y [#16 Extracción documental](https://github.com/luinuxscl/lnx/issues/16) | #15 completado. #16 es independiente. | Alto por módulo |
+| 7. Incorporar conocimiento propio | [#17 Consulta con fuentes](https://github.com/luinuxscl/lnx/issues/17) | Requiere #12, #13 y #15 (resueltas). Validar con documentos reales la recuperación, los permisos y la calidad de las referencias; no requiere #16. | Muy alto |
 
 ## Decisiones de secuencia
+
+- #15 se completó: conversaciones privadas por usuario, aislamiento por `AiConversationPolicy`, `AiGateway::stream()` con cuotas y registro de consumo, `ProductHelpSearchTool` autorizada, componente Livewire bilingüe `/chat`, suite de pruebas pasadas y documentación actualizada.
 
 - #23 se completó: manifiesto `.ai/kit-manifest.json`, script `scripts/update-agent-kit.py` con previsualización, preservación de personalizaciones locales y reversión, skill `update-agent-kit`, suite de pruebas automatizadas y actualización de la documentación del kit.
 - #22 se integró y cerró: skills versionadas `implement-feature`, `expose-mcp-operation` y `verify-delivery` creadas en `.ai/skills/`, documentadas en `README.md` y sincronizadas en `.agents/skills/`. Completa la etapa 4 y habilita la etapa 5 (#23).
@@ -37,7 +39,7 @@ Continuar con **#15** (Chat interactivo) o **#16** (Extracción documental), cor
 
 ## Estado actual
 
-GitHub registra 4 issues abiertas: #15–#17 y #27. #23 ya está cerrada; la mejora visual #27 sigue pendiente de priorización. Skills reutilizables (#22), notificaciones (#9), preferencias por usuario (#10), asistente de texto (#14), cuotas y consumo de IA (#13), base de IA (#12), servidor MCP de lectura (#21), dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
+GitHub registra 3 issues abiertas: #16, #17 y #27. #15 y #23 ya están cerradas; la mejora visual #27 sigue pendiente de priorización. Skills reutilizables (#22), notificaciones (#9), preferencias por usuario (#10), asistente de texto (#14), cuotas y consumo de IA (#13), base de IA (#12), servidor MCP de lectura (#21), dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
 
 ## Mantenimiento
 

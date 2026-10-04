@@ -9,6 +9,7 @@ use App\Ai\Exceptions\UnsupportedCapabilityException;
 use App\Models\User;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Responses\AgentResponse;
+use Laravel\Ai\Responses\StreamableAgentResponse;
 use Throwable;
 
 /**
@@ -144,6 +145,92 @@ class AiGateway
         );
 
         return $response;
+    }
+
+    /**
+     * Run a prompt through an agent as a streamable response, validated, quota-controlled and recorded.
+     *
+     * @param  list<string>  $capabilities
+     *
+     * @throws AiQuotaExceededException when a local limit is reached before the call
+     */
+    public function stream(
+        Agent $agent,
+        string $prompt,
+        ?string $model = null,
+        array $capabilities = ['streaming'],
+        ?int $timeout = null,
+        ?string $application = null,
+        ?int $reservedTokens = null,
+        ?string $correlationId = null,
+    ): StreamableAgentResponse {
+        $capabilities = array_values(array_unique(array_merge(['streaming'], $capabilities)));
+        $resolved = $this->resolveModel($model, $capabilities);
+
+        $application = $this->config->normalizeApplication($application);
+        $reservedTokens ??= $this->config->maxOutputTokens();
+        $correlationId ??= (string) str()->uuid();
+
+        $user = auth()->user();
+        $user = $user instanceof User ? $user : null;
+
+        try {
+            $reservation = $this->quota->reserve($user, $application, $reservedTokens, $correlationId);
+        } catch (AiQuotaExceededException $exception) {
+            $this->usage->blocked($correlationId, $user, $application, $resolved);
+
+            throw $exception;
+        }
+
+        $startedAt = microtime(true);
+
+        try {
+            $streamable = $agent->stream(
+                $prompt,
+                provider: $this->config->provider(),
+                model: $resolved,
+                timeout: $timeout,
+            );
+        } catch (Throwable $exception) {
+            $this->quota->release($reservation);
+            $this->usage->failure(
+                $correlationId,
+                $user,
+                $application,
+                $resolved,
+                $this->elapsedMilliseconds($startedAt),
+                $this->categorizer->categorize($exception),
+            );
+
+            throw $exception;
+        }
+
+        $streamable->then(function ($response) use ($reservation, $correlationId, $user, $application, $resolved, $startedAt): void {
+            $totalTokens = $response->usage?->totalTokens();
+            $this->quota->reconcile($reservation, $totalTokens);
+            $this->usage->success(
+                $correlationId,
+                $user,
+                $application,
+                $resolved,
+                $response,
+                $this->elapsedMilliseconds($startedAt),
+            );
+        });
+
+        $streamable->catch(function ($exception) use ($reservation, $correlationId, $user, $application, $resolved, $startedAt): void {
+            $this->quota->release($reservation);
+            $this->usage->failure(
+                $correlationId,
+                $user,
+                $application,
+                $resolved,
+                $this->elapsedMilliseconds($startedAt),
+                $this->categorizer->categorize($exception),
+            );
+        });
+
+        return $streamable;
     }
 
     /**

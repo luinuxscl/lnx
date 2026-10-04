@@ -442,6 +442,29 @@ Cada llamada usa la aplicación `text_assistant`, así que aplican la allowlist,
 
 Define tu habilidad (por ejemplo una policy) y pásala en `ability`; coloca `<livewire:ai.text-assistant wire:model="tuCampo" ability="tu-habilidad" />` donde estaba tu campo de texto. El componente reutiliza `App\Ai\Agents\TextAssistantAgent` y `App\Ai\TextAssistant`; para variantes nuevas declara su propia aplicación y límites y pásalos al gateway.
 
+## Chat interactivo (conversacional, streaming y herramientas)
+
+lnx incluye un módulo de chat interactivo conversacional en `/chat` (`chat`) accesible para cualquier cuenta autenticada. Permite crear, seleccionar, continuar y eliminar conversaciones privadas con respuestas progresivas por streaming.
+
+### Aislamiento y privacidad
+
+- Las conversaciones se guardan en las tablas `ai_conversations` y `ai_messages` con clave foránea ligada a la cuenta de usuario.
+- `App\Policies\AiConversationPolicy` y `App\Ai\ChatService` aplican aislamiento estricto: ningún usuario puede ver, enviar mensajes ni eliminar conversaciones ajenas cambiando identificadores.
+
+### Cuotas, modelos y streaming
+
+- Invocado bajo la aplicación `chat` pasando por `AiGateway::stream()`. Valida que el modelo esté en la allowlist y declare la capacidad `streaming`.
+- Aplica cuotas atómicas locales (`AI_CHAT_LIMIT_*`) y registra el consumo en `ai_usage_events`.
+
+### Contexto explícito de página y herramientas de lectura
+
+- El chat soporta recibir contexto explícito de página (`<page_context>`), sanitized en servidor sin enviar formularios ni datos sensibles.
+- Incluye la herramienta de lectura `App\Ai\Tools\ProductHelpSearchTool` que re-valida la autenticación y autorización del usuario en cada ejecución.
+
+### Extender en proyectos derivados
+
+- Para añadir una herramienta de lectura personalizada, crea una clase que implemente `Laravel\Ai\Contracts\Tool`, re-valida `$user->can(...)` dentro de `handle()` y pásala a `ChatService::sendMessage($user, $conv, $prompt, $context, [$miHerramienta])` o configúrala en `ChatAgent::tools()`.
+
 ## Estrategia de ramas (Git Flow)
 
 - `main` — producción, siempre estable.
@@ -500,6 +523,22 @@ La galería `/design-gallery` solo se registra en `local` y `testing`, tras aute
 ### Componentes desde capturas
 
 La skill `.ai/skills/create-ui-component/SKILL.md` guía la adaptación de una captura a un componente Blade o Livewire reutilizable. Con la captura y su propósito prepara una ficha breve de estructura, datos, acciones, estados y ancho responsivo antes de implementar. El contenedor asigna columnas de una grilla de 12; por ejemplo, una tarjeta de estadísticas puede ocupar `col-span-12 md:col-span-6 xl:col-span-3`. El componente no recibe una prop de ancho. Tras revisar y aprobar el candidato para la biblioteca, se incorpora a `/design-gallery` con las variantes pertinentes y un ejemplo de invocación. Empieza en esta aplicación y puede ser usado por packages diseñados para ella; su extracción a un package se decide cuando la API esté estabilizada.
+
+La biblioteca incluye `x-stat` (`label`, `value`, `icon` Flux y `color`), `x-stat-card` (una tarjeta individual que reutiliza `x-stat` y las mismas props) y `x-statistics-panel` (`title`, `updated-at` opcional y slot de métricas). El panel usa `flux:card` y una grilla de 12 columnas; el contenedor externo asigna el ancho a cada tarjeta individual. `color` acepta `accent` (predeterminado), `violet`, `cyan`, `rose`, `emerald`, `blue` y `amber`. El consumidor aporta cifras ya formateadas y textos traducidos, sin consultas ni lógica de negocio dentro de los componentes. Cuando se entrega `updated-at`, el panel muestra un icono cuyo tooltip contiene ese texto; sin la prop, no muestra el icono.
+
+```blade
+<x-statistics-panel :title="__('Statistics')" :updated-at="__('Updated 1 month ago')">
+    <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
+    <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
+</x-statistics-panel>
+
+<div class="grid grid-cols-12 gap-4">
+    <x-stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
+    <x-stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
+</div>
+```
+
+`resources/views/design-gallery.blade.php` sitúa estos componentes al inicio: tarjetas individuales, el panel con cuatro métricas y la variante sin fecha de actualización. Las decisiones visuales reutilizables figuran en `.ai/skills/create-ui-component/references/style-foundations.md`.
 
 Los estilos reutilizables aprobados se registran en `.ai/skills/create-ui-component/references/style-foundations.md`: espaciado, fuente, jerarquía de títulos, superficies y foco. `resources/css/app.css` sigue siendo la fuente de tokens CSS. Después de incorporar un componente se puede abrir una revisión de la skill si el trabajo reveló una mejora generalizable; las particularidades de una captura quedan en el componente.
 

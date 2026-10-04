@@ -5,6 +5,28 @@
             <flux:text class="mt-1">{{ __('Examples of the interface states used across this application.') }}</flux:text>
         </div>
 
+        <section class="space-y-4" aria-label="{{ __('Statistics components') }}">
+            <flux:heading level="2">{{ __('Statistics components') }}</flux:heading>
+
+            <div class="grid grid-cols-12 gap-4">
+                <x-stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
+                <x-stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
+                <x-stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Products')" value="1.423k" icon="shopping-cart" color="rose" />
+                <x-stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Revenue')" value="$9745" icon="currency-dollar" color="emerald" />
+            </div>
+
+            <x-statistics-panel :title="__('Statistics')" :updated-at="__('Updated 1 month ago')">
+                <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
+                <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
+                <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Products')" value="1.423k" icon="shopping-cart" color="rose" />
+                <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Revenue')" value="$9745" icon="currency-dollar" color="emerald" />
+            </x-statistics-panel>
+
+            <x-statistics-panel :title="__('Statistics without update')">
+                <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" />
+            </x-statistics-panel>
+        </section>
+
         <div class="grid gap-6 lg:grid-cols-2">
             <flux:card class="space-y-4">
                 <flux:heading level="2">{{ __('Loading') }}</flux:heading>
