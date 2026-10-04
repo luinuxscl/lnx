@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Messages\Message;
+use Laravel\Ai\Streaming\Events\TextDelta;
 use Throwable;
 
 /**
@@ -189,10 +190,10 @@ class ChatService
             // Iterate chunks to compile full response text
             $responseText = '';
             foreach ($streamable as $event) {
-                if (property_exists($event, 'delta') && is_string($event->delta)) {
+                if ($event instanceof TextDelta) {
                     $responseText .= $event->delta;
-                } elseif ($event instanceof \Stringable) {
-                    $responseText .= $event->__toString();
+                } elseif (property_exists($event, 'delta') && is_string($event->delta)) {
+                    $responseText .= $event->delta;
                 }
             }
 
