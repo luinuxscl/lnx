@@ -148,6 +148,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Document Extraction
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for document data extraction.
+    |
+    */
+
+    'document_extraction' => [
+        'timeout' => (int) env('AI_DOCUMENT_TIMEOUT', 60),
+        'max_output_tokens' => (int) env('AI_DOCUMENT_MAX_OUTPUT_TOKENS', 2048),
+        'max_file_size_kb' => (int) env('AI_DOCUMENT_MAX_FILE_SIZE_KB', 10240),
+        'max_pages' => (int) env('AI_DOCUMENT_MAX_PAGES', 20),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Usage limits
     |--------------------------------------------------------------------------
     |
@@ -197,6 +213,12 @@ return [
                 'window' => (string) env('AI_CHAT_LIMIT_WINDOW', 'hour'),
                 'requests' => (int) env('AI_CHAT_LIMIT_REQUESTS', 40),
                 'tokens' => (int) env('AI_CHAT_LIMIT_TOKENS', 150000),
+            ],
+
+            'document_extraction' => [
+                'window' => (string) env('AI_DOCUMENT_LIMIT_WINDOW', 'hour'),
+                'requests' => (int) env('AI_DOCUMENT_LIMIT_REQUESTS', 20),
+                'tokens' => (int) env('AI_DOCUMENT_LIMIT_TOKENS', 100000),
             ],
         ],
     ],

@@ -17,6 +17,9 @@
                 <flux:sidebar.item icon="chat-bubble-left-right" :href="route('chat')" :current="request()->routeIs('chat*')" wire:navigate>
                     {{ __('Interactive Chat') }}
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="document-text" :href="route('documents.index')" :current="request()->routeIs('documents.*')" wire:navigate>
+                    {{ __('Document extraction') }}
+                </flux:sidebar.item>
             </flux:sidebar.nav>
 
             <flux:spacer />

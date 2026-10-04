@@ -465,6 +465,28 @@ lnx incluye un módulo de chat interactivo conversacional en `/chat` (`chat`) ac
 
 - Para añadir una herramienta de lectura personalizada, crea una clase que implemente `Laravel\Ai\Contracts\Tool`, re-valida `$user->can(...)` dentro de `handle()` y pásala a `ChatService::sendMessage($user, $conv, $prompt, $context, [$miHerramienta])` o configúrala en `ChatAgent::tools()`.
 
+## Extracción de documentos con IA y revisión
+
+lnx incluye un módulo de extracción de datos de documentos con IA en `/documents` (`documents.index`, `documents.show`). Permite subir documentos privados, procesarlos en cola con OpenRouter, validar la salida JSON contra un esquema configurable, revisar y ajustar los campos mediante una interfaz interactiva y confirmar la extracción.
+
+### Formatos, almacenamiento y privacidad
+
+- **Formatos soportados**: PDF (con texto seleccionable) y archivos de texto plano (`.txt`, `.md`, `.json`, `.csv`).
+- **Almacenamiento privado**: Los archivos se guardan en el disco privado `storage/app/private/documents/{user_id}/`. No son accesibles directamente por URL; la descarga y vista previa están resguardadas por `DocumentExtractionPolicy` y la ruta protegida `/documents/{document}/download`.
+- **PDFs escaneados sin OCR**: Los documentos escaneados sin capa de texto seleccionable se detectan y explican con un error entendible ("Documento escaneado o no legible: OCR no soportado"), sin fallos silenciosos ni OCR implícito.
+
+### Procesamiento en cola y cuotas de IA
+
+- La extracción se ejecuta mediante el job `App\Jobs\ProcessDocumentExtractionJob`.
+- Utiliza la aplicación `document_extraction` a través de `AiGateway::prompt()`, aplicando la reserva de cuotas por usuario y aplicación (`AI_DOCUMENT_LIMIT_*`), registrando el consumo en `ai_usage_events` y manejando reintentos configurados (`$tries = 3`, `$backoff = [10, 30]`).
+- Variables (ver `config/lnx_ai.php` y `.env.example`): `AI_DOCUMENT_TIMEOUT`, `AI_DOCUMENT_MAX_OUTPUT_TOKENS`, `AI_DOCUMENT_MAX_FILE_SIZE_KB`, `AI_DOCUMENT_MAX_PAGES` y el bloque `AI_DOCUMENT_LIMIT_*`.
+
+### Revisión humana y confirmación de negocio
+
+- **Revisión**: En `/documents/{document}` el usuario visualiza advertencias si faltan campos requeridos o hay formatos no estándar, puede editar los campos en `reviewed_data` y guardar borradores sin confirmar.
+- **Confirmación**: Al pulsar "Confirmar documento", el servidor valida los datos, actualiza el estado a `confirmed` y dispara el evento de dominio `App\Events\DocumentExtractionConfirmed`.
+- **Extensión en proyectos derivados**: Para integrar la extracción con modelos de negocio (por ejemplo crear facturas), escucha el evento `DocumentExtractionConfirmed` en un Listener o extiende `App\Ai\DocumentExtractor\SampleExtractionSchema` y `ExtractionValidator` con el esquema propio del dominio.
+
 ## Estrategia de ramas (Git Flow)
 
 - `main` — producción, siempre estable.
