@@ -2,6 +2,12 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.2.1] - 2026-10-04
+
+### Mejorado
+- La skill `create-ui-component` recomienda extraer piezas visuales repetidas y componer derivados reutilizables cuando corresponda.
+- Los fundamentos visuales registran el patrón aprobado de métricas individuales y panel de estadísticas.
+
 ## [1.2.0] - 2026-10-04
 
 ### Añadido
