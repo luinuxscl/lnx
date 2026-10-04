@@ -23,6 +23,7 @@ Esta referencia registra decisiones reutilizables al aprobar componentes de la b
 | Grilla de tarjetas | El padre define columnas responsivas y separación; el componente no fija su ancho. | `resources/views/livewire/dashboard.blade.php` |
 | Cabecera y métricas de un panel | `space-y-4` entre cabecera y grilla; el panel contiene una grilla de 12 columnas y cada métrica recibe su `col-span-*` desde la invocación. | `resources/views/components/statistics-panel.blade.php` |
 | Métricas como tarjetas individuales | Un contenedor externo usa `grid grid-cols-12 gap-4` y asigna el `col-span-*` a cada `x-stat-card`; la tarjeta reutiliza `x-stat`. | `resources/views/components/stat-card.blade.php` |
+| Tarjetas de tendencia | El padre asigna `col-span-12 md:col-span-6 xl:col-span-4` para mostrar una, dos o tres tarjetas por fila según el ancho. | `resources/views/components/trend-card.blade.php` |
 
 ## Superficie, color e interacción
 
@@ -32,6 +33,7 @@ Esta referencia registra decisiones reutilizables al aprobar componentes de la b
 | Acento | Variables `--color-accent`, `--color-accent-content` y `--color-accent-foreground`, con seis variantes y modo oscuro. | `resources/css/app.css` |
 | Foco y controles | Mantener foco visible y verificar teclado, claro/oscuro y acentos. | `README.md`, sección «Contrato visual» |
 | Información de actualización opcional | Icono con `flux:tooltip`, texto accesible y foco visible; omitirlo si no hay fecha. | `resources/views/components/statistics-panel.blade.php` |
+| Tendencia decorativa | Mostrar la variación como texto y ocultar el SVG a lectores de pantalla; colorear la línea con clases claras y oscuras existentes. | `resources/views/components/trend-card.blade.php` |
 
 ## Cómo ampliar esta referencia
 

@@ -526,6 +526,8 @@ La skill `.ai/skills/create-ui-component/SKILL.md` guía la adaptación de una c
 
 La biblioteca incluye `x-stat` (`label`, `value`, `icon` Flux y `color`), `x-stat-card` (una tarjeta individual que reutiliza `x-stat` y las mismas props) y `x-statistics-panel` (`title`, `updated-at` opcional y slot de métricas). El panel usa `flux:card` y una grilla de 12 columnas; el contenedor externo asigna el ancho a cada tarjeta individual. `color` acepta `accent` (predeterminado), `violet`, `cyan`, `rose`, `emerald`, `blue` y `amber`. El consumidor aporta cifras ya formateadas y textos traducidos, sin consultas ni lógica de negocio dentro de los componentes. Cuando se entrega `updated-at`, el panel muestra un icono cuyo tooltip contiene ese texto; sin la prop, no muestra el icono.
 
+`x-trend-card` muestra una métrica con línea de tendencia y tiene ejemplos aprobados en `/design-gallery`. Recibe `label`, `value` y `change` ya formateados y traducidos, `series` como arreglo de cifras ordenadas y `color` (`accent`, `emerald`, `amber` o `rose`). Dibuja una línea decorativa si hay al menos dos puntos válidos; sin ellos mantiene el texto de la métrica. El contenedor asigna su ancho, normalmente `col-span-12 md:col-span-6 xl:col-span-4` para tres tarjetas por fila en escritorio.
+
 ```blade
 <x-statistics-panel :title="__('Statistics')" :updated-at="__('Updated 1 month ago')">
     <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
@@ -538,7 +540,20 @@ La biblioteca incluye `x-stat` (`label`, `value`, `icon` Flux y `color`), `x-sta
 </div>
 ```
 
-`resources/views/design-gallery.blade.php` sitúa estos componentes al inicio: tarjetas individuales, el panel con cuatro métricas y la variante sin fecha de actualización. Las decisiones visuales reutilizables figuran en `.ai/skills/create-ui-component/references/style-foundations.md`.
+```blade
+<div class="grid grid-cols-12 gap-4">
+    <x-trend-card
+        class="col-span-12 md:col-span-6 xl:col-span-4"
+        :label="__('Product sold')"
+        value="2.968"
+        :change="__(':change last week', ['change' => '+3.2%'])"
+        :series="[28, 16, 34, 42, 51, 75, 78, 80, 72, 21]"
+        color="emerald"
+    />
+</div>
+```
+
+`resources/views/design-gallery.blade.php` sitúa estos componentes al inicio: tarjetas de tendencia, tarjetas individuales, el panel con cuatro métricas y la variante sin fecha de actualización. Las decisiones visuales reutilizables figuran en `.ai/skills/create-ui-component/references/style-foundations.md`.
 
 Los estilos reutilizables aprobados se registran en `.ai/skills/create-ui-component/references/style-foundations.md`: espaciado, fuente, jerarquía de títulos, superficies y foco. `resources/css/app.css` sigue siendo la fuente de tokens CSS. Después de incorporar un componente se puede abrir una revisión de la skill si el trabajo reveló una mejora generalizable; las particularidades de una captura quedan en el componente.
 
