@@ -4,6 +4,7 @@ namespace App\Livewire\Support;
 
 use App\Ai\TextAssistant;
 use App\Support\TicketService;
+use Flux\Flux;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -77,16 +78,14 @@ class Panel extends Component
         $result = $assistant->run($original, 'support', null);
         if ($result['status'] !== 'success' || ! is_string($result['text'])) {
             $this->aiError = __('The assistant is unavailable. You can still send your request.');
-
-            return;
-        }
-        if ($original !== $this->description || ! preg_match('/^Title:\s*(.+)\RDescription:\s*([\s\S]+)$/u', $result['text'], $matches)) {
+        } elseif ($original !== $this->description || ! preg_match('/^Title:\s*(.+)\RDescription:\s*([\s\S]+)$/u', $result['text'], $matches)) {
             $this->aiError = __('The assistant response could not be used. Your text is unchanged.');
-
-            return;
+        } else {
+            $this->proposalTitle = Str::limit(trim($matches[1]), 160, '');
+            $this->proposalDescription = trim($matches[2]);
         }
-        $this->proposalTitle = Str::limit(trim($matches[1]), 160, '');
-        $this->proposalDescription = trim($matches[2]);
+
+        Flux::modal('support-panel')->show();
     }
 
     public function acceptProposal(): void

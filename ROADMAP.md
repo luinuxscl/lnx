@@ -8,6 +8,8 @@ Este documento conserva el orden global de trabajo. GitHub es la fuente del esta
 
 Feedback y soporte funciona como módulo independiente. La issue [#34](https://github.com/luinuxscl/lnx/issues/34) permanece abierta: consumirá los eventos y operaciones autorizadas de soporte para integrar mensajería futura sin duplicar historiales.
 
+La mejora de UI/UX del circuito de tickets se registró en [#35](https://github.com/luinuxscl/lnx/issues/35) y permanece abierta sin prioridad asignada.
+
 Priorizar y abordar la mejora visual **#27** (o la siguiente issue acordada con el mantenedor). Las etapas 1 a 7 del roadmap inicial están completas, incluyendo la consulta con fuentes propios RAG (**#17**) y la estandarización del formato numérico con punto para miles y coma para decimales (**#31**).
 
 ## Orden acordado
@@ -23,6 +25,8 @@ Priorizar y abordar la mejora visual **#27** (o la siguiente issue acordada con 
 | 7. Incorporar conocimiento propio | [#17 Consulta con fuentes](https://github.com/luinuxscl/lnx/issues/17) (cerrada) y [#31 Formato numérico](https://github.com/luinuxscl/lnx/issues/31) (cerrada) | #17 (módulo RAG de base de conocimiento con embeddings) y #31 (formato numérico regional) completados y cerrados. | Muy alto |
 
 ## Decisiones de secuencia
+
+- Nueva secuencia acordada: implementar soporte y feedback para usuarios, gestionado exclusivamente por root, antes de [#34 Mensajería interna](https://github.com/luinuxscl/lnx/issues/34) (abierta). Soporte funcionará inicialmente con su conversación y las notificaciones existentes, emitiendo eventos de creación, respuesta y cambio de estado. #34 incorporará mensajería entre usuarios, sistema e IA, envíos individuales/grupales de root/admin e integración con soporte mediante respuestas y acciones autorizadas, conservando un único historial. Esta secuencia no cambia la prioridad relativa de #27.
 
 - #31 se completó: `Number::useLocale('es')` en `AppServiceProvider`, helper `App\Support\NumberFormat`, vistas y componentes numéricos actualizados, suite de pruebas Pest y documentación en `README.md`.
 - #17 se completó: ingesta y chunking de documentos de conocimiento, almacenamiento vectorial integrado con OpenRouter embeddings, herramienta RAG `KnowledgeSearchTool`, filtrado por policies, respuestas con citas verificables, interfaz bilingüe `/knowledge`, suite de pruebas completada y documentación en `README.md`.

@@ -17,7 +17,7 @@ it('hides the configuration menu from users without an admin role', function () 
         ->get(route('dashboard'))
         ->assertOk()
         ->assertDontSee('Repositorio')
-        ->assertDontSee('Configuración general')
+        ->assertDontSee('Configuración')
         ->assertDontSee('Documentación');
 });
 
@@ -30,7 +30,7 @@ it('shows documentation but not the repository to admin users', function () {
         ->assertOk()
         ->assertSee('Documentación')
         ->assertDontSee('Repositorio')
-        ->assertDontSee('Configuración general');
+        ->assertDontSee('Configuración');
 });
 
 it('shows the repository of this application to root users', function () {
@@ -42,7 +42,7 @@ it('shows the repository of this application to root users', function () {
         ->assertOk()
         ->assertSee('Repositorio')
         ->assertSee('https://github.com/luinuxscl/lnx')
-        ->assertSee('Configuración general')
+        ->assertSee('Configuración')
         ->assertSee('admin/settings')
         ->assertSee('Documentación')
         ->assertDontSee('laravel.com/docs');
@@ -54,10 +54,10 @@ it('groups AI tools and hides administration group from standard users', functio
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Herramientas de IA')
-        ->assertSee('Chat interactivo')
-        ->assertSee('Base de Conocimiento')
-        ->assertSee('Extracción de documentos')
+        ->assertSee('AI Tools')
+        ->assertSee('Chat')
+        ->assertSee('RAG')
+        ->assertSee('Document AI')
         ->assertDontSee('Administración');
 });
 
@@ -68,9 +68,10 @@ it('shows administration domain group to admin and root users', function () {
     $this->actingAs($admin)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Herramientas de IA')
+        ->assertSee('AI Tools')
         ->assertSee('Administración')
-        ->assertSee('Usuarios');
+        ->assertSee('Usuarios')
+        ->assertDontSee('Bandeja de soporte');
 
     $root = User::factory()->create();
     $root->assignRole(Role::Root->value);
@@ -78,9 +79,10 @@ it('shows administration domain group to admin and root users', function () {
     $this->actingAs($root)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Herramientas de IA')
+        ->assertSee('AI Tools')
         ->assertSee('Administración')
-        ->assertSee('Configuración general');
+        ->assertSee('Bandeja de soporte')
+        ->assertSee('Configuración');
 });
 
 it('shows the uploaded avatar in desktop and mobile menus with Gravatar fallback', function () {

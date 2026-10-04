@@ -1,5 +1,6 @@
 <?php
 
+use App\Ai\TextAssistant;
 use App\Enums\Role;
 use App\Events\SupportPublicReplyAdded;
 use App\Events\SupportTicketCreated;
@@ -26,6 +27,21 @@ it('allows every authenticated account, including an unverified account, to reac
     $this->get(route('support.index'))->assertRedirect(route('login'));
     $user = User::factory()->unverified()->create();
     $this->actingAs($user)->get(route('support.index'))->assertOk();
+});
+
+it('shows root only their own requests from the header and all requests in the inbox', function () {
+    $root = User::factory()->create();
+    $root->assignRole(Role::Root);
+    $other = User::factory()->create();
+    SupportTicket::factory()->for($root)->create(['title' => 'My printer issue']);
+    SupportTicket::factory()->for($other)->create(['title' => 'Another account issue']);
+
+    $this->actingAs($root)->get(route('support.index', ['mine' => 1]))
+        ->assertSee('My printer issue')
+        ->assertDontSee('Another account issue');
+    $this->actingAs($root)->get(route('support.index'))
+        ->assertSee('My printer issue')
+        ->assertSee('Another account issue');
 });
 
 it('creates a request with private image, alerts root once, and isolates other users', function () {
@@ -102,7 +118,38 @@ it('keeps AI failure separate from sending a request', function () {
     Livewire::actingAs($user)->test(Panel::class)
         ->call('open')->set('description', 'Please help me')
         ->call('suggest')->assertSet('proposalDescription', null)
-        ->assertSet('description', 'Please help me');
+        ->assertSet('description', 'Please help me')
+        ->assertSet('showPanel', true)
+        ->assertDispatched('modal-show')
+        ->set('title', 'Need help')->call('submit')->assertHasNoErrors();
+
+    expect(SupportTicket::firstOrFail()->title)->toBe('Need help');
+});
+
+it('keeps the request open while reviewing and accepting an AI suggestion', function () {
+    $assistant = $this->mock(TextAssistant::class);
+    $assistant->shouldReceive('maxInputChars')->once()->andReturn(8000);
+    $assistant->shouldReceive('run')->once()->with('The button does not respond', 'support', null)
+        ->andReturn(['status' => 'success', 'category' => 'ok', 'text' => "Title: Button does not respond\nDescription: The button does not respond when clicked."]);
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)->test(Panel::class)
+        ->call('open')
+        ->set('description', 'The button does not respond')
+        ->call('suggest')
+        ->assertSet('showPanel', true)
+        ->assertDispatched('modal-show')
+        ->assertSet('title', '')
+        ->assertSet('description', 'The button does not respond')
+        ->assertSet('proposalTitle', 'Button does not respond')
+        ->call('acceptProposal')
+        ->assertSet('showPanel', true)
+        ->assertSet('title', 'Button does not respond')
+        ->assertSet('description', 'The button does not respond when clicked.')
+        ->call('submit')
+        ->assertHasNoErrors();
+
+    expect(SupportTicket::firstOrFail()->title)->toBe('Button does not respond');
 });
 
 it('protects internal attachments and rejects invalid uploads', function () {

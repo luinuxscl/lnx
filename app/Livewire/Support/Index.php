@@ -25,11 +25,19 @@ class Index extends Component
 
     public string $screen = '';
 
+    public bool $mine = false;
+
+    public function mount(): void
+    {
+        $this->mine = request()->query('mine') === '1';
+    }
+
     public function render(): View
     {
         $root = auth()->user()->hasRole(Role::Root);
+        $inbox = $root && ! $this->mine;
         $query = SupportTicket::query()->with('user');
-        if (! $root) {
+        if (! $inbox) {
             $query->where('user_id', auth()->id());
         } else {
             $query->when($this->status, fn ($q) => $q->where('status', $this->status))
@@ -41,7 +49,7 @@ class Index extends Component
 
         return view('livewire.support.index', [
             'tickets' => $query->orderByDesc('created_at')->orderByDesc('id')->paginate(15),
-            'root' => $root,
+            'inbox' => $inbox,
             'statuses' => TicketService::STATUSES,
             'types' => TicketService::TYPES,
             'priorities' => TicketService::PRIORITIES,
