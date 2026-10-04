@@ -68,8 +68,8 @@ git init -b main >/dev/null
 echo "==> Ajustando identidad del proyecto"
 export NAME APP_NAME DOMAIN REPO_URL DOMAIN_URL GITHUB_OWNER
 
-# Enlaces al repositorio (sidebar, reglas y tests del kit).
-grep -rl --exclude-dir=.git -e 'https://github.com/luinuxscl/lnx' -e 'https://github.com/laravel/livewire-starter-kit' . 2>/dev/null \
+# Enlaces al repositorio (sidebar, reglas y tests del kit), excluyendo el manifiesto del kit.
+grep -rl --exclude-dir=.git --exclude='kit-manifest.json' -e 'https://github.com/luinuxscl/lnx' -e 'https://github.com/laravel/livewire-starter-kit' . 2>/dev/null \
     | xargs -r sed -i "s|https://github.com/luinuxscl/lnx|${REPO_URL}|g; s|https://github.com/laravel/livewire-starter-kit|${REPO_URL}|g"
 
 # composer.json
@@ -80,6 +80,12 @@ sed -i "s|\"description\": \"The official Laravel starter kit for Livewire.\"|\"
 sed -i "s|^APP_NAME=.*|APP_NAME=\"${APP_NAME}\"|" .env.example
 sed -i "s|^APP_URL=.*|APP_URL=${DOMAIN_URL}|" .env.example
 sed -i "s|^MAIL_FROM_ADDRESS=.*|MAIL_FROM_ADDRESS=\"no-reply@${DOMAIN}\"|" .env.example
+
+# .ai/kit-manifest.json
+if [[ -f .ai/kit-manifest.json ]]; then
+    CURRENT_ISO="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    sed -i "s|\"updated_at\": \".*\"|\"updated_at\": \"${CURRENT_ISO}\"|" .ai/kit-manifest.json
+fi
 
 # README
 sed -i "s|^# lnx — Base de desarrollo Laravel$|# ${NAME} — Base de desarrollo Laravel\n\n- **Producción:** ${DOMAIN_URL}\n- **Repositorio:** ${REPO_URL}\n- **Kit base:** https://github.com/${GITHUB_OWNER}/lnx|" README.md

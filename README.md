@@ -455,7 +455,9 @@ Define tu habilidad (por ejemplo una policy) y pásala en `ability`; coloca `<li
 
 - `README.md` — este archivo, panorámica del proyecto.
 - `.ai/rules/` — reglas permanentes del proyecto (git flow, documentación).
-- `.ai/skills/` — skills propias versionadas (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`); Boost las distribuye a los clientes configurados.
+- `.ai/skills/` — skills propias versionadas (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `update-agent-kit`); Boost las distribuye a los clientes configurados.
+- `.ai/kit-manifest.json` — manifiesto versionado del kit para agentes (versión, origen, compatibilidad y componentes mantenidos).
+- `.ai/CHANGELOG.md` — registro de cambios y notas de migración del kit de agentes.
 - `git-closeout` — skill global (fuera del repo) para cerrar el ciclo: documentación, commits, integración de ramas y push.
 
 ## Trabajo con agentes
@@ -469,8 +471,9 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 | Dependencias JS | `package.json` y `npm ls --depth=0` |
 | Módulos, rutas y estructura | `app/`, `routes/`, `resources/`; `php artisan route:list --except-vendor` |
 | Reglas por ruta | `.ai/rules/index.md`, luego los archivos indicados |
-| Skills propias | `.ai/skills/` (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`); Boost las distribuye a los clientes configurados |
+| Skills propias | `.ai/skills/` (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `update-agent-kit`); Boost las distribuye a los clientes configurados |
 | Skills de paquetes instalados | `php artisan boost:list-skills --no-interaction`; pueden variar por instalación |
+| Actualización del kit de agentes | `.ai/kit-manifest.json`; `python3 scripts/update-agent-kit.py --preview` (previsualizar) o `--apply` (aplicar) |
 | MCP | Laravel Boost (`php artisan boost:mcp`) cuando el cliente lo configure; el servidor de aplicación de lectura se documenta en **Servidor MCP (lectura)** y no presupone plugins personales |
 | Verificación | `php artisan test --compact`, `vendor/bin/pint --dirty --format agent`, `composer types:check`, `npm run build`, `python3 scripts/check-agent-context.py` |
 
