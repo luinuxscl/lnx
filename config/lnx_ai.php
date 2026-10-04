@@ -131,6 +131,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Interactive Chat
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for the interactive chat feature.
+    |
+    */
+
+    'chat' => [
+        'timeout' => (int) env('AI_CHAT_TIMEOUT', 60),
+        'max_output_tokens' => (int) env('AI_CHAT_MAX_OUTPUT_TOKENS', 2048),
+        'max_input_chars' => (int) env('AI_CHAT_MAX_INPUT_CHARS', 4000),
+        'max_context_messages' => (int) env('AI_CHAT_MAX_CONTEXT_MESSAGES', 20),
+        'retention_days' => (int) env('AI_CHAT_RETENTION_DAYS', 0),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Usage limits
     |--------------------------------------------------------------------------
     |
@@ -174,6 +191,12 @@ return [
                 'window' => (string) env('AI_TEXT_ASSISTANT_LIMIT_WINDOW', 'hour'),
                 'requests' => (int) env('AI_TEXT_ASSISTANT_LIMIT_REQUESTS', 30),
                 'tokens' => (int) env('AI_TEXT_ASSISTANT_LIMIT_TOKENS', 100000),
+            ],
+
+            'chat' => [
+                'window' => (string) env('AI_CHAT_LIMIT_WINDOW', 'hour'),
+                'requests' => (int) env('AI_CHAT_LIMIT_REQUESTS', 40),
+                'tokens' => (int) env('AI_CHAT_LIMIT_TOKENS', 150000),
             ],
         ],
     ],

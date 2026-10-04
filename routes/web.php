@@ -4,6 +4,7 @@ use App\Enums\Role;
 use App\Http\Controllers\AcceptInvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Livewire\Activity\Index as ActivityIndex;
+use App\Livewire\Ai\Chat as AiChat;
 use App\Livewire\Ai\Status as AiStatus;
 use App\Livewire\Ai\TextAssistantDemo as AiTextAssistantDemo;
 use App\Livewire\Ai\Usage as AiUsage;
@@ -23,6 +24,7 @@ Route::post('invitations/{invitation}/{token}', [AcceptInvitationController::cla
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', Dashboard::class)->name('dashboard');
     Route::livewire('notifications', NotificationsIndex::class)->name('notifications.index');
+    Route::livewire('chat/{conversation?}', AiChat::class)->name('chat');
 
     if (app()->environment(['local', 'testing']) && config('app.design_gallery_enabled')) {
         Route::view('design-gallery', 'design-gallery')
