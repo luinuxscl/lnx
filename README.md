@@ -442,6 +442,29 @@ Cada llamada usa la aplicación `text_assistant`, así que aplican la allowlist,
 
 Define tu habilidad (por ejemplo una policy) y pásala en `ability`; coloca `<livewire:ai.text-assistant wire:model="tuCampo" ability="tu-habilidad" />` donde estaba tu campo de texto. El componente reutiliza `App\Ai\Agents\TextAssistantAgent` y `App\Ai\TextAssistant`; para variantes nuevas declara su propia aplicación y límites y pásalos al gateway.
 
+## Chat interactivo (conversacional, streaming y herramientas)
+
+lnx incluye un módulo de chat interactivo conversacional en `/chat` (`chat`) accesible para cualquier cuenta autenticada. Permite crear, seleccionar, continuar y eliminar conversaciones privadas con respuestas progresivas por streaming.
+
+### Aislamiento y privacidad
+
+- Las conversaciones se guardan en las tablas `ai_conversations` y `ai_messages` con clave foránea ligada a la cuenta de usuario.
+- `App\Policies\AiConversationPolicy` y `App\Ai\ChatService` aplican aislamiento estricto: ningún usuario puede ver, enviar mensajes ni eliminar conversaciones ajenas cambiando identificadores.
+
+### Cuotas, modelos y streaming
+
+- Invocado bajo la aplicación `chat` pasando por `AiGateway::stream()`. Valida que el modelo esté en la allowlist y declare la capacidad `streaming`.
+- Aplica cuotas atómicas locales (`AI_CHAT_LIMIT_*`) y registra el consumo en `ai_usage_events`.
+
+### Contexto explícito de página y herramientas de lectura
+
+- El chat soporta recibir contexto explícito de página (`<page_context>`), sanitized en servidor sin enviar formularios ni datos sensibles.
+- Incluye la herramienta de lectura `App\Ai\Tools\ProductHelpSearchTool` que re-valida la autenticación y autorización del usuario en cada ejecución.
+
+### Extender en proyectos derivados
+
+- Para añadir una herramienta de lectura personalizada, crea una clase que implemente `Laravel\Ai\Contracts\Tool`, re-valida `$user->can(...)` dentro de `handle()` y pásala a `ChatService::sendMessage($user, $conv, $prompt, $context, [$miHerramienta])` o configúrala en `ChatAgent::tools()`.
+
 ## Estrategia de ramas (Git Flow)
 
 - `main` — producción, siempre estable.

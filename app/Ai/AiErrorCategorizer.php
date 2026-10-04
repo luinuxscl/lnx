@@ -2,7 +2,10 @@
 
 namespace App\Ai;
 
+use App\Ai\Exceptions\AiNotConfiguredException;
 use App\Ai\Exceptions\AiQuotaExceededException;
+use App\Ai\Exceptions\ModelNotAllowedException;
+use App\Ai\Exceptions\UnsupportedCapabilityException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Laravel\Ai\Exceptions\InsufficientCreditsException;
@@ -42,6 +45,8 @@ class AiErrorCategorizer
     public function categorize(Throwable $exception): string
     {
         return match (true) {
+            $exception instanceof AiNotConfiguredException => self::NOT_CONFIGURED,
+            $exception instanceof ModelNotAllowedException || $exception instanceof UnsupportedCapabilityException => self::MODEL,
             $exception instanceof AiQuotaExceededException => self::LOCAL_QUOTA,
             $exception instanceof InsufficientCreditsException => self::CREDITS,
             $exception instanceof RateLimitedException => self::RATE_LIMITED,
