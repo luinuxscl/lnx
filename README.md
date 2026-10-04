@@ -188,6 +188,17 @@ Se usa la estrategia de Laravel de **"translation strings as keys"**: la clave e
 
 Toda vista nueva o modificada debe crearse **siempre en ambos idiomas**: envuelve los textos en `__()` y añade la clave con su traducción en `lang/es.json` y `lang/en.json`. Los títulos de página pasan por `__($title)` en `resources/views/partials/head.blade.php`, por lo que `#[Title('Profile settings')]` también se traduce.
 
+## Formato numérico estándar
+
+La aplicación estandariza el formateo de números en toda la interfaz utilizando **punto (`.`) para separadores de miles** y **coma (`,`) para separadores decimales** (ejemplo: `1.234.567,89`).
+
+- **Configuración global**: `AppServiceProvider` establece `Illuminate\Support\Number::useLocale('es')` por defecto para que las utilidades nativas de Laravel (`Number::format()`, `Number::currency()`, `Number::fileSize()`, etc.) apliquen esta convención automáticamente.
+- **Helper de formato**: La clase `App\Support\NumberFormat` proporciona métodos estáticos convenientes:
+  - `NumberFormat::format($value, ?int $precision = null)` — formatea enteros o decimales (ej. `1.234,56`).
+  - `NumberFormat::currency($value, string $currency = 'USD', int $precision = 4)` — formatea montos monetarios (ej. `1.234,5678 USD`).
+  - `NumberFormat::fileSize($bytes, int $precision = 1)` — formatea tamaños de archivos (ej. `1,5 MB` o `1.024,0 KB`).
+- **Regla en vistas**: Al presentar contadores, métricas, tablas, uso de IA o montos numéricos en Blade y Livewire, utiliza `Number::format()` o `App\Support\NumberFormat` para mantener la consistencia en todos los idiomas.
+
 ## Autorización (roles)
 
 La app usa **spatie/laravel-permission** y trabaja **por roles, no por permisos granulares**. Roles por defecto (`App\Enums\Role`):
@@ -464,6 +475,71 @@ lnx incluye un módulo de chat interactivo conversacional en `/chat` (`chat`) ac
 ### Extender en proyectos derivados
 
 - Para añadir una herramienta de lectura personalizada, crea una clase que implemente `Laravel\Ai\Contracts\Tool`, re-valida `$user->can(...)` dentro de `handle()` y pásala a `ChatService::sendMessage($user, $conv, $prompt, $context, [$miHerramienta])` o configúrala en `ChatAgent::tools()`.
+
+## Extracción de documentos con IA y revisión
+
+lnx incluye un módulo de extracción de datos de documentos con IA en `/documents` (`documents.index`, `documents.show`). Permite subir documentos privados, procesarlos en cola con OpenRouter, validar la salida JSON contra un esquema configurable, revisar y ajustar los campos mediante una interfaz interactiva y confirmar la extracción.
+
+### Formatos, almacenamiento y privacidad
+
+- **Formatos soportados**: PDF (con texto seleccionable) y archivos de texto plano (`.txt`, `.md`, `.json`, `.csv`).
+- **Almacenamiento privado**: Los archivos se guardan en el disco privado `storage/app/private/documents/{user_id}/`. No son accesibles directamente por URL; la descarga y vista previa están resguardadas por `DocumentExtractionPolicy` y la ruta protegida `/documents/{document}/download`.
+- **PDFs escaneados sin OCR**: Los documentos escaneados sin capa de texto seleccionable se detectan y explican con un error entendible ("Documento escaneado o no legible: OCR no soportado"), sin fallos silenciosos ni OCR implícito.
+
+### Procesamiento en cola y cuotas de IA
+
+- La extracción se ejecuta mediante el job `App\Jobs\ProcessDocumentExtractionJob`.
+- Utiliza la aplicación `document_extraction` a través de `AiGateway::prompt()`, aplicando la reserva de cuotas por usuario y aplicación (`AI_DOCUMENT_LIMIT_*`), registrando el consumo en `ai_usage_events` y manejando reintentos configurados (`$tries = 3`, `$backoff = [10, 30]`).
+- Variables (ver `config/lnx_ai.php` y `.env.example`): `AI_DOCUMENT_TIMEOUT`, `AI_DOCUMENT_MAX_OUTPUT_TOKENS`, `AI_DOCUMENT_MAX_FILE_SIZE_KB`, `AI_DOCUMENT_MAX_PAGES` y el bloque `AI_DOCUMENT_LIMIT_*`.
+
+### Revisión humana y confirmación de negocio
+
+- **Revisión**: En `/documents/{document}` el usuario visualiza advertencias si faltan campos requeridos o hay formatos no estándar, puede editar los campos en `reviewed_data` y guardar borradores sin confirmar.
+- **Confirmación**: Al pulsar "Confirmar documento", el servidor valida los datos, actualiza el estado a `confirmed` y dispara el evento de dominio `App\Events\DocumentExtractionConfirmed`.
+- **Extensión en proyectos derivados**: Para integrar la extracción con modelos de negocio (por ejemplo crear facturas), escucha el evento `DocumentExtractionConfirmed` en un Listener o extiende `App\Ai\DocumentExtractor\SampleExtractionSchema` y `ExtractionValidator` con el esquema propio del dominio.
+
+## Base de Conocimiento e Integración RAG (Consultar conocimiento propio)
+
+lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`knowledge.index`, `knowledge.show`) integrado con el chat interactivo contextual (`/chat`). Permite incorporar manuales, guías o catálogos, dividirlos en fragmentos (chunks), generar embeddings vectoriales mediante OpenRouter y responder preguntas con referencias verificables.
+
+### Infraestructura opcional y almacenamiento vectorial
+
+- **Almacenamiento vectorial integrado**: Los vectores y fragmentos se guardan directamente en las tablas `knowledge_documents` y `knowledge_chunks` de la base de datos de la aplicación (SQLite/PostgreSQL). No se exige una base vectorial externa (Pinecone/Qdrant/pgvector).
+- **Módulo inactivo por defecto**: `AI_KNOWLEDGE_ENABLED=false` mantiene el módulo apagado por defecto. La instalación básica de SQLite funciona sin depender del módulo.
+
+### Embeddings con OpenRouter
+
+- Los embeddings se generan vía Laravel AI SDK (`Embeddings::for(...)`) utilizando OpenRouter con la clave del despliegue (`OPENROUTER_API_KEY`).
+- Modelo predeterminado: `google/gemini-embedding-001` (configurable vía `AI_KNOWLEDGE_EMBEDDING_MODEL` dentro de la lista de modelos permitidos).
+
+### Ingesta, reindexación y retiro de contenido
+
+- **Formatos soportados**: Entrada directa de texto plano o carga de archivos `.txt`, `.md`, `.json`, `.csv`.
+- **Reindexación idempotente**: La reindexación reemplaza atómicamente los fragmentos existentes en base de datos.
+- **Retiro inmediato**: Marcar un documento como retirado (`withdrawn_at`) o eliminarlo impide inmediatamente recuperar sus fragmentos en cualquier consulta de conocimiento.
+
+### Filtrado por autorización (Authorization-first)
+
+- El motor de búsqueda `KnowledgeSearchService` aplica la política `KnowledgeDocumentPolicy` y el scope `accessibleTo($user)` **antes** de enviar fragmentos al LLM. Un usuario nunca puede recuperar fragmentos de documentos a los que no tiene permiso.
+- Las instrucciones contenidas dentro de fragmentos de documentos se tratan estrictamente como texto pasivo de lectura, previniendo inyecciones de prompt.
+
+### Respuestas con citas verificables e integración con Chat
+
+- Las respuestas generadas por el chat citan expresamente las fuentes recuperadas mediante etiquetas `[Fuente: Título (Fragmento #)]`.
+- Cuando las fuentes disponibles no contienen suficiente información para responder a la consulta, el asistente indica explícitamente la falta de sustento.
+- Incluye la herramienta `App\Ai\Tools\KnowledgeSearchTool` accesible para agentes y chats interactivos.
+
+### Cuotas y registro de consumo
+
+- Las peticiones de embeddings y generación de respuestas utilizan las aplicaciones `knowledge_indexing` y `knowledge_query` a través del `AiGateway`, aplicando cuotas locales por usuario/aplicación y registrando el consumo en `ai_usage_events`.
+
+### Evaluación manual de calidad
+
+1. Ingesta de un manual técnico o procedimiento en `/knowledge`.
+2. Verificación de que la indexación genere fragmentos coherentes.
+3. Consulta en `/chat` comprobando que la respuesta incluya citas precisas a la fuente.
+4. Prueba con una pregunta ajena al corpus comprobando que el asistente informe que las fuentes no sustentan la respuesta.
+5. Retiro del documento comprobando la imposibilidad inmediata de recuperar sus fragmentos.
 
 ## Estrategia de ramas (Git Flow)
 

@@ -6,7 +6,7 @@ Este documento conserva el orden global de trabajo. GitHub es la fuente del esta
 
 ## Próximo trabajo
 
-Continuar con **#16** (Extracción documental) o **#17** (Consulta con fuentes), correspondientes a las etapas 6 y 7. #15 (Chat interactivo) se implementó: conversaciones privadas por usuario, aislamiento por policy, respuestas progresivas en streaming vía `AiGateway`, herramientas de lectura con re-validación de autorización (`ProductHelpSearchTool`), cuotas y consumo de la aplicación `chat`, componente Livewire `/chat`, suite de pruebas completada y documentación actualizada.
+Priorizar y abordar la mejora visual **#27** (o la siguiente issue acordada con el mantenedor). Las etapas 1 a 7 del roadmap inicial están completas, incluyendo la consulta con fuentes propios RAG (**#17**) y la estandarización del formato numérico con punto para miles y coma para decimales (**#31**).
 
 ## Orden acordado
 
@@ -17,11 +17,14 @@ Continuar con **#16** (Extracción documental) o **#17** (Consulta con fuentes),
 | 3. Mejorar la experiencia cotidiana | [#10 Preferencias](https://github.com/luinuxscl/lnx/issues/10) (cerrada) → [#9 Notificaciones](https://github.com/luinuxscl/lnx/issues/9) (cerrada) | Preferencias por cuenta y bandeja persistente integradas. | Medio |
 | 4. Consolidar procedimientos probados | [#22 Skills reutilizables](https://github.com/luinuxscl/lnx/issues/22) (cerrada) | Extraer procedimientos de entregas reales de funcionalidad, MCP y verificación. Sus dependencias #18–#21 están cerradas. | Medio |
 | 5. Llevar mejoras a proyectos derivados | [#23 Versionado y actualización](https://github.com/luinuxscl/lnx/issues/23) (cerrada) | Manifiesto versionado, herramienta de actualización determinista con previsualización, preservación de personalizaciones locales, reversión y pruebas. | Alto |
-| 6. Ampliar IA según demanda | [#15 Chat](https://github.com/luinuxscl/lnx/issues/15) (cerrada) y [#16 Extracción documental](https://github.com/luinuxscl/lnx/issues/16) | #15 completado. #16 es independiente. | Alto por módulo |
-| 7. Incorporar conocimiento propio | [#17 Consulta con fuentes](https://github.com/luinuxscl/lnx/issues/17) | Requiere #12, #13 y #15 (resueltas). Validar con documentos reales la recuperación, los permisos y la calidad de las referencias; no requiere #16. | Muy alto |
+| 6. Ampliar IA según demanda | [#15 Chat](https://github.com/luinuxscl/lnx/issues/15) (cerrada) y [#16 Extracción documental](https://github.com/luinuxscl/lnx/issues/16) (cerrada) | #15 y #16 completados. | Alto por módulo |
+| 7. Incorporar conocimiento propio | [#17 Consulta con fuentes](https://github.com/luinuxscl/lnx/issues/17) (cerrada) y [#31 Formato numérico](https://github.com/luinuxscl/lnx/issues/31) (cerrada) | #17 (módulo RAG de base de conocimiento con embeddings) y #31 (formato numérico regional) completados y cerrados. | Muy alto |
 
 ## Decisiones de secuencia
 
+- #31 se completó: `Number::useLocale('es')` en `AppServiceProvider`, helper `App\Support\NumberFormat`, vistas y componentes numéricos actualizados, suite de pruebas Pest y documentación en `README.md`.
+- #17 se completó: ingesta y chunking de documentos de conocimiento, almacenamiento vectorial integrado con OpenRouter embeddings, herramienta RAG `KnowledgeSearchTool`, filtrado por policies, respuestas con citas verificables, interfaz bilingüe `/knowledge`, suite de pruebas completada y documentación en `README.md`.
+- #16 se completó: almacenamiento de archivos privados, extracción de texto plano/PDF, procesamiento con `AiGateway` en la aplicación `document_extraction`, validación de esquema con alertas por campos incompletos, revisión humana y confirmación con emisión de `DocumentExtractionConfirmed`, suite de pruebas Pest completada y documentación en `README.md`.
 - #15 se completó: conversaciones privadas por usuario, aislamiento por `AiConversationPolicy`, `AiGateway::stream()` con cuotas y registro de consumo, `ProductHelpSearchTool` autorizada, componente Livewire bilingüe `/chat`, suite de pruebas pasadas y documentación actualizada.
 
 - #23 se completó: manifiesto `.ai/kit-manifest.json`, script `scripts/update-agent-kit.py` con previsualización, preservación de personalizaciones locales y reversión, skill `update-agent-kit`, suite de pruebas automatizadas y actualización de la documentación del kit.
@@ -39,7 +42,7 @@ Continuar con **#16** (Extracción documental) o **#17** (Consulta con fuentes),
 
 ## Estado actual
 
-GitHub registra 3 issues abiertas: #16, #17 y #27. #15 y #23 ya están cerradas; la mejora visual #27 sigue pendiente de priorización. Skills reutilizables (#22), notificaciones (#9), preferencias por usuario (#10), asistente de texto (#14), cuotas y consumo de IA (#13), base de IA (#12), servidor MCP de lectura (#21), dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19) y coherencia de instrucciones (#20) están cerradas.
+GitHub registra todas las etapas principales (1 a 7) cerradas. La mejora visual #27 sigue pendiente de priorización. Skills reutilizables (#22), notificaciones (#9), preferencias por usuario (#10), asistente de texto (#14), cuotas y consumo de IA (#13), base de IA (#12), servidor MCP de lectura (#21), dashboard por rol (#11), invitaciones (#4), suspensión (#5), historial administrativo (#6), checklist de puesta en marcha (#7), sesiones (#8), contexto de agentes (#18), diseño (#19), coherencia de instrucciones (#20), extracción documental (#16), base de conocimiento RAG (#17) y formato numérico (#31) están cerradas.
 
 ## Mantenimiento
 
