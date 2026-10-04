@@ -29,6 +29,26 @@ def local_target(root: Path, source: Path, reference: str) -> Path | None:
 
 def check_project(root: Path) -> list[str]:
     errors: list[str] = []
+
+    manifest_path = root / ".ai/kit-manifest.json"
+    if not manifest_path.is_file():
+        errors.append(".ai/kit-manifest.json: falta el manifiesto del kit; crea o restaura el manifiesto.")
+    else:
+        try:
+            manifest_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+            required_keys = ["schema_version", "kit_version", "source", "updated_at", "stack_compatibility", "supported_agents", "components"]
+            for key in required_keys:
+                if key not in manifest_data:
+                    errors.append(f".ai/kit-manifest.json: falta la clave requerida '{key}'.")
+            
+            maintained_files = manifest_data.get("components", {}).get("kit_maintained", [])
+            for rel_path in maintained_files:
+                target_file = root / rel_path
+                if not target_file.exists():
+                    errors.append(f".ai/kit-manifest.json: el archivo mantenido {rel_path} no existe en la raíz.")
+        except json.JSONDecodeError:
+            errors.append(".ai/kit-manifest.json: JSON inválido; corrige la sintaxis.")
+
     index = root / ".ai/rules/index.md"
     if not index.is_file():
         return [".ai/rules/index.md: falta el índice; restaura el archivo de reglas."]

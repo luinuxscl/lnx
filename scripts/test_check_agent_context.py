@@ -17,6 +17,7 @@ class AgentContextCheckTest(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
+        self.write(".ai/kit-manifest.json", '{\n  "schema_version": "1.0",\n  "kit_version": "1.0.0",\n  "source": "https://github.com/luinuxscl/lnx",\n  "updated_at": "2026-10-04T00:00:00Z",\n  "stack_compatibility": {"php": ">=8.5"},\n  "supported_agents": ["antigravity"],\n  "components": {"kit_maintained": ["README.md"]}\n}\n')
         self.write(".ai/rules/index.md", "| Applies to | Rule file |\n| --- | --- |\n| ** | .ai/rules/general.md |\n")
         self.write(".ai/rules/general.md", "---\npaths:\n  - '**'\n---\n# General\n")
         self.write(".ai/skills/design-screen/SKILL.md", "---\nname: design-screen\ndescription: Design a screen.\n---\nRead `README.md`.\n")
@@ -64,6 +65,13 @@ class AgentContextCheckTest(unittest.TestCase):
 
         self.assertTrue(any("falta SKILL.md" in error for error in errors))
         self.assertTrue(any("composer.json: JSON inválido" in error for error in errors))
+
+    def test_missing_kit_manifest_fails(self):
+        (self.root / ".ai/kit-manifest.json").unlink()
+
+        errors = checker.check_project(self.root)
+
+        self.assertTrue(any("falta el manifiesto del kit" in error for error in errors))
 
     def test_cli_exits_with_file_and_correction_for_a_broken_fixture(self):
         self.write("README.md", "| Verificación | `python3 scripts/check-agent-context.py` |\n[Missing](missing.md)\n")

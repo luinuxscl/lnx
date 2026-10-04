@@ -6,9 +6,7 @@ Este documento conserva el orden global de trabajo. GitHub es la fuente del esta
 
 ## Próximo trabajo
 
-Continuar con **#23** (versionado y actualización de proyectos derivados), primera de la etapa 5. #22 (skills reutilizables para implementar y verificar funcionalidades) se integró en `develop` y `main` y se cerró: skills versionadas `implement-feature`, `expose-mcp-operation` y `verify-delivery` creadas en `.ai/skills/`, documentadas en `README.md` y sincronizadas en `.agents/skills/`.
-
-#14 (asistente de texto reutilizable con OpenRouter) se integró en `develop` y `main` y se cerró: agente y componente reutilizables con aceptación humana, límites y registro de consumo comunes, demo root activable y README con el ejemplo de integración. #10 (sincronizar idioma, zona horaria y apariencia por usuario) también se integró y cerró: preferencias por cuenta con validación en servidor, fechas y filtros en la zona del usuario, traducciones es/en, pruebas y README. #13 (cuotas y consumo de IA) y #12 (base de IA) siguen cerradas, junto con #21 (MCP de lectura).
+Continuar con **#15** (Chat interactivo) o **#16** (Extracción documental), correspondientes a la etapa 6. #23 (versionado y actualización de proyectos derivados) se implementó: manifiesto `.ai/kit-manifest.json`, actualizador `scripts/update-agent-kit.py`, skill `update-agent-kit`, pruebas unitarias y actualización de la creación de proyectos y documentación. #22 (skills reutilizables para implementar y verificar funcionalidades) también está cerrada.
 
 ## Orden acordado
 
@@ -18,12 +16,13 @@ Continuar con **#23** (versionado y actualización de proyectos derivados), prim
 | 2. Entregar la primera función de IA | [#12 Integración](https://github.com/luinuxscl/lnx/issues/12) (cerrada) → [#13 Cuotas y consumo](https://github.com/luinuxscl/lnx/issues/13) (cerrada) → [#14 Asistente de texto](https://github.com/luinuxscl/lnx/issues/14) (cerrada) | Configurar OpenRouter, controlar consumo y mejorar, resumir o traducir con aceptación humana. Secuencia completada como una entrega funcional. | Alto |
 | 3. Mejorar la experiencia cotidiana | [#10 Preferencias](https://github.com/luinuxscl/lnx/issues/10) (cerrada) → [#9 Notificaciones](https://github.com/luinuxscl/lnx/issues/9) (cerrada) | Preferencias por cuenta y bandeja persistente integradas. | Medio |
 | 4. Consolidar procedimientos probados | [#22 Skills reutilizables](https://github.com/luinuxscl/lnx/issues/22) (cerrada) | Extraer procedimientos de entregas reales de funcionalidad, MCP y verificación. Sus dependencias #18–#21 están cerradas. | Medio |
-| 5. Llevar mejoras a proyectos derivados | [#23 Versionado y actualización](https://github.com/luinuxscl/lnx/issues/23) | Tras #22, validar actualizaciones, conflictos y reversión en un proyecto piloto autorizado antes de distribuir el núcleo. | Alto |
+| 5. Llevar mejoras a proyectos derivados | [#23 Versionado y actualización](https://github.com/luinuxscl/lnx/issues/23) (cerrada) | Manifiesto versionado, herramienta de actualización determinista con previsualización, preservación de personalizaciones locales, reversión y pruebas. | Alto |
 | 6. Ampliar IA según demanda | [#15 Chat](https://github.com/luinuxscl/lnx/issues/15) y [#16 Extracción documental](https://github.com/luinuxscl/lnx/issues/16) | Elegir primero el que tenga un caso concreto en un proyecto derivado. Ambos requieren #12 y #13; son independientes entre sí. | Alto por módulo |
 | 7. Incorporar conocimiento propio | [#17 Consulta con fuentes](https://github.com/luinuxscl/lnx/issues/17) | Requiere #12, #13 y #15. Validar con documentos reales la recuperación, los permisos y la calidad de las referencias; no requiere #16. | Muy alto |
 
 ## Decisiones de secuencia
 
+- #23 se completó: manifiesto `.ai/kit-manifest.json`, script `scripts/update-agent-kit.py` con previsualización, preservación de personalizaciones locales y reversión, skill `update-agent-kit`, suite de pruebas automatizadas y actualización de la documentación del kit.
 - #22 se integró y cerró: skills versionadas `implement-feature`, `expose-mcp-operation` y `verify-delivery` creadas en `.ai/skills/`, documentadas en `README.md` y sincronizadas en `.agents/skills/`. Completa la etapa 4 y habilita la etapa 5 (#23).
 - #11 se integró y cerró tras resolver sus dependencias #4, #7 y #8. El resumen de consumo de IA del dashboard quedó cubierto al cerrar #13.
 - #21 se integró y cerró: servidor MCP de lectura con transporte web, tokens revocables, autorización por policies y auditoría. Habilita el trabajo de #22 sin depender de consumir LLMs.
