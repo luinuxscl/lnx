@@ -10,6 +10,7 @@ Esta referencia registra decisiones reutilizables al aprobar componentes de la b
 | Título de página | `flux:heading` con `level="1"`; el texto visible se traduce. | `resources/views/livewire/dashboard.blade.php` |
 | Título de sección | `flux:heading` con `level="2"`. | `resources/views/livewire/dashboard.blade.php` |
 | Título dentro de tarjeta | `flux:heading` con `level="3"`. | `resources/views/livewire/dashboard.blade.php` |
+| Título de panel de métricas | `flux:heading` con `level="2"` y `size="xl"`, para distinguirlo del valor de cada métrica. | `resources/views/components/statistics-panel.blade.php` |
 | Texto de apoyo | `flux:text`; usa un tamaño menor solo si la información es secundaria. | `resources/views/livewire/dashboard.blade.php` |
 
 ## Espaciado y composición
@@ -20,6 +21,8 @@ Esta referencia registra decisiones reutilizables al aprobar componentes de la b
 | Acciones y tarjetas próximas | `gap-4`. | `resources/views/livewire/dashboard.blade.php` |
 | Secciones o grupos de campos | `mt-6`, `space-y-6` o `gap-6` según el contenedor. | `resources/views/livewire/dashboard.blade.php` |
 | Grilla de tarjetas | El padre define columnas responsivas y separación; el componente no fija su ancho. | `resources/views/livewire/dashboard.blade.php` |
+| Cabecera y métricas de un panel | `space-y-4` entre cabecera y grilla; el panel contiene una grilla de 12 columnas y cada métrica recibe su `col-span-*` desde la invocación. | `resources/views/components/statistics-panel.blade.php` |
+| Métricas como tarjetas individuales | Un contenedor externo usa `grid grid-cols-12 gap-4` y asigna el `col-span-*` a cada `x-stat-card`; la tarjeta reutiliza `x-stat`. | `resources/views/components/stat-card.blade.php` |
 
 ## Superficie, color e interacción
 
@@ -28,6 +31,7 @@ Esta referencia registra decisiones reutilizables al aprobar componentes de la b
 | Tarjetas | `flux:card` antes de crear una superficie propia. | `resources/views/livewire/dashboard.blade.php` |
 | Acento | Variables `--color-accent`, `--color-accent-content` y `--color-accent-foreground`, con seis variantes y modo oscuro. | `resources/css/app.css` |
 | Foco y controles | Mantener foco visible y verificar teclado, claro/oscuro y acentos. | `README.md`, sección «Contrato visual» |
+| Información de actualización opcional | Icono con `flux:tooltip`, texto accesible y foco visible; omitirlo si no hay fecha. | `resources/views/components/statistics-panel.blade.php` |
 
 ## Cómo ampliar esta referencia
 
