@@ -48,6 +48,41 @@ it('shows the repository of this application to root users', function () {
         ->assertDontSee('laravel.com/docs');
 });
 
+it('groups AI tools and hides administration group from standard users', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Herramientas de IA')
+        ->assertSee('Chat interactivo')
+        ->assertSee('Base de Conocimiento')
+        ->assertSee('Extracción de documentos')
+        ->assertDontSee('Administración');
+});
+
+it('shows administration domain group to admin and root users', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    $this->actingAs($admin)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Herramientas de IA')
+        ->assertSee('Administración')
+        ->assertSee('Usuarios');
+
+    $root = User::factory()->create();
+    $root->assignRole(Role::Root->value);
+
+    $this->actingAs($root)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Herramientas de IA')
+        ->assertSee('Administración')
+        ->assertSee('Configuración general');
+});
+
 it('shows the uploaded avatar in desktop and mobile menus with Gravatar fallback', function () {
     Storage::fake('public');
 
