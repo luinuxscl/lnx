@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\DocumentExtractionFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,6 +31,7 @@ use Illuminate\Support\Carbon;
  */
 class DocumentExtraction extends Model
 {
+    /** @use HasFactory<DocumentExtractionFactory> */
     use HasFactory, HasUuids;
 
     public const STATUS_PENDING = 'pending';

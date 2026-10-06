@@ -119,7 +119,7 @@ class InternalConversation extends Model
         if ($this->isDirect()) {
             $other = $this->otherUserFor($viewer);
 
-            return $other?->name ?? __('Unknown user');
+            return $other->name ?? __('Unknown user');
         }
 
         if ($this->isSupport() && $this->ticket) {

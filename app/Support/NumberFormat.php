@@ -21,11 +21,11 @@ class NumberFormat
 
         $numeric = (float) $value;
 
-        if ($precision !== null) {
-            return Number::format($numeric, precision: $precision, locale: 'es');
-        }
+        $formatted = $precision !== null
+            ? Number::format($numeric, precision: $precision, locale: 'es')
+            : Number::format($numeric, locale: 'es');
 
-        return Number::format($numeric, locale: 'es');
+        return $formatted === false ? strval($numeric) : $formatted;
     }
 
     /**

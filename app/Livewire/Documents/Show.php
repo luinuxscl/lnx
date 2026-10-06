@@ -113,8 +113,9 @@ class Show extends Component
     public function removeLineItem(int $index): void
     {
         if (isset($this->line_items[$index])) {
-            unset($this->line_items[$index]);
-            $this->line_items = array_values($this->line_items);
+            $lineItems = $this->line_items;
+            unset($lineItems[$index]);
+            $this->line_items = array_values($lineItems);
         }
     }
 

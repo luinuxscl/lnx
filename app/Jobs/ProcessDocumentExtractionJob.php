@@ -122,8 +122,7 @@ class ProcessDocumentExtractionJob implements ShouldQueue
      */
     protected function sendNotification(string $title, string $message): void
     {
-        // Check if application notification system or database notifications are active
-        if ($this->document->user && method_exists($this->document->user, 'notify')) {
+        if ($this->document->user) {
             try {
                 // Silently attempt notification if notification class exists
                 if (class_exists(DocumentExtractionCompletedNotification::class)) {
