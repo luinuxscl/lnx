@@ -72,6 +72,6 @@ class InternalMessage extends Model
             return $name;
         }
 
-        return $this->user?->name ?? __('Unknown user');
+        return $this->user->name ?? __('Unknown user');
     }
 }
