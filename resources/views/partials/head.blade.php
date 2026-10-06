@@ -3,7 +3,7 @@
 
 <title>
     @php
-        $siteName = ($site ?? null)?->title() ?? config('app.name', 'Laravel');
+        $siteName = ($site ?? null)?->title() ?? config('app.name', 'LNX');
         $pageTitle = filled($title ?? null) ? __($title) : null;
         $metaDescription = ($site ?? null)?->description();
     @endphp
@@ -15,18 +15,9 @@
     <meta name="description" content="{{ $metaDescription }}">
 @endif
 
-@if (($site ?? null)?->faviconUrl())
-    <link rel="icon" href="{{ $site->faviconUrl() }}">
-@else
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-@endif
+<link rel="icon" href="{{ ($site ?? null)?->faviconUrl() ?? asset(\App\Models\Setting::DEFAULT_FAVICON) }}">
 
-@if (($site ?? null)?->appleTouchIconUrl())
-    <link rel="apple-touch-icon" href="{{ $site->appleTouchIconUrl() }}">
-@else
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-@endif
+<link rel="apple-touch-icon" href="{{ ($site ?? null)?->appleTouchIconUrl() ?? asset(\App\Models\Setting::DEFAULT_APPLE_TOUCH_ICON) }}">
 
 @fonts
 
