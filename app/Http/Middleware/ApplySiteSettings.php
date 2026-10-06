@@ -31,10 +31,6 @@ class ApplySiteSettings
             ]);
         }
 
-        if (filled($settings->admin_email)) {
-            config(['mail.from.address' => $settings->admin_email]);
-        }
-
         View::share('site', $settings);
 
         return $next($request);
