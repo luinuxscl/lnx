@@ -56,8 +56,8 @@
         {{ $slot }}
 
         <footer class="mt-auto flex flex-col gap-3 pt-8 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between dark:text-zinc-400">
-            @if (filled(($site ?? null)?->footer_text))
-                <span>{{ $site->footer_text }}</span>
+            @if (filled(($site ?? null)?->footer()))
+                <span>{{ $site->footer() }}</span>
             @endif
 
             <div class="flex flex-wrap items-center gap-x-4 gap-y-2">

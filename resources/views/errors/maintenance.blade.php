@@ -4,11 +4,9 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        <title>{{ __('Maintenance') }} - {{ ($site ?? null)?->title() ?? config('app.name', 'Laravel') }}</title>
+        <title>{{ __('Maintenance') }} - {{ ($site ?? null)?->title() ?? config('app.name', 'LNX') }}</title>
 
-        @if (($site ?? null)?->faviconUrl())
-            <link rel="icon" href="{{ $site->faviconUrl() }}">
-        @endif
+        <link rel="icon" href="{{ ($site ?? null)?->faviconUrl() ?? asset(\App\Models\Setting::DEFAULT_FAVICON) }}">
 
         <style>
             :root {
@@ -88,8 +86,8 @@
 
             <p>{{ $message }}</p>
 
-            @if (filled(($site ?? null)?->site_tagline))
-                <p class="tagline">{{ $site->site_tagline }}</p>
+            @if (filled(($site ?? null)?->tagline()))
+                <p class="tagline">{{ $site->tagline() }}</p>
             @endif
         </main>
     </body>

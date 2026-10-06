@@ -13,9 +13,24 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'LNX'),
 
     'version' => env('APP_VERSION', '0.1.0'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Identity
+    |--------------------------------------------------------------------------
+    |
+    | Default tagline and footer text used when the corresponding site setting
+    | is empty. Derived projects override these in code or through the admin
+    | general settings screen.
+    |
+    */
+
+    'tagline' => env('APP_TAGLINE', 'Base de desarrollo Laravel'),
+
+    'footer_text' => env('APP_FOOTER_TEXT', 'Hecho por Like Innovación'),
 
     /*
     |--------------------------------------------------------------------------
@@ -64,12 +79,12 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
+    | will be used by the PHP date and date-time functions. The timezone is
+    | set to "America/Santiago" by default, the home timezone of the kit.
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'America/Santiago'),
 
     /*
     |--------------------------------------------------------------------------

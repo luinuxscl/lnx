@@ -42,6 +42,24 @@ El despliegue de referencia (Coolify + PostgreSQL + `Dockerfile`) usa:
 - `trustProxies(at: '*')` en `bootstrap/app.php` para detectar HTTPS tras Traefik.
 - El usuario de prueba del `DatabaseSeeder` solo se crea fuera de producción.
 
+## Identidad y valores por defecto
+
+lnx define su identidad por defecto en capas, de modo que una instalación nueva se ve como LNX sin configurar nada:
+
+| Valor | Por defecto | Origen |
+|---|---|---|
+| Nombre de la app | `LNX` | `APP_NAME` (`config('app.name')`) |
+| Lema | `Base de desarrollo Laravel` | `APP_TAGLINE` (`config('app.tagline')`) |
+| Texto del footer | `Hecho por Like Innovación` | `APP_FOOTER_TEXT` (`config('app.footer_text')`) |
+| Zona horaria | `America/Santiago` | `APP_TIMEZONE` (`config('app.timezone')`) |
+| Idioma | Español (`es`); inglés (`en`) disponible | `APP_LOCALE` / `APP_FALLBACK_LOCALE` |
+| Logo | `public/branding/lnx-logo.png` | `App\Models\Setting::DEFAULT_LOGO` |
+| Favicon / Apple touch icon | `public/favicon.png` / `public/apple-touch-icon.png` | `Setting::DEFAULT_FAVICON` / `Setting::DEFAULT_APPLE_TOUCH_ICON` |
+
+- La fila de `settings` **sobrescribe** estos valores: si el sitio define título, lema, footer, logo o favicon, se usan esos. Con los campos vacíos se aplican los defaults de arriba.
+- `App\Models\Setting` expone `title()`, `tagline()`, `footer()`, `logoUrl()`, `logoDarkUrl()`, `faviconUrl()` y `appleTouchIconUrl()` con esos fallbacks. `Setting::logoUrl()` siempre devuelve una URL (el logo del kit si no hay uno subido).
+- `new-project.sh` sustituye `APP_NAME` y `APP_URL`; el resto de defaults se pueden cambiar en `.env` o en **Configuración general** (`/admin/settings`).
+
 ## Requisitos
 
 - PHP >= 8.5
@@ -63,7 +81,7 @@ php artisan serve
 
 ## Historial de actividad administrativa
 
-La página **Actividad administrativa** (`/admin/activity`) está disponible exclusivamente para `root`. Muestra actor, fecha, acción y recurso, permite desplegar valores anteriores/nuevos y combina filtros por actor histórico, acción y días desde/hasta. Los filtros se conservan en la URL; la página muestra 10 registros por vez. Las fechas se presentan y los filtros de días se interpretan en la zona horaria del usuario autenticado (`users.timezone`); sin preferencia se usa `config('app.timezone')` (UTC por defecto) y abarcan los días completos.
+La página **Actividad administrativa** (`/admin/activity`) está disponible exclusivamente para `root`. Muestra actor, fecha, acción y recurso, permite desplegar valores anteriores/nuevos y combina filtros por actor histórico, acción y días desde/hasta. Los filtros se conservan en la URL; la página muestra 10 registros por vez. Las fechas se presentan y los filtros de días se interpretan en la zona horaria del usuario autenticado (`users.timezone`); sin preferencia se usa `config('app.timezone')` (America/Santiago por defecto) y abarcan los días completos.
 
 Se registran las altas por invitación, ediciones, cambios de rol, cambios administrativos de contraseña (solo el hecho), eliminaciones, suspensiones y reactivaciones de usuarios; cambios de configuración e imágenes; y creación, renovación, revocación, aceptación y resultado de envío de invitaciones. Los registros conservan identificadores y copias del nombre y correo del actor y recurso aunque se eliminen. La aceptación se atribuye al destinatario y el alta queda vinculada con su invitación. El historial no contiene contraseñas, hashes de tokens, enlaces de aceptación, secretos 2FA, credenciales de passkeys ni excepciones; para imágenes solo conserva rutas relativas.
 
@@ -146,7 +164,7 @@ Al desplegar, aplicar la migración `add_preferences_to_users_table` con `php ar
 - **Menú agrupado por dominios con prioridad de root**: el sidebar organiza las opciones principales en dominios lógicos usando `<flux:sidebar.group>`. `Dashboard` es siempre el primer ítem. Para `root`, tras `Dashboard` va el grupo **Administración** (`Administration`, `cog-6-tooth`) con sus herramientas (Soporte, Usuarios, Actividad, Ajustes, Checklist e IA) y después el grupo **Herramientas de IA** (`AI Tools`) con Chat, RAG y Document AI; se omiten los ítems sin destino `Repository` y `Documentation`. Para `admin` y usuarios normales el orden es `Dashboard`, **Herramientas de IA** y, tras el espaciador, la sección **Administración** (`Users` y `Documentation`), visible solo para `admin`.
 - **Sidebar colapsable** (desktop): el `<flux:sidebar collapsible>` se colapsa a barra de iconos. El estado se persiste en `localStorage['flux-sidebar-collapsed-desktop']` (gestionado por Flux). `resources/views/partials/head.blade.php` siembra el valor `true` en la primera visita, por lo que arranca **colapsado por defecto**; cada toggle posterior lo sobrescribe. En móvil conserva el overlay. Al colapsar en escritorio, los grupos desplegables (`<flux:sidebar.group>`) se convierten automáticamente en un flyout dropdown hover.
 - **Botón de colapso en el sidebar**: `<flux:sidebar.collapse>` en el header del sidebar (patrón oficial de Flux). Al colapsar, el logo se oculta al hacer hover y es sustituido por el botón de expansión; por eso el botón debe estar presente en desktop (no usar `lg:hidden`).
-- **Marca del sidebar**: junto al logo, `x-app-logo` muestra el título en negrita y, si existe, `site_tagline` debajo en texto más pequeño. Sin lema, solo se muestra el título; si falta el título configurado, se usa `APP_NAME`. Los textos largos se truncan para dejar disponible el botón de colapso.
+- **Marca del sidebar**: junto al logo, `x-app-logo` muestra el título en negrita y, debajo en texto más pequeño, `tagline()` (configurado o el default `APP_TAGLINE`). Si no hay lema, solo se muestra el título; si falta el título configurado, se usa `APP_NAME`. Los textos largos se truncan para dejar disponible el botón de colapso.
 - **Header de contenido** (solo desktop, `max-lg:hidden`): se renderiza dentro de `<flux:main>` en `layouts/app.blade.php` con el breadcrumb (`flux:breadcrumbs`) a la izquierda y, a la derecha, el botón `Messages` (enlace a `/messages`), la campana de notificaciones, el botón de modo claro/oscuro (`$flux.dark`) y el selector de idioma. En móvil, el botón `Messages` aparece junto a la campana en el header móvil del sidebar. El colapso del sidebar se controla solo desde su propio botón en el header del sidebar.
 - **Breadcrumbs por página**: cada página pasa un arreglo `['label' => string, 'href' => string|null]`; el último item sin `href` es la página actual. En Blade: `<x-layouts::app :breadcrumbs="[...]">`; en componentes Livewire full-page, `render()` devuelve `view(...)->layout('layouts.app', ['breadcrumbs' => [...]])`.
 - **Alto del contenido**: `<flux:main>` es una columna flex (`flex flex-col`) para que el header de contenido y los banners convivan con la página. Una página que debe ocupar el alto restante usa `flex-1` en su raíz, **nunca `h-full`**: `h-full` reclama el 100% del alto de `main` y, al sumarse el header/banner, desborda la fila del grid; ese desborde impide que la fila crezca y rompe el sidebar sticky (el sidebar deja de cubrir todo el alto y aparece un hueco al hacer scroll).
@@ -252,19 +270,19 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 
 | Sección | Campo | Efecto |
 |---|---|---|
-| Identidad | Title | `config('app.name')`, `<title>`, marca del sidebar. |
-| Identidad | Tagline | Lema del sitio bajo el título del sidebar (y fallback de la meta descripción). |
+| Identidad | Title | `config('app.name')`, `<title>`, marca del sidebar. Sin valor cae a `APP_NAME` (`LNX`). |
+| Identidad | Tagline | Lema del sitio bajo el título del sidebar (y fallback de la meta descripción). Vacío usa `APP_TAGLINE`. |
 | Identidad | Meta description | `<meta name="description">` (fallback: Tagline). |
 | Identidad | Administration email | Destinatario del correo de prueba del checklist y validación de identidad; no altera el remitente de correo. |
-| Personalización | Logo / Dark mode logo | Logo del encabezado y sidebar; las imágenes personalizadas se muestran sobre un fondo transparente y el icono predeterminado conserva su fondo. |
-| Personalización | Favicon / Apple touch icon | Iconos del `<head>`. |
-| Avanzado | Footer text | Texto mostrado en el footer del contenido de las páginas autenticadas. |
+| Personalización | Logo / Dark mode logo | Logo del encabezado, sidebar y pantallas de autenticación; el logo personalizado se muestra sobre fondo transparente. Sin archivo se usa el logo del kit. |
+| Personalización | Favicon / Apple touch icon | Iconos del `<head>`. Sin archivo se usan `favicon.png` y `apple-touch-icon.png` del kit. |
+| Avanzado | Footer text | Texto mostrado en el footer del contenido de las páginas autenticadas. Vacío usa `APP_FOOTER_TEXT`. |
 | Avanzado | Analytics ID | ID de GA4 inyectado en el `<head>` (solo en producción). |
 | Avanzado | Maintenance mode + message | Bloquea la app con una página 503; root y las rutas de auth siguen accesibles. |
 
 ### Cómo se aplica
 
-- El footer del contenido muestra siempre la marca Like Innovación. Solo `admin` y `root` ven la versión de LNX, definida con `APP_VERSION` (valor predeterminado `0.1.0`).
+- El footer del contenido muestra el `footer_text` (por defecto `Hecho por Like Innovación`) y la marca Like Innovación. Solo `admin` y `root` ven la versión de LNX, definida con `APP_VERSION` (valor predeterminado `0.1.0`).
 - `App\Http\Middleware\ApplySiteSettings` (grupo `web`) vuelca los settings en `config()` y comparte `$site` con todas las vistas; `resources/views/partials/head.blade.php`, `resources/views/components/app-logo.blade.php` y el sidebar lo consumen.
 - El remitente de los correos (`config('mail.from.address')`) proviene de `MAIL_FROM_ADDRESS` y debe pertenecer a un dominio verificado en el proveedor (por ejemplo, Resend). El email de administración es solo un destinatario y no lo sobrescribe.
 - `App\Http\Middleware\CheckMaintenanceMode` (grupo `web`) devuelve la vista `errors/maintenance.blade.php` (503) cuando el modo mantenimiento está activo. Los usuarios root y las rutas de autenticación quedan exentos para poder desactivarlo.
