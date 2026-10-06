@@ -4,6 +4,7 @@ namespace App\Livewire\Messages;
 
 use App\Enums\Role;
 use App\Models\InternalConversation;
+use App\Models\InternalMessage;
 use App\Models\User;
 use App\Support\Appearance;
 use App\Support\MessagingService;
@@ -27,6 +28,11 @@ class Index extends Component
     public string $tab = 'chats';
 
     public string $newMessageBody = '';
+
+    // In-conversation search
+    public bool $showMessageSearch = false;
+
+    public string $messageSearch = '';
 
     // New conversation modal state
     public bool $showNewModal = false;
@@ -78,6 +84,22 @@ class Index extends Component
         $messagingService->markAsRead($user, $conversation);
         $this->resetValidation();
         $this->newMessageBody = '';
+        $this->closeMessageSearch();
+    }
+
+    public function toggleMessageSearch(): void
+    {
+        $this->showMessageSearch = ! $this->showMessageSearch;
+
+        if (! $this->showMessageSearch) {
+            $this->messageSearch = '';
+        }
+    }
+
+    public function closeMessageSearch(): void
+    {
+        $this->showMessageSearch = false;
+        $this->messageSearch = '';
     }
 
     public function selectContactUser(int $userId, MessagingService $messagingService): void
@@ -248,6 +270,13 @@ class Index extends Component
                         ->orderBy('created_at')
                         ->orderBy('id')
                         ->get();
+
+                    if (trim($this->messageSearch) !== '') {
+                        $needle = mb_strtolower(trim($this->messageSearch));
+                        $messages = $messages
+                            ->filter(fn (InternalMessage $message): bool => str_contains(mb_strtolower($message->body), $needle))
+                            ->values();
+                    }
                 } catch (\Throwable) {
                     $selectedConversation = null;
                 }

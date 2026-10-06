@@ -17,9 +17,8 @@
         <div class="col-span-12 flex flex-col space-y-4 border-r border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40 lg:col-span-4">
             {{-- User Header & Search --}}
             <div class="flex items-center gap-3">
-                <div class="relative shrink-0">
+                <div class="shrink-0">
                     <x-user-avatar :user="auth()->user()" size="sm" />
-                    <span class="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900"></span>
                 </div>
                 <div class="flex-1">
                     <flux:input
@@ -80,49 +79,48 @@
                             $otherUser = $conv->otherUserFor(auth()->user());
                             $lastMsg = $conv->latestMessage;
                         @endphp
-                        <div
+                        <button
+                            type="button"
                             wire:key="conversation-{{ $conv->id }}"
                             wire:click="selectConversation({{ $conv->id }})"
-                            class="group relative cursor-pointer rounded-xl border p-2.5 transition-all {{ $isSelected ? 'border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 shadow-xs dark:bg-indigo-950/30' : 'border-transparent bg-white/80 hover:border-zinc-200 hover:bg-white dark:bg-zinc-900/60 dark:hover:border-zinc-800 dark:hover:bg-zinc-800/60' }}"
+                            @if ($isSelected) aria-current="true" @endif
+                            class="group flex w-full cursor-pointer items-center gap-3 rounded-xl border p-2.5 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset {{ $isSelected ? 'border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 shadow-xs dark:bg-indigo-950/30' : 'border-transparent bg-white/80 hover:border-zinc-200 hover:bg-white dark:bg-zinc-900/60 dark:hover:border-zinc-800 dark:hover:bg-zinc-800/60' }}"
                         >
-                            <div class="flex items-center gap-3">
-                                <div class="relative shrink-0">
-                                    @if ($otherUser)
-                                        <x-user-avatar :user="$otherUser" size="sm" />
-                                    @else
-                                        <flux:avatar :name="$title" size="sm" />
+                            <div class="shrink-0">
+                                @if ($otherUser)
+                                    <x-user-avatar :user="$otherUser" size="sm" />
+                                @else
+                                    <flux:avatar :name="$title" size="sm" />
+                                @endif
+                            </div>
+
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-1">
+                                    <h4 class="truncate text-sm font-semibold text-zinc-900 dark:text-white">
+                                        {{ $title }}
+                                    </h4>
+                                    @if ($conv->last_message_at)
+                                        <span class="shrink-0 text-[11px] text-zinc-400">
+                                            {{ $conv->last_message_at->copy()->timezone($timezone)->diffForHumans(null, true) }}
+                                        </span>
                                     @endif
-                                    <span class="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900"></span>
                                 </div>
 
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center justify-between gap-1">
-                                        <h4 class="truncate text-sm font-semibold text-zinc-900 dark:text-white">
-                                            {{ $title }}
-                                        </h4>
-                                        @if ($conv->last_message_at)
-                                            <span class="shrink-0 text-[11px] text-zinc-400">
-                                                {{ $conv->last_message_at->copy()->timezone($timezone)->diffForHumans(null, true) }}
-                                            </span>
+                                <div class="mt-0.5 flex items-center justify-between gap-2">
+                                    <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                                        @if ($lastMsg)
+                                            {{ Str::limit($lastMsg->body, 35) }}
+                                        @else
+                                            <span class="italic text-zinc-400">{{ __('No messages yet') }}</span>
                                         @endif
-                                    </div>
+                                    </p>
 
-                                    <div class="mt-0.5 flex items-center justify-between gap-2">
-                                        <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">
-                                            @if ($lastMsg)
-                                                {{ Str::limit($lastMsg->body, 35) }}
-                                            @else
-                                                <span class="italic text-zinc-400">{{ __('No messages yet') }}</span>
-                                            @endif
-                                        </p>
-
-                                        @if ($unread > 0)
-                                            <flux:badge color="amber" size="sm" class="shrink-0 font-bold">{{ $unread }}</flux:badge>
-                                        @endif
-                                    </div>
+                                    @if ($unread > 0)
+                                        <flux:badge color="amber" size="sm" class="shrink-0 font-bold">{{ $unread }}</flux:badge>
+                                    @endif
                                 </div>
                             </div>
-                        </div>
+                        </button>
                     @empty
                         <div class="py-12 text-center text-zinc-400">
                             <flux:icon.chat-bubble-left-right class="mx-auto size-8 text-zinc-300 dark:text-zinc-700" />
@@ -135,15 +133,15 @@
             @else
                 <div class="max-h-[560px] flex-1 space-y-2 overflow-y-auto pr-1">
                     @forelse ($availableUsers as $contactUser)
-                        <div
+                        <button
+                            type="button"
                             wire:key="contact-{{ $contactUser->id }}"
                             wire:click="selectContactUser({{ $contactUser->id }})"
-                            class="group flex cursor-pointer items-center justify-between rounded-xl border border-transparent bg-white/80 p-2.5 transition-all hover:border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/5 dark:bg-zinc-900/60 dark:hover:border-indigo-500/30 dark:hover:bg-indigo-950/30"
+                            class="group flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-transparent bg-white/80 p-2.5 text-left transition-all hover:border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset dark:bg-zinc-900/60 dark:hover:border-indigo-500/30 dark:hover:bg-indigo-950/30"
                         >
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="relative shrink-0">
+                            <div class="flex min-w-0 items-center gap-3">
+                                <div class="shrink-0">
                                     <x-user-avatar :user="$contactUser" size="sm" />
-                                    <span class="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900"></span>
                                 </div>
                                 <div class="min-w-0">
                                     <h4 class="truncate text-sm font-semibold text-zinc-900 dark:text-white">
@@ -155,10 +153,11 @@
                                 </div>
                             </div>
 
-                            <flux:button size="xs" variant="ghost" icon="chat-bubble-left">
+                            <span class="flex shrink-0 items-center gap-1 text-xs font-medium text-[var(--color-accent)] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                <flux:icon.chat-bubble-left class="size-4" />
                                 {{ __('Start chat') }}
-                            </flux:button>
-                        </div>
+                            </span>
+                        </button>
                     @empty
                         <div class="py-12 text-center text-zinc-400">
                             <flux:icon.users class="mx-auto size-8 text-zinc-300 dark:text-zinc-700" />
@@ -178,58 +177,148 @@
                 @endphp
 
                 {{-- Chat Header with Search Action --}}
-                <div class="flex items-center justify-between border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
-                    <div class="flex items-center gap-3">
-                        <div class="relative shrink-0">
-                            @if ($activeUser)
-                                <x-user-avatar :user="$activeUser" size="sm" />
-                            @else
-                                <flux:avatar :name="$activeTitle" size="sm" />
-                            @endif
-                            <span class="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900"></span>
-                        </div>
-                        <div>
-                            <flux:heading level="2" class="text-sm font-semibold">
-                                {{ $activeTitle }}
-                            </flux:heading>
-                            <div class="mt-0.5 flex items-center gap-2">
-                                @if ($selectedConversation->isDirect())
-                                    <span class="text-[11px] text-emerald-500 font-medium">● {{ __('Online') }}</span>
-                                @elseif ($selectedConversation->isGroup())
-                                    <span class="text-[11px] text-zinc-400">{{ $selectedConversation->participants->count() }} {{ __('participants') }}</span>
-                                @elseif ($selectedConversation->isAnnouncement())
-                                    <flux:badge size="sm" color="emerald">{{ __('Announcement') }}</flux:badge>
-                                @elseif ($selectedConversation->isSupport())
-                                    <flux:badge size="sm" color="amber">{{ __('Support ticket') }} #{{ $selectedConversation->support_ticket_id }}</flux:badge>
+                <div class="border-b border-zinc-200 dark:border-zinc-800">
+                    <div class="flex items-center justify-between px-5 py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="shrink-0">
+                                @if ($activeUser)
+                                    <x-user-avatar :user="$activeUser" size="sm" />
+                                @else
+                                    <flux:avatar :name="$activeTitle" size="sm" />
                                 @endif
                             </div>
+                            <div>
+                                <flux:heading level="2" class="text-sm font-semibold">
+                                    {{ $activeTitle }}
+                                </flux:heading>
+                                <div class="mt-0.5 flex items-center gap-2">
+                                    @if ($selectedConversation->isDirect())
+                                        <span class="text-[11px] text-zinc-400">{{ __('Direct message') }}</span>
+                                    @elseif ($selectedConversation->isGroup())
+                                        <span class="text-[11px] text-zinc-400">{{ $selectedConversation->participants->count() }} {{ __('participants') }}</span>
+                                    @elseif ($selectedConversation->isAnnouncement())
+                                        <flux:badge size="sm" color="emerald">{{ __('Announcement') }}</flux:badge>
+                                    @elseif ($selectedConversation->isSupport())
+                                        <flux:badge size="sm" color="amber">{{ __('Support ticket') }} #{{ $selectedConversation->support_ticket_id }}</flux:badge>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1">
+                            <flux:button
+                                size="sm"
+                                :variant="$showMessageSearch ? 'filled' : 'ghost'"
+                                icon="magnifying-glass"
+                                tooltip="{{ __('Search in conversation') }}"
+                                wire:click="toggleMessageSearch"
+                                :aria-expanded="$showMessageSearch ? 'true' : 'false'"
+                            />
                         </div>
                     </div>
 
-                    {{-- Header Action Icon: Only Search as requested --}}
-                    <div class="flex items-center gap-1">
-                        <flux:button size="sm" variant="ghost" icon="magnifying-glass" tooltip="{{ __('Search in conversation') }}" />
-                    </div>
+                    @if ($showMessageSearch)
+                        <div class="flex items-center gap-2 border-t border-zinc-100 px-5 py-2 dark:border-zinc-800/60">
+                            <flux:input
+                                wire:model.live.debounce.300ms="messageSearch"
+                                icon="magnifying-glass"
+                                size="sm"
+                                autofocus
+                                placeholder="{{ __('Search in conversation') }}"
+                                class="flex-1"
+                            />
+                            <span class="shrink-0 text-[11px] text-zinc-400">{{ $messages->count() }} {{ __('results') }}</span>
+                            <flux:button
+                                size="sm"
+                                variant="ghost"
+                                icon="x-mark"
+                                wire:click="closeMessageSearch"
+                                :aria-label="__('Clear search')"
+                            />
+                        </div>
+                    @endif
                 </div>
 
-                {{-- Messages Stream Area (Exact WhatsApp alignment & tight bounds) --}}
-                <div class="flex-1 space-y-2.5 overflow-y-auto p-4 max-h-[520px]">
-                    @php
-                        $previousDate = null;
-                    @endphp
-
-                    @forelse ($messages as $msg)
+                {{-- Messages Stream Area (WhatsApp alignment, auto-scroll and live refresh) --}}
+                <div
+                    class="relative flex-1 min-h-0"
+                    wire:poll.5s
+                    x-data="{
+                        showJump: false,
+                        atBottom() {
+                            const el = this.$refs.stream;
+                            return el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+                        },
+                        jump() {
+                            this.$nextTick(() => {
+                                this.$refs.stream.scrollTop = this.$refs.stream.scrollHeight;
+                            });
+                        },
+                        init() {
+                            this.jump();
+                            new MutationObserver(() => {
+                                if (this.atBottom()) { this.jump(); }
+                                this.showJump = !this.atBottom();
+                            }).observe(this.$refs.stream, { childList: true, subtree: true });
+                        },
+                    }"
+                >
+                    <div
+                        x-ref="stream"
+                        @scroll.throttle.150ms="showJump = !atBottom()"
+                        class="h-full overflow-y-auto p-4"
+                    >
                         @php
-                            $msgDate = $msg->created_at->copy()->timezone($timezone);
-                            $dateKey = $msgDate->format('Y-m-d');
-                            $dateLabel = $msgDate->isToday()
-                                ? __('Today')
-                                : ($msgDate->isYesterday() ? __('Yesterday') : $msgDate->format('d/m/Y'));
-                            $isMe = $msg->user_id === auth()->id() && $msg->isUser();
-                            $timeFormatted = $msgDate->isToday()
-                                ? $msgDate->format('H:i')
-                                : $msgDate->format('d/m H:i');
+                            $previousDate = null;
+                            $previousMessage = null;
+                            $senderKeyFor = function (\App\Models\InternalMessage $message): string {
+                                return match (true) {
+                                    $message->isSystem() => 'system',
+                                    $message->isAi() => 'ai:'.($message->sender_name ?? $message->user_id),
+                                    default => 'user:'.$message->user_id,
+                                };
+                            };
+                            $sameGroupAs = function (?\App\Models\InternalMessage $a, ?\App\Models\InternalMessage $b) use ($senderKeyFor, $timezone): bool {
+                                if (! $a || ! $b || $senderKeyFor($a) !== $senderKeyFor($b)) {
+                                    return false;
+                                }
+                                $timeA = $a->created_at->copy()->timezone($timezone);
+                                $timeB = $b->created_at->copy()->timezone($timezone);
+
+                                return $timeA->isSameDay($timeB) && $timeA->diffInMinutes($timeB) < 5;
+                            };
+                            $showSenderNames = $selectedConversation->isGroup();
                         @endphp
+
+                        @forelse ($messages as $msg)
+                            @php
+                                $msgDate = $msg->created_at->copy()->timezone($timezone);
+                                $dateKey = $msgDate->format('Y-m-d');
+                                $dateLabel = $msgDate->isToday()
+                                    ? __('Today')
+                                    : ($msgDate->isYesterday() ? __('Yesterday') : $msgDate->format('d/m/Y'));
+                                $isMe = $msg->user_id === auth()->id() && $msg->isUser();
+                                $timeFormatted = $msgDate->isToday()
+                                    ? $msgDate->format('H:i')
+                                    : $msgDate->format('d/m H:i');
+
+                                $needle = trim($messageSearch);
+                                $bodyHtml = e($msg->body);
+                                if ($needle !== '') {
+                                    $bodyHtml = preg_replace(
+                                        '/('.preg_quote(e($needle), '/').')/iu',
+                                        '<mark class="rounded bg-amber-200/70 px-0.5 text-inherit dark:bg-amber-400/30">$1</mark>',
+                                        $bodyHtml,
+                                    );
+                                }
+
+                                $isFirstInGroup = ! $sameGroupAs($previousMessage, $msg);
+                                $isLastInGroup = ! $sameGroupAs($msg, $messages->get($loop->index + 1));
+                                $previousMessage = $msg;
+                                $bubbleRadius = $isMe
+                                    ? ($isFirstInGroup ? 'rounded-tr-xs' : 'rounded-tr-none')
+                                    : ($isFirstInGroup ? 'rounded-tl-xs' : 'rounded-tl-none');
+                            @endphp
 
                         {{-- Date Separator Pill --}}
                         @if ($previousDate !== $dateKey)
@@ -253,52 +342,91 @@
                         @else
                             <div
                                 wire:key="msg-{{ $msg->id }}"
-                                class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }}"
+                                class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }} {{ $isFirstInGroup ? 'mt-2.5' : 'mt-0.5' }}"
                             >
-                                <div class="relative w-fit max-w-[75%] rounded-xl px-2.5 py-1 text-sm shadow-xs {{ $isMe ? 'rounded-tr-xs bg-[var(--color-accent)] text-white text-right' : ($msg->isAi() ? 'rounded-tl-xs border border-purple-500/30 bg-purple-50 dark:bg-purple-950/40 text-purple-900 dark:text-purple-100 text-left' : 'rounded-tl-xs border border-zinc-200 bg-zinc-100 dark:border-zinc-700/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-left') }}">
+                                @if ($showSenderNames && ! $isMe && $isFirstInGroup)
+                                    <span class="mb-0.5 px-1 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                                        {{ $msg->displaySenderName() }}
+                                    </span>
+                                @endif
+
+                                <div class="relative w-fit max-w-[75%] rounded-lg px-2.5 py-1.5 text-left text-base shadow-xs {{ $bubbleRadius }} {{ $isMe ? 'bg-[var(--color-accent)] text-white' : ($msg->isAi() ? 'border border-purple-500/30 bg-purple-50 text-purple-900 dark:bg-purple-950/40 dark:text-purple-100' : 'border border-zinc-200 bg-zinc-100 text-zinc-900 dark:border-zinc-700/80 dark:bg-zinc-800 dark:text-zinc-100') }}">
                                     @if ($msg->isAi())
                                         <div class="mb-0.5 flex items-center gap-1 text-[11px] font-semibold text-purple-600 dark:text-purple-300">
                                             <flux:badge size="sm" color="purple">{{ __('AI') }}</flux:badge>
                                         </div>
                                     @endif
 
-                                    <span class="whitespace-pre-wrap leading-snug">
-                                        {{ $msg->body }}
-                                    </span>
+                                    <span class="whitespace-pre-wrap leading-snug">{!! $bodyHtml !!}</span>
 
-                                    <span class="ml-1.5 inline-flex items-center gap-0.5 align-bottom text-[10px] select-none shrink-0 {{ $isMe ? 'text-white/80' : 'text-zinc-500 dark:text-zinc-400' }}">
-                                        <span>{{ $timeFormatted }}</span>
-                                        @if ($isMe)
-                                            <flux:icon.check class="size-3 text-white/90" />
-                                        @endif
-                                    </span>
+                                    @if ($isLastInGroup)
+                                        <span class="ml-1.5 inline-flex shrink-0 select-none items-center gap-0.5 align-bottom text-[10px] {{ $isMe ? 'text-white/80' : 'text-zinc-500 dark:text-zinc-400' }}">
+                                            <span>{{ $timeFormatted }}</span>
+                                            @if ($isMe)
+                                                <flux:icon.check class="size-3 text-white/90" />
+                                            @endif
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                         @endif
-                    @empty
-                        <div class="flex h-full flex-col items-center justify-center py-16 text-center text-zinc-400">
-                            <flux:icon.chat-bubble-bottom-center-text class="size-10 text-zinc-300 dark:text-zinc-700" />
-                            <p class="mt-2 text-xs font-medium">{{ __('No messages yet. Send the first message below.') }}</p>
-                        </div>
-                    @endforelse
+                        @empty
+                            <div class="flex h-full flex-col items-center justify-center py-16 text-center text-zinc-400">
+                                <flux:icon.chat-bubble-bottom-center-text class="size-10 text-zinc-300 dark:text-zinc-700" />
+                                @if (trim($messageSearch) !== '')
+                                    <p class="mt-2 text-xs font-medium">{{ __('No messages match your search.') }}</p>
+                                @else
+                                    <p class="mt-2 text-xs font-medium">{{ __('No messages yet. Send the first message below.') }}</p>
+                                @endif
+                            </div>
+                        @endforelse
+                    </div>
+
+                    <flux:button
+                        x-show="showJump"
+                        x-cloak
+                        x-transition
+                        @click="jump()"
+                        size="sm"
+                        variant="primary"
+                        icon="chevron-down"
+                        :aria-label="__('Scroll to latest message')"
+                        class="absolute bottom-4 right-5 rounded-full shadow-lg"
+                    />
                 </div>
 
                 {{-- Input Area --}}
                 @if ($canSend)
                     <div class="border-t border-zinc-200 p-3 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/20">
                         <form wire:submit="sendMessage" class="space-y-2">
-                            <div class="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 shadow-xs transition-all focus-within:border-[var(--color-accent)] focus-within:ring-1 focus-within:ring-[var(--color-accent)] dark:border-zinc-700/80 dark:bg-zinc-800/80">
-                                <input
-                                    type="text"
+                            <div
+                                class="flex items-end gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 shadow-xs transition-all focus-within:border-[var(--color-accent)] focus-within:ring-1 focus-within:ring-[var(--color-accent)] dark:border-zinc-700/80 dark:bg-zinc-800/80"
+                                x-data="{
+                                    resize() {
+                                        const el = this.$refs.composer;
+                                        el.style.height = 'auto';
+                                        el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+                                    },
+                                }"
+                                x-init="resize()"
+                                x-effect="if ($wire.newMessageBody === '') { $nextTick(() => resize()) }"
+                            >
+                                <textarea
+                                    x-ref="composer"
+                                    rows="1"
+                                    maxlength="5000"
                                     wire:model="newMessageBody"
+                                    @input="resize()"
+                                    @keydown.enter="if (! $event.shiftKey && ! $event.isComposing) { $event.preventDefault(); $wire.sendMessage(); }"
                                     placeholder="{{ __('Type your message here...') }}"
-                                    class="flex-1 bg-transparent py-1 text-sm text-zinc-900 placeholder-zinc-400 outline-none dark:text-white"
-                                />
+                                    class="max-h-40 flex-1 resize-none bg-transparent py-1.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-white"
+                                ></textarea>
 
                                 <flux:button type="submit" variant="primary" icon="paper-airplane" size="sm">
                                     {{ __('Send') }}
                                 </flux:button>
                             </div>
+                            <span class="block px-1 text-[11px] text-zinc-400">{{ __('Enter to send, Shift+Enter for a new line') }}</span>
                             <flux:error name="newMessageBody" />
                         </form>
                     </div>
