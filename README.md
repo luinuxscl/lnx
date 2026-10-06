@@ -579,7 +579,7 @@ lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`kn
 
 - `README.md` — este archivo, panorámica del proyecto.
 - `.ai/rules/` — reglas permanentes del proyecto (git flow, documentación).
-- `.ai/skills/` — skills propias versionadas (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`); Boost las distribuye a los clientes configurados.
+- `.ai/skills/` — skills propias versionadas (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`, `brand-logos`); Boost las distribuye a los clientes configurados.
 - `.ai/kit-manifest.json` — manifiesto versionado del kit para agentes (versión, origen, compatibilidad y componentes mantenidos).
 - `.ai/CHANGELOG.md` — registro de cambios y notas de migración del kit de agentes.
 - `git-closeout` — skill global (fuera del repo) para cerrar el ciclo: documentación, commits, integración de ramas y push.
@@ -595,7 +595,7 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 | Dependencias JS | `package.json` y `npm ls --depth=0` |
 | Módulos, rutas y estructura | `app/`, `routes/`, `resources/`; `php artisan route:list --except-vendor` |
 | Reglas por ruta | `.ai/rules/index.md`, luego los archivos indicados |
-| Skills propias | `.ai/skills/` (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`); Boost las distribuye a los clientes configurados |
+| Skills propias | `.ai/skills/` (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`, `brand-logos`); Boost las distribuye a los clientes configurados |
 | Skills de paquetes instalados | `php artisan boost:list-skills --no-interaction`; pueden variar por instalación |
 | Actualización del kit de agentes | `.ai/kit-manifest.json`; `python3 scripts/update-agent-kit.py --preview` (previsualizar) o `--apply` (aplicar) |
 | MCP | Laravel Boost (`php artisan boost:mcp`) cuando el cliente lo configure; el servidor de aplicación de lectura se documenta en **Servidor MCP (lectura)** y no presupone plugins personales |
@@ -661,6 +661,12 @@ El dashboard usa `x-stat` dentro de las tarjetas de usuarios que incluyen accion
 Los estilos reutilizables aprobados se registran en `.ai/skills/create-ui-component/references/style-foundations.md`: espaciado, fuente, jerarquía de títulos, superficies y foco. `resources/css/app.css` sigue siendo la fuente de tokens CSS. Después de incorporar un componente se puede abrir una revisión de la skill si el trabajo reveló una mejora generalizable; las particularidades de una captura quedan en el componente.
 
 La skill usa `tailwind-design-system` de [wshobson/agents](https://github.com/wshobson/agents), fijada a una revisión en `skills-lock.json`. En un checkout nuevo, restáurala con `npx skills experimental_install` y sincroniza las skills propias con `php artisan boost:update --no-discover --no-interaction`.
+
+### Logos de marcas (SVGL)
+
+Los logos de marcas (tecnologías, proveedores y servicios) se obtienen de [SVGL](https://svgl.app), biblioteca open source (MIT) con API REST pública, gratuita y sin autenticación. La vía autorizada es esa API más el **vendorizado local**: el SVG se descarga durante el desarrollo, se guarda en el repositorio y la aplicación nunca llama a SVGL en runtime. Queda descartado el MCP comunitario `svgl-mcp` (sus herramientas de búsqueda están detrás de pago) y el registry de shadcn/ui (genera componentes React, ajenos a Blade/Livewire).
+
+La skill `.ai/skills/brand-logos/SKILL.md` describe la búsqueda, la elección de variantes light/dark, la normalización del SVG, la licencia y la verificación. Los logos viven como componentes Blade anónimos en `resources/views/components/brand-logos/*.blade.php` y se consumen con el envoltorio `x-brand-logo` (o el parcial directo). SVGL se reserva para marcas; la iconografía de interfaz sigue usando Flux/Heroicons.
 
 ### Coherencia de instrucciones
 
