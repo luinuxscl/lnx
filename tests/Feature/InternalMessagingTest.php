@@ -262,3 +262,44 @@ it('renders the Livewire messages index interface and allows sending and switchi
     expect($conv->messages()->count())->toBe(2)
         ->and($conv->messages()->latest('id')->first()->body)->toBe('Hi back from User B!');
 });
+
+it('filters messages within a conversation when searching', function () {
+    $userA = User::factory()->create();
+    $userB = User::factory()->create();
+    $service = app(MessagingService::class);
+
+    $conv = $service->createDirectConversation($userA, $userB);
+    $service->sendMessage($userA, $conv, 'Zetaq older note', 'search-msg-1');
+    $service->sendMessage($userA, $conv, 'Alphay latest match', 'search-msg-2');
+
+    Livewire::actingAs($userB)
+        ->test(MessagesIndex::class, ['conversation' => $conv->id])
+        ->assertSee('Zetaq older note')
+        ->assertSee('Alphay latest match')
+        ->set('messageSearch', 'Alphay')
+        ->assertSee('Alphay')
+        ->assertSee('latest match')
+        ->assertDontSee('Zetaq older note')
+        ->call('closeMessageSearch')
+        ->assertSet('showMessageSearch', false)
+        ->assertSet('messageSearch', '')
+        ->assertSee('Zetaq older note');
+});
+
+it('preserves line breaks when sending a multi-line message', function () {
+    Notification::fake();
+
+    $userA = User::factory()->create();
+    $userB = User::factory()->create();
+    $service = app(MessagingService::class);
+
+    $conv = $service->createDirectConversation($userA, $userB);
+
+    Livewire::actingAs($userA)
+        ->test(MessagesIndex::class, ['conversation' => $conv->id])
+        ->set('newMessageBody', "First line\nSecond line")
+        ->call('sendMessage')
+        ->assertHasNoErrors();
+
+    expect($conv->messages()->latest('id')->first()->body)->toBe("First line\nSecond line");
+});

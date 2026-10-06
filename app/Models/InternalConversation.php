@@ -100,13 +100,24 @@ class InternalConversation extends Model
         return $this->type === self::TYPE_SUPPORT;
     }
 
-    public function titleFor(User $viewer): string
+    public function otherUserFor(User $viewer): ?User
     {
         if ($this->isDirect()) {
             $other = $this->users->firstWhere('id', '!==', $viewer->id);
             if (! $other) {
                 $other = $this->users()->where('users.id', '!=', $viewer->id)->first();
             }
+
+            return $other;
+        }
+
+        return null;
+    }
+
+    public function titleFor(User $viewer): string
+    {
+        if ($this->isDirect()) {
+            $other = $this->otherUserFor($viewer);
 
             return $other?->name ?? __('Unknown user');
         }
