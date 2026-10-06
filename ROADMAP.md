@@ -1,12 +1,12 @@
 # Roadmap de prioridades
 
-Última revisión: 2026-10-04. Priorización acordada con el mantenedor.
+Última revisión: 2026-10-05. Priorización acordada con el mantenedor.
 
 Este documento conserva el orden global de trabajo. GitHub es la fuente del estado y los criterios de aceptación de cada issue; los órdenes parciales escritos en ellas se concilian aquí. Las etapas no son compromisos de fecha. El esfuerzo es comparativo por alcance, no una estimación de duración.
 
 ## Próximo trabajo
 
-La **Etapa 8** ([#34 Mensajería interna entre usuarios, sistema e IA integrada con soporte](https://github.com/luinuxscl/lnx/issues/34)) ha sido completada e integrada con éxito. El foco activo pasa a la **Etapa 9: Modernización visual y UI/UX**, abordando de manera coordinada la unificación de estilos y jerarquía del dashboard y vistas principales ([#27](https://github.com/luinuxscl/lnx/issues/27)) junto con la optimización de UI/UX del circuito de tickets de soporte ([#35](https://github.com/luinuxscl/lnx/issues/35)).
+La **Etapa 8** ([#34 Mensajería interna entre usuarios, sistema e IA integrada con soporte](https://github.com/luinuxscl/lnx/issues/34)) y la **Etapa 9: Modernización visual y UI/UX** ([#27](https://github.com/luinuxscl/lnx/issues/27) y [#35](https://github.com/luinuxscl/lnx/issues/35)) han sido completadas e integradas con éxito. No queda ninguna etapa activa: el próximo trabajo queda a la espera de nueva priorización del mantenedor.
 
 ## Orden acordado
 
@@ -20,11 +20,12 @@ La **Etapa 8** ([#34 Mensajería interna entre usuarios, sistema e IA integrada 
 | 6. Ampliar IA según demanda | [#15 Chat](https://github.com/luinuxscl/lnx/issues/15) (cerrada) y [#16 Extracción documental](https://github.com/luinuxscl/lnx/issues/16) (cerrada) | #15 y #16 completados. | Alto por módulo |
 | 7. Incorporar conocimiento propio | [#17 Consulta con fuentes](https://github.com/luinuxscl/lnx/issues/17) (cerrada) y [#31 Formato numérico](https://github.com/luinuxscl/lnx/issues/31) (cerrada) | #17 (módulo RAG de base de conocimiento con embeddings) y #31 (formato numérico regional) completados y cerrados. | Muy alto |
 | 8. Mensajería interna y colaboración | [#34 Mensajería interna](https://github.com/luinuxscl/lnx/issues/34) (cerrada) | Habilitar comunicación directa entre usuarios, avisos de sistema y agentes de IA autorizados, integrando eventos y respuestas de soporte. Prerrequisito de soporte independiente completado. | Alto |
-| 9. Modernización visual y UI/UX | [#27 Diseño y dashboard](https://github.com/luinuxscl/lnx/issues/27) (abierta) y [#35 UI/UX de soporte](https://github.com/luinuxscl/lnx/issues/35) (abierta) | Unificar la jerarquía visual del dashboard por rol y vistas clave (#27) y pulir el flujo de soporte y tickets (#35) con componentes consolidados y estados claros. | Medio-Alto |
+| 9. Modernización visual y UI/UX | [#27 Diseño y dashboard](https://github.com/luinuxscl/lnx/issues/27) (cerrada) y [#35 UI/UX de soporte](https://github.com/luinuxscl/lnx/issues/35) (cerrada) | Unificar la jerarquía visual del dashboard por rol y vistas clave (#27) y pulir el flujo de soporte y tickets (#35) con componentes consolidados y estados claros. | Medio-Alto |
 
 ## Decisiones de secuencia
 
 - #34 se completó: modelos `InternalConversation`, `InternalConversationParticipant`, `InternalMessage`, `MessagingService`, bypass de `root` acotado en `AppServiceProvider`, vistas bilingües `/messages`, notificaciones en base de datos, integración bidireccional con eventos de soporte y suite de pruebas Pest.
+- Etapa 9 completada y cerrada (#27 y #35): rediseño de la interfaz de mensajería con búsqueda en conversación, auto-scroll, agrupación de mensajes, compositor multilínea y accesibilidad; modernización visual del dashboard y vistas principales (#27) y del circuito de tickets de soporte (#35). Cierre confirmado por el mantenedor tras integrar la entrega en `main`.
 - Secuencia acordada (Ruta B, 2026-10-04): Se priorizó la funcionalidad de comunicación en la Etapa 8 ([#34](https://github.com/luinuxscl/lnx/issues/34)). El módulo base de soporte y feedback se encuentra completado e integrado en `develop`. La modernización visual y de experiencia de usuario se agrupa en la Etapa 9 ([#27](https://github.com/luinuxscl/lnx/issues/27) y [#35](https://github.com/luinuxscl/lnx/issues/35)).
 - Soporte funciona con su conversación y notificaciones existentes, emitiendo eventos de creación, respuesta y cambio de estado. #34 incorporó mensajería entre usuarios, sistema e IA, envíos individuales/grupales de root/admin e integración con soporte mediante respuestas y acciones autorizadas, conservando un único historial.
 
@@ -48,7 +49,7 @@ La **Etapa 8** ([#34 Mensajería interna entre usuarios, sistema e IA integrada 
 
 ## Estado actual
 
-GitHub registra todas las etapas principales (1 a 8) cerradas y el módulo independiente de soporte integrado. El trabajo activo se sitúa en la **Etapa 9 ([#27](https://github.com/luinuxscl/lnx/issues/27) y [#35](https://github.com/luinuxscl/lnx/issues/35))**.
+GitHub registra todas las etapas principales (1 a 9) cerradas, incluida la modernización visual y de UI/UX (Etapa 9: [#27](https://github.com/luinuxscl/lnx/issues/27) y [#35](https://github.com/luinuxscl/lnx/issues/35)). No hay trabajo de roadmap activo; el próximo trabajo queda a la espera de nueva priorización del mantenedor.
 
 ## Mantenimiento
 
