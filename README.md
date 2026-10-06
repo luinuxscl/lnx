@@ -140,11 +140,11 @@ Al desplegar, aplicar la migración `add_preferences_to_users_table` con `php ar
 
 ## Layout de la aplicación
 
-- **Menú agrupado por dominios**: el sidebar organiza las opciones principales en dominios lógicos usando `<flux:sidebar.group>`. La navegación superior incluye `Dashboard` y el grupo **Herramientas de IA** (`AI Tools`) con Chat interactivo, Base de conocimiento y Extracción de documentos. Tras el espaciador, la sección **Administración** (`Administration`) agrupa los controles de usuarios, actividad, configuración global, checklist e IA según los roles del usuario (`root` y `admin`).
+- **Menú agrupado por dominios con prioridad de root**: el sidebar organiza las opciones principales en dominios lógicos usando `<flux:sidebar.group>`. `Dashboard` es siempre el primer ítem. Para `root`, tras `Dashboard` va el grupo **Administración** (`Administration`, `cog-6-tooth`) con sus herramientas (Soporte, Usuarios, Actividad, Ajustes, Checklist e IA) y después el grupo **Herramientas de IA** (`AI Tools`) con Chat, RAG y Document AI; se omiten los ítems sin destino `Repository` y `Documentation`. Para `admin` y usuarios normales el orden es `Dashboard`, **Herramientas de IA** y, tras el espaciador, la sección **Administración** (`Users` y `Documentation`), visible solo para `admin`.
 - **Sidebar colapsable** (desktop): el `<flux:sidebar collapsible>` se colapsa a barra de iconos. El estado se persiste en `localStorage['flux-sidebar-collapsed-desktop']` (gestionado por Flux). `resources/views/partials/head.blade.php` siembra el valor `true` en la primera visita, por lo que arranca **colapsado por defecto**; cada toggle posterior lo sobrescribe. En móvil conserva el overlay. Al colapsar en escritorio, los grupos desplegables (`<flux:sidebar.group>`) se convierten automáticamente en un flyout dropdown hover.
 - **Botón de colapso en el sidebar**: `<flux:sidebar.collapse>` en el header del sidebar (patrón oficial de Flux). Al colapsar, el logo se oculta al hacer hover y es sustituido por el botón de expansión; por eso el botón debe estar presente en desktop (no usar `lg:hidden`).
 - **Marca del sidebar**: junto al logo, `x-app-logo` muestra el título en negrita y, si existe, `site_tagline` debajo en texto más pequeño. Sin lema, solo se muestra el título; si falta el título configurado, se usa `APP_NAME`. Los textos largos se truncan para dejar disponible el botón de colapso.
-- **Header de contenido** (solo desktop, `max-lg:hidden`): se renderiza dentro de `<flux:main>` en `layouts/app.blade.php` con el breadcrumb (`flux:breadcrumbs`) a la izquierda y, a la derecha, el botón de modo claro/oscuro (`$flux.dark`) y el selector de idioma. El colapso del sidebar se controla solo desde su propio botón en el header del sidebar.
+- **Header de contenido** (solo desktop, `max-lg:hidden`): se renderiza dentro de `<flux:main>` en `layouts/app.blade.php` con el breadcrumb (`flux:breadcrumbs`) a la izquierda y, a la derecha, el botón `Messages` (enlace a `/messages`), la campana de notificaciones, el botón de modo claro/oscuro (`$flux.dark`) y el selector de idioma. En móvil, el botón `Messages` aparece junto a la campana en el header móvil del sidebar. El colapso del sidebar se controla solo desde su propio botón en el header del sidebar.
 - **Breadcrumbs por página**: cada página pasa un arreglo `['label' => string, 'href' => string|null]`; el último item sin `href` es la página actual. En Blade: `<x-layouts::app :breadcrumbs="[...]">`; en componentes Livewire full-page, `render()` devuelve `view(...)->layout('layouts.app', ['breadcrumbs' => [...]])`.
 - **Alto del contenido**: `<flux:main>` es una columna flex (`flex flex-col`) para que el header de contenido y los banners convivan con la página. Una página que debe ocupar el alto restante usa `flex-1` en su raíz, **nunca `h-full`**: `h-full` reclama el 100% del alto de `main` y, al sumarse el header/banner, desborda la fila del grid; ese desborde impide que la fila crezca y rompe el sidebar sticky (el sidebar deja de cubrir todo el alto y aparece un hueco al hacer scroll).
 
@@ -232,7 +232,7 @@ El enlace vence a los siete días y solo se puede aceptar una vez. El destinatar
 
 El correo se envía durante la solicitud para mostrar un fallo inmediatamente. La invitación queda guardada como **Falló el envío** y puede reenviarse desde la lista. Un éxito significa que el transporte aceptó el envío; la entrega final depende del proveedor. Configura `MAIL_MAILER` y las credenciales del proveedor antes de invitar. Los intentos se limitan a uno por minuto y cinco por hora por destinatario, y veinte por hora por administrador; los fallos también cuentan.
 
-Las cuentas `root` no se pueden editar ni eliminar desde la gestión de usuarios. Nadie puede eliminar su propia cuenta. El ítem «Usuarios» vive en la zona de configuración del sidebar (ver `.ai/rules/views.md`).
+Las cuentas `root` no se pueden editar ni eliminar desde la gestión de usuarios. Nadie puede eliminar su propia cuenta. El ítem «Usuarios» vive en el grupo **Administración** del sidebar (ver `.ai/rules/views.md`).
 
 ### Modalidad de registro
 
@@ -240,7 +240,7 @@ En **Configuración general**, root puede elegir **Registro abierto** o **Solo i
 
 ## Configuración general (General Settings)
 
-Vista de configuración global del sitio en `/admin/settings` (`admin.settings.edit`), accesible **solo para `root`** mediante el middleware `role:root` (`routes/settings.php`). El ítem "General settings" vive en la zona de configuración del sidebar y solo lo ve root.
+Vista de configuración global del sitio en `/admin/settings` (`admin.settings.edit`), accesible **solo para `root`** mediante el middleware `role:root` (`routes/settings.php`). El ítem "Settings" vive en el grupo **Administración** del sidebar y solo lo ve root.
 
 - `App\Livewire\Settings\General` + `App\Policies\SettingPolicy` (view/update solo root) gobiernan la vista.
 - La configuración se guarda en una fila única de la tabla `settings` (`App\Models\Setting`). `Setting::current()` la cachea bajo la clave `settings` y `Setting::forgetCache()` la invalida al guardar.
@@ -269,11 +269,13 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 
 ## Panel por rol
 
-`/dashboard` (`dashboard`) mantiene los middleware `auth` y `verified`. La bienvenida muestra el nombre escapado y todos los usuarios tienen accesos a perfil y seguridad. El panel es un componente Livewire de clase que comprueba los roles y las policies en cada renderizado; sus cifras y diagnósticos se pasan solo a la vista, sin conservarlos en propiedades públicas.
+`/dashboard` (`dashboard`) mantiene los middleware `auth` y `verified`. La bienvenida muestra el nombre escapado. El panel es un componente Livewire de clase que comprueba los roles y las policies en cada renderizado; sus datos se pasan solo a la vista, sin conservarlos en propiedades públicas.
 
-`root` y `admin` ven usuarios totales, activos (`suspended_at` nulo) y suspendidos (`suspended_at` presente). Los conteos incluyen **todas las cuentas**, también las de root y admin. Pueden abrir la lista completa, los filtros `status=active` y `status=suspended`, invitaciones y la creación de una invitación. Las invitaciones pendientes son las no aceptadas ni revocadas cuyo vencimiento es futuro, aunque haya fallado el envío; si no hay ninguna, el panel lo indica expresamente.
+**root**: el dashboard es un panel de acceso a herramientas mediante tarjetas-enlace (`x-tool-card`). La sección principal **Administración** reúne las herramientas de root —Soporte, Usuarios, Actividad, Configuración, Checklist e IA— y la sección secundaria **Herramientas de la app** enlaza Chat, Messages, RAG y Document AI. Cada tarjeta navega a la página de detalle del área; el dashboard no muestra cifras ni resúmenes (queda abierto a añadir métricas o widgets de root más adelante). El detalle de cada área, incluido el consumo de IA, vive en su propia pantalla.
 
-Solo `root` ve el resumen compacto de las cinco comprobaciones del checklist (verificadas, pendientes y con error), con accesos al checklist y a configuración general. `App\Actions\DiagnoseSetup` calcula los mismos estados para ambas pantallas. Al renderizar el panel root se comprueba el enlace público y se escribe, lee y elimina un archivo temporal en el disco `public`; los fallos muestran un estado de error recuperable. El envío del correo de prueba y su resultado persistido siguen gestionándose en el checklist. No hay sondeo periódico.
+**admin**: ve usuarios totales, activos (`suspended_at` nulo) y suspendidos (`suspended_at` presente), junto con los accesos de cuenta (perfil y seguridad). Los conteos incluyen **todas las cuentas**, también las de root y admin. Puede abrir la lista completa, los filtros `status=active` y `status=suspended`, invitaciones y la creación de una invitación. Las invitaciones pendientes son las no aceptadas ni revocadas cuyo vencimiento es futuro, aunque haya fallado el envío; si no hay ninguna, el panel lo indica expresamente.
+
+El usuario normal ve solo sus accesos de cuenta. El dashboard ya no ejecuta diagnósticos ni la sonda de almacenamiento; el checklist y sus comprobaciones viven en `/admin/setup` (`App\Actions\DiagnoseSetup`).
 
 ## Checklist de puesta en marcha
 
@@ -435,7 +437,7 @@ El asistente de texto ofrece una propuesta de título y redacción para la descr
 
 ## Mensajería interna (usuarios, sistema e IA)
 
-La aplicación incorpora un sistema de mensajería interna accesible en `/messages` y disponible desde la navegación principal (`Messages`):
+La aplicación incorpora un sistema de mensajería interna accesible en `/messages` desde el botón `Messages` del header (junto a la campana de notificaciones):
 
 - **Conversaciones directas**: Cualquier usuario autenticado y activo puede iniciar un chat directo 1 a 1 con otro usuario activo. Si ya existe una conversación entre ambos, se reutiliza automáticamente sin duplicar canales.
 - **Grupos y comunicados**: Los roles `root` y `admin` pueden crear conversaciones grupales con múltiples participantes o enviar comunicados generales (`announcements`). En los comunicados, los destinatarios tienen rol de receptor, sus identidades no se exponen al resto y las respuestas están bloqueadas para evitar hilos no deseados.
@@ -629,7 +631,9 @@ La biblioteca incluye `x-stat` (`label`, `value`, `icon` Flux y `color`), `x-sta
 
 `x-trend-card` muestra una métrica con línea de tendencia y tiene ejemplos aprobados en `/design-gallery`. Recibe `label`, `value` y `change` ya formateados y traducidos, `series` como arreglo de cifras ordenadas y `color` (`accent`, `emerald`, `amber` o `rose`). Dibuja una línea decorativa si hay al menos dos puntos válidos; sin ellos mantiene el texto de la métrica. El contenedor asigna su ancho, normalmente `col-span-12 md:col-span-6 xl:col-span-4` para tres tarjetas por fila en escritorio.
 
-El dashboard usa `x-stat` dentro de las tarjetas de usuarios que incluyen acciones y `x-stat-card` para las métricas de consumo de IA. Los estados vacíos y los enlaces siguen en la pantalla; `x-trend-card` se reserva para datos que tengan una serie histórica real.
+`x-tool-card` es una tarjeta-enlace a un área de la aplicación y tiene un ejemplo aprobado en `/design-gallery`. Recibe `title`, `description`, `icon` (icono Flux), `href`, `color` (`accent` predeterminado y las mismas variantes que `x-stat`) y `external` (abre en una pestaña nueva con `rel="noopener noreferrer"`). Todo el bloque es un enlace; internamente navega con `wire:navigate` salvo cuando `external` es verdadero. El contenedor asigna su ancho, normalmente `col-span-12 sm:col-span-6 xl:col-span-4` (tres por fila) o `xl:col-span-3` (cuatro por fila).
+
+El dashboard de admin usa `x-stat` dentro de las tarjetas de usuarios que incluyen acciones; el dashboard de root usa `x-tool-card` para enlazar las herramientas de root y las de la app. Los estados vacíos y los enlaces siguen en la pantalla; `x-trend-card` se reserva para datos que tengan una serie histórica real.
 
 ```blade
 <x-statistics-panel :title="__('Statistics')" :updated-at="__('Updated 1 month ago')">

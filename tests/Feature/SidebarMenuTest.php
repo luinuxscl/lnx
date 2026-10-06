@@ -33,19 +33,21 @@ it('shows documentation but not the repository to admin users', function () {
         ->assertDontSee('Configuración');
 });
 
-it('shows the repository of this application to root users', function () {
+it('prioritizes root tools and hides repository and documentation from root users', function () {
     $user = User::factory()->create();
     $user->assignRole(Role::Root->value);
 
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Repositorio')
-        ->assertSee('https://github.com/luinuxscl/lnx')
-        ->assertSee('Configuración')
-        ->assertSee('admin/settings')
-        ->assertSee('Documentación')
-        ->assertDontSee('laravel.com/docs');
+        ->assertSee('Soporte')
+        ->assertSee(route('admin.settings.edit'))
+        ->assertSee(route('admin.setup.index'))
+        ->assertSee(route('admin.ai.index'))
+        ->assertSeeInOrder(['Dashboard', 'Administración'])
+        ->assertDontSee('Repositorio')
+        ->assertDontSee('https://github.com/luinuxscl/lnx')
+        ->assertDontSee('Documentación');
 });
 
 it('groups AI tools and hides administration group from standard users', function () {
@@ -71,7 +73,7 @@ it('shows administration domain group to admin and root users', function () {
         ->assertSee('AI Tools')
         ->assertSee('Administración')
         ->assertSee('Usuarios')
-        ->assertDontSee('Bandeja de soporte');
+        ->assertDontSee('Soporte');
 
     $root = User::factory()->create();
     $root->assignRole(Role::Root->value);
@@ -81,8 +83,8 @@ it('shows administration domain group to admin and root users', function () {
         ->assertOk()
         ->assertSee('AI Tools')
         ->assertSee('Administración')
-        ->assertSee('Bandeja de soporte')
-        ->assertSee('Configuración');
+        ->assertSee('Soporte')
+        ->assertSee(route('admin.settings.edit'));
 });
 
 it('shows the uploaded avatar in desktop and mobile menus with Gravatar fallback', function () {
