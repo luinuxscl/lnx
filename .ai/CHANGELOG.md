@@ -2,6 +2,12 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.4.0] - 2026-10-06
+
+### Añadido
+- Herramienta de desarrollo `lnx:reset` (`app/Console/Commands/LnxResetCommand.php`) con soporte `app/Support/DemoUsers.php` y seeder `database/seeders/DemoUserSeeder.php`: limpia cachés, ejecuta `migrate:fresh`, siembra roles y root, y crea cuentas demo (Samantha admin, Leonora usuario y una tanda de usuarios de ejemplo con reparto exacto 90/10 verificados) con contraseña `password`. Bloqueada en producción.
+- Pruebas asociadas `tests/Feature/Console/DemoUsersTest.php` y `tests/Feature/Console/ResetCommandTest.php`.
+
 ## [1.3.0] - 2026-10-05
 
 ### Añadido
