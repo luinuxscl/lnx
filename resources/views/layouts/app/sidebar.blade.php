@@ -10,14 +10,37 @@
                 <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
             </flux:sidebar.header>
 
+            @php
+                $user = auth()->user();
+                $isRoot = $user->hasRole(\App\Enums\Role::Root);
+                $isAdmin = $user->hasRole(\App\Enums\Role::Admin);
+            @endphp
+
             <flux:sidebar.nav>
                 <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="envelope" :href="route('messages.index')" :current="request()->routeIs('messages.*')" wire:navigate>
-                    {{ __('Messages') }}
-                </flux:sidebar.item>
+                @if ($isRoot)
+                    <flux:sidebar.group :heading="__('Administration')" icon="cog-6-tooth" expandable :expanded="true">
+                        <flux:sidebar.item icon="inbox" :href="route('support.index')" :current="request()->routeIs('support.index') && request()->query('mine') !== '1'" wire:navigate>{{ __('Support') }}</flux:sidebar.item>
+                        <flux:sidebar.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')" wire:navigate>
+                            {{ __('Users') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="clock" :href="route('admin.activity.index')" :current="request()->routeIs('admin.activity.*')" wire:navigate>
+                            {{ __('Activity') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="cog" :href="route('admin.settings.edit')" :current="request()->routeIs('admin.settings.*')" wire:navigate>
+                            {{ __('Settings') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="clipboard-document-check" :href="route('admin.setup.index')" :current="request()->routeIs('admin.setup.*')" wire:navigate>
+                            {{ __('Checklist') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="sparkles" :href="route('admin.ai.index')" :current="request()->routeIs('admin.ai.*')" wire:navigate>
+                            {{ __('AI') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
 
                 <flux:sidebar.group :heading="__('AI Tools')" icon="sparkles" expandable :expanded="request()->routeIs('chat*', 'knowledge.*', 'documents.*')">
                     <flux:sidebar.item icon="chat-bubble-left-right" :href="route('chat')" :current="request()->routeIs('chat*')" wire:navigate>
@@ -34,34 +57,12 @@
 
             <flux:spacer />
 
-            @if (auth()->user()->hasAnyRole([\App\Enums\Role::Root, \App\Enums\Role::Admin]))
+            @if (! $isRoot && $isAdmin)
                 <flux:sidebar.nav>
                     <flux:sidebar.group :heading="__('Administration')" icon="cog-6-tooth" expandable :expanded="request()->routeIs('admin.*') || (request()->routeIs('support.index') && request()->query('mine') !== '1')">
-                        @if (auth()->user()->hasRole(\App\Enums\Role::Root))
-                            <flux:sidebar.item icon="inbox" :href="route('support.index')" :current="request()->routeIs('support.index') && request()->query('mine') !== '1'" wire:navigate>{{ __('Support inbox') }}</flux:sidebar.item>
-                        @endif
                         <flux:sidebar.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')" wire:navigate>
                             {{ __('Users') }}
                         </flux:sidebar.item>
-
-                        @if (auth()->user()->hasRole(\App\Enums\Role::Root))
-                            <flux:sidebar.item icon="clock" :href="route('admin.activity.index')" :current="request()->routeIs('admin.activity.*')" wire:navigate>
-                                {{ __('Activity') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="cog" :href="route('admin.settings.edit')" :current="request()->routeIs('admin.settings.*')" wire:navigate>
-                                {{ __('Settings') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="clipboard-document-check" :href="route('admin.setup.index')" :current="request()->routeIs('admin.setup.*')" wire:navigate>
-                                {{ __('Checklist') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="sparkles" :href="route('admin.ai.index')" :current="request()->routeIs('admin.ai.*')" wire:navigate>
-                                {{ __('AI') }}
-                            </flux:sidebar.item>
-
-                            <flux:sidebar.item icon="folder-git-2" href="https://github.com/luinuxscl/lnx" target="_blank">
-                                {{ __('Repository') }}
-                            </flux:sidebar.item>
-                        @endif
 
                         <flux:sidebar.item icon="book-open-text">
                             {{ __('Documentation') }}
@@ -86,6 +87,16 @@
                     <flux:menu.item icon="list-bullet" :href="route('support.index', ['mine' => 1])" wire:navigate>{{ __('View my requests') }}</flux:menu.item>
                 </flux:menu>
             </flux:dropdown>
+            <flux:button
+                variant="ghost"
+                size="sm"
+                square
+                icon="envelope"
+                :href="route('messages.index')"
+                wire:navigate
+                :aria-label="__('Messages')"
+                :title="__('Messages')"
+            />
             <livewire:notifications.bell />
             <livewire:locale-switcher />
 

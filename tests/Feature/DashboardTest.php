@@ -1,35 +1,14 @@
 <?php
 
-use App\Actions\DiagnoseSetup;
 use App\Enums\Role;
 use App\Livewire\Dashboard;
-use App\Models\Setting;
 use App\Models\User;
 use App\Models\UserInvitation;
 use Database\Seeders\RolePermissionSeeder;
-use Illuminate\Filesystem\FilesystemAdapter;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
-class DashboardDiagnoseSetup extends DiagnoseSetup
-{
-    public static ?bool $writable = null;
-
-    protected function storageLinkExists(): bool
-    {
-        return true;
-    }
-
-    protected function storageIsWritable(): bool
-    {
-        return static::$writable ?? parent::storageIsWritable();
-    }
-}
-
 beforeEach(function () {
-    DashboardDiagnoseSetup::$writable = null;
     $this->seed(RolePermissionSeeder::class);
-    Storage::fake('public');
 });
 
 function dashboardUser(?Role $role = null): User
@@ -61,13 +40,14 @@ test('ordinary users see only their personal shortcuts and an escaped name', fun
         ->assertSee(route('security.edit'))
         ->assertDontSee('Usuarios totales')
         ->assertDontSee('Invitaciones pendientes')
+        ->assertDontSee('Herramientas de la app')
         ->assertDontSee('de 5 verificadas')
         ->assertDontSee(route('admin.users.index'))
         ->assertDontSee(route('admin.setup.index'));
 
     $component = Livewire::actingAs($user)->test(Dashboard::class);
-    expect($component->html())->not->toContain('Usuarios totales', 'Invitaciones pendientes', 'de 5 verificadas');
-    expect(json_encode($component->effects))->not->toContain('userCounts', 'pendingInvitations', 'setup');
+    expect($component->html())->not->toContain('Usuarios totales', 'Invitaciones pendientes', 'Herramientas de la app');
+    expect(json_encode($component->effects))->not->toContain('userCounts', 'pendingInvitations');
 });
 
 test('admin sees all account counts and only actionable pending invitations', function () {
@@ -92,6 +72,7 @@ test('admin sees all account counts and only actionable pending invitations', fu
         ->assertSee(route('admin.users.index', ['status' => 'suspended']))
         ->assertSee(route('admin.users.invitations'))
         ->assertSee(route('admin.users.create'))
+        ->assertDontSee('Herramientas de la app')
         ->assertDontSee('de 5 verificadas')
         ->assertDontSee(route('admin.setup.index'))
         ->assertDontSee(route('admin.settings.edit'));
@@ -110,77 +91,55 @@ test('admin sees a truthful empty invitation state', function () {
         ->assertSee('No hay invitaciones pendientes de aceptación.');
 });
 
-test('root sees pending setup checks without invented activity', function () {
+test('root sees administration and app tool cards instead of metric summaries', function () {
     $root = dashboardUser(Role::Root);
-    $this->app->bind(DiagnoseSetup::class, DashboardDiagnoseSetup::class);
-
-    $this->actingAs($root)->get(route('dashboard'))
-        ->assertSee('1 de 5 verificadas')
-        ->assertSee('Pendientes: 4')
-        ->assertSee('Con errores: 0');
-});
-
-test('root sees shared checklist summary and storage probe is cleaned', function () {
-    $root = dashboardUser(Role::Root);
-    Setting::factory()->create(['site_title' => 'Site', 'admin_email' => 'admin@example.com', 'test_email_sent_at' => now(), 'test_email_sent_to' => 'admin@example.com']);
-    config()->set('lnx_ai.enabled', true);
-    config()->set('lnx_ai.default_model', 'test/model');
-    config()->set('lnx_ai.allowed_models', ['test/model' => []]);
-    config()->set('ai.providers.openrouter.key', 'test-key');
-    $this->app->bind(DiagnoseSetup::class, DashboardDiagnoseSetup::class);
 
     $response = $this->actingAs($root)->get(route('dashboard'));
 
-    $response->assertSee('5 de 5 verificadas')
-        ->assertSee('Todas las comprobaciones están verificadas.')
-        ->assertSee(route('admin.setup.index'))
-        ->assertSee(route('admin.settings.edit'));
-    expect(Storage::disk('public')->allFiles())->toBe([]);
+    $response->assertOk()
+        ->assertSee('Administración')
+        ->assertSee('Herramientas de la app')
+        ->assertSee('Revisa y responde las solicitudes de soporte de todos los usuarios.')
+        ->assertSee('Gestiona cuentas, roles e invitaciones.')
+        ->assertSee('Audita los cambios administrativos en toda la aplicación.')
+        ->assertSee('Configura la identidad, la marca y las opciones del sitio.')
+        ->assertSee('Verifica que la instalación esté configurada por completo.')
+        ->assertSee('Revisa el estado y la configuración del proveedor de IA.')
+        ->assertSee('Conversa con los usuarios y sigue los comunicados.')
+        ->assertSee('Mantén conversaciones interactivas con el asistente de IA.')
+        ->assertSee('Consulta tu propia base de conocimiento con respuestas citadas.')
+        ->assertSee('Extrae datos estructurados de documentos.')
+        ->assertDontSee('Usuarios totales')
+        ->assertDontSee('Invitaciones pendientes')
+        ->assertDontSee('de 5 verificadas')
+        ->assertDontSee('Consumo de IA este mes')
+        ->assertDontSee('Tu cuenta');
 
-    $this->get(route('admin.setup.index'))->assertSee('Verificado');
+    $component = Livewire::actingAs($root)->test(Dashboard::class);
+    expect($component->viewData('isRoot'))->toBeTrue()
+        ->and($component->viewData('userCounts'))->toBeNull()
+        ->and(json_encode($component->effects))->not->toContain('userCounts', 'pendingInvitations');
 });
 
-test('root sees recoverable storage error on dashboard and checklist', function () {
-    $root = dashboardUser(Role::Root);
-    $this->app->bind(DiagnoseSetup::class, DashboardDiagnoseSetup::class);
-    DashboardDiagnoseSetup::$writable = false;
-
-    $this->actingAs($root)->get(route('dashboard'))
-        ->assertSee('Con errores')
-        ->assertSee(route('admin.setup.index'));
-    $this->get(route('admin.setup.index'))->assertSee('Error');
-});
-
-test('removing an admin role between Livewire requests hides admin data', function () {
+test('admin does not see root-exclusive tool cards', function () {
     $admin = dashboardUser(Role::Admin);
-    $component = Livewire::actingAs($admin)->test(Dashboard::class)->assertSee('Usuarios totales');
 
-    $admin->removeRole(Role::Admin->value);
-
-    $component->call('$refresh')->assertDontSee('Usuarios totales')->assertDontSee('Invitaciones pendientes');
-    expect(json_encode($component->effects))->not->toContain('userCounts', 'pendingInvitations');
+    $this->actingAs($admin)->get(route('dashboard'))
+        ->assertOk()
+        ->assertDontSee('Herramientas de la app')
+        ->assertDontSee('Audita los cambios administrativos en toda la aplicación.')
+        ->assertSee('Usuarios totales');
 });
 
-test('removing root role between Livewire requests hides setup data', function () {
+test('removing the root role between Livewire requests hides the root tool cards', function () {
     $root = dashboardUser(Role::Root);
-    $component = Livewire::actingAs($root)->test(Dashboard::class)->assertSee('de 5 verificadas');
+    $component = Livewire::actingAs($root)->test(Dashboard::class)->assertSee('Herramientas de la app');
 
     $root->removeRole(Role::Root->value);
 
-    $component->call('$refresh')->assertDontSee('de 5 verificadas');
-    expect(json_encode($component->effects))->not->toContain('setup');
-});
-
-test('storage read failures keep the root dashboard available and delete the probe', function () {
-    $root = dashboardUser(Role::Root);
-    $disk = Mockery::mock(FilesystemAdapter::class);
-    $disk->shouldReceive('put')->once()->andReturn(true);
-    $disk->shouldReceive('get')->once()->andThrow(new RuntimeException('private storage path'));
-    $disk->shouldReceive('delete')->once()->andReturn(true);
-    Storage::shouldReceive('disk')->with('public')->andReturn($disk);
-    $this->app->bind(DiagnoseSetup::class, DashboardDiagnoseSetup::class);
-
-    $response = $this->actingAs($root)->get(route('dashboard'));
-
-    $response->assertOk()->assertSee('Con errores')->assertDontSee('private storage path');
+    $component->call('$refresh')
+        ->assertDontSee('Herramientas de la app')
+        ->assertDontSee('Revisa y responde las solicitudes de soporte de todos los usuarios.')
+        ->assertSee('Tu cuenta');
+    expect($component->viewData('isRoot'))->toBeFalse();
 });

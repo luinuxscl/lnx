@@ -2,7 +2,6 @@
 
 use App\Enums\Role;
 use App\Livewire\Ai\Usage;
-use App\Livewire\Dashboard;
 use App\Models\AiUsageEvent;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -78,25 +77,24 @@ it('rejects an invalid status filter', function () {
         ->assertHasErrors('status');
 });
 
-it('shows the consumption summary on the root dashboard but not for other roles', function () {
+it('links the AI tools on the root dashboard without rendering the consumption summary', function () {
     $root = usageRoot();
     AiUsageEvent::factory()->reportedCost(1.25)->create(['user_id' => $root->id]);
 
     $this->actingAs($root)->get(route('dashboard'))
         ->assertOk()
-        ->assertSee(route('admin.ai.usage'))
-        ->assertSee(__('AI consumption this month'));
+        ->assertSee(route('admin.ai.index'))
+        ->assertDontSee(route('admin.ai.usage'))
+        ->assertDontSee(__('AI consumption this month'));
 
     $admin = User::factory()->create();
     $admin->assignRole(Role::Admin->value);
 
-    $response = $this->actingAs($admin)->get(route('dashboard'))
+    $this->actingAs($admin)->get(route('dashboard'))
         ->assertOk()
-        ->assertDontSee(route('admin.ai.usage'));
-    expect($response->getContent())->not->toContain('AI consumption this month');
-
-    $component = Livewire::actingAs($admin)->test(Dashboard::class);
-    expect(json_encode($component->effects))->not->toContain('aiUsage');
+        ->assertDontSee(route('admin.ai.index'))
+        ->assertDontSee(route('admin.ai.usage'))
+        ->assertDontSee(__('AI consumption this month'));
 });
 
 it('prunes consumption records older than the retention period', function () {
