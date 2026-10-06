@@ -252,7 +252,7 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 | Identidad | Title | `config('app.name')`, `<title>`, marca del sidebar. |
 | Identidad | Tagline | Lema del sitio bajo el título del sidebar (y fallback de la meta descripción). |
 | Identidad | Meta description | `<meta name="description">` (fallback: Tagline). |
-| Identidad | Administration email | `config('mail.from.address')`. |
+| Identidad | Administration email | Destinatario del correo de prueba del checklist y validación de identidad; no altera el remitente de correo. |
 | Personalización | Logo / Dark mode logo | Logo del encabezado y sidebar; las imágenes personalizadas se muestran sobre un fondo transparente y el icono predeterminado conserva su fondo. |
 | Personalización | Favicon / Apple touch icon | Iconos del `<head>`. |
 | Avanzado | Footer text | Texto mostrado en el footer del contenido de las páginas autenticadas. |
@@ -263,6 +263,7 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 
 - El footer del contenido muestra siempre la marca Like Innovación. Solo `admin` y `root` ven la versión de LNX, definida con `APP_VERSION` (valor predeterminado `0.1.0`).
 - `App\Http\Middleware\ApplySiteSettings` (grupo `web`) vuelca los settings en `config()` y comparte `$site` con todas las vistas; `resources/views/partials/head.blade.php`, `resources/views/components/app-logo.blade.php` y el sidebar lo consumen.
+- El remitente de los correos (`config('mail.from.address')`) proviene de `MAIL_FROM_ADDRESS` y debe pertenecer a un dominio verificado en el proveedor (por ejemplo, Resend). El email de administración es solo un destinatario y no lo sobrescribe.
 - `App\Http\Middleware\CheckMaintenanceMode` (grupo `web`) devuelve la vista `errors/maintenance.blade.php` (503) cuando el modo mantenimiento está activo. Los usuarios root y las rutas de autenticación quedan exentos para poder desactivarlo.
 - Los archivos de branding se suben al disco `public` (`storage/app/public/branding`); por eso `php artisan storage:link` es obligatorio en instalación y despliegue.
 
@@ -279,7 +280,7 @@ Solo `root` ve el resumen compacto de las cinco comprobaciones del checklist (ve
 Vista en `/admin/setup` (`admin.setup.index`), accesible **solo para `root`** mediante el middleware `role:root` (`routes/web.php`). `App\Livewire\Setup\Index` muestra cinco pasos para verificar que la instalación quedó utilizable:
 
 1. **Identidad del sitio**: verificado cuando hay `site_title` y un `admin_email` con formato válido.
-2. **Correo de prueba**: botón que envía una notificación on-demand a `admin_email` (o al correo del root si no hay ninguno) y persiste el resultado en la fila `settings`. Limitado a cinco intentos por hora y por usuario; los fallos cuentan. Un éxito solo significa que el transporte aceptó el mensaje, nunca que llegó al buzón. Un fallo de transporte se registra con `report()` y jamás expone el mensaje de la excepción (puede filtrar credenciales).
+2. **Correo de prueba**: botón que envía una notificación on-demand a `admin_email` (o al correo del root si no hay ninguno) y persiste el resultado en la fila `settings`. El remitente es `MAIL_FROM_ADDRESS`, que debe pertenecer a un dominio verificado en el proveedor; no es el email de administración. Limitado a cinco intentos por hora y por usuario; los fallos cuentan. Un éxito solo significa que el transporte aceptó el mensaje, nunca que llegó al buzón. Un fallo de transporte se registra con `report()` y jamás expone el mensaje de la excepción (puede filtrar credenciales).
 3. **Almacenamiento**: diagnóstico en vivo del enlace `public/storage` y de una escritura/lectura/borrado de prueba en el disco `public`; el archivo temporal se elimina siempre. Se puede re-ejecutar con «Re-check storage».
 4. **Modalidad de registro**: verificado cuando ya existe una fila persistida en `settings`, es decir, root guardó configuración al menos una vez.
 5. **IA**: pendiente mientras la integración está desactivada (una instalación nueva no tiene credenciales); verificado cuando está activada, hay clave y el modelo configurado figura en la lista permitida; con error cuando está activada pero mal configurada. Enlaza a `/admin/ai`.
