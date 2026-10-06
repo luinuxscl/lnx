@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "kit_version": "1.2.1",
+  "kit_version": "1.3.0",
   "source": "https://github.com/luinuxscl/lnx",
-  "updated_at": "2026-10-04T12:56:11Z",
+  "updated_at": "2026-10-06T02:07:45Z",
   "stack_compatibility": {
     "php": ">=8.5",
     "laravel": "^13.0",
@@ -31,6 +31,7 @@
       "scripts/update-agent-kit.py",
       ".ai/CHANGELOG.md",
       ".ai/skills/create-ui-component/SKILL.md",
+      ".ai/skills/brand-logos/SKILL.md",
       "skills-lock.json",
       ".ai/skills/create-ui-component/references/style-foundations.md"
     ],
@@ -44,7 +45,7 @@
   "file_hashes": {
     ".ai/rules/index.md": "8cd0627a50a08dacc9c4b4ea159ad8c48c92d5fc0679e40e6ba32f75811a7597",
     ".ai/rules/general.md": "8a59f1897b1cf035df346563a57d72c8a843ed7a46b1497c8b3cb4695eab4dc4",
-    ".ai/rules/views.md": "8dadca04c1df65f89aff3c339c76ef0104ae6a13b64300ef1bbb55ae22c0220f",
+    ".ai/rules/views.md": "1a71b7da014d37def35766082dbcdf431de0937d2cafe0bb7de5be83ee2dfea9",
     ".ai/guidelines/project-entry.md": "0a420ea8d7d860f79c95b4547b4b54c7a94e46d1f8e81350c1cf0cdb69b8c22d",
     ".ai/skills/implement-feature/SKILL.md": "7867e0aec5d1043a50fbfb47fe309ef2dfd9341d156a97dfda64054f20acc0c1",
     ".ai/skills/expose-mcp-operation/SKILL.md": "72644113338c86a45d1a42b09b2465fb4185993865f43c5b5afd40c1657ab250",
@@ -53,9 +54,10 @@
     ".ai/skills/update-agent-kit/SKILL.md": "e2c727998136bca6bb3d4ffc0f8550a1c28d7777579e5846b52ad681cef26267",
     "scripts/check-agent-context.py": "0eb22d53a722a578bc910f535e0a6e27e6fdca63c4b67092bbf6ba32e9e29bbd",
     "scripts/update-agent-kit.py": "3c9c7d1cc5edab1d929103620b19103d68965caea2588d60018d7916bab1d295",
-    ".ai/CHANGELOG.md": "5a0e61bba46bc02634861b2c1b5eb0714143f876f2ad9370eb2a025bd2d21d9b",
+    ".ai/CHANGELOG.md": "d878791b310769ce9e8b65ff4424e1c7ad64f4e1810c1928674799e53b4ca7c8",
     ".ai/skills/create-ui-component/SKILL.md": "4d3a2888906828242d49ebbc8ea4dc42b0dc1c19e389f9d965b406534739d72a",
+    ".ai/skills/brand-logos/SKILL.md": "f6b0394bc9c363e40e60a588446a158cbad2840b1490a3c6ab55c8fb00f1fc19",
     "skills-lock.json": "44f584c57ad33c4221e104c14760856c0db111a1c273f9f19ef924aa9b9cc31f",
-    ".ai/skills/create-ui-component/references/style-foundations.md": "a74bf53cbe9139c3b215e94d77f79c36e1b0af49e3c6d2e6aad9cbdf5600f351"
+    ".ai/skills/create-ui-component/references/style-foundations.md": "51521c9c35212eaaf0ba76c5bef9be791c1be4b792df027ff7e8c5e30213ba3c"
   }
 }
