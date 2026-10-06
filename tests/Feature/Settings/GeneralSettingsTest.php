@@ -144,10 +144,14 @@ test('the site title is applied to the application name', function () {
     expect(config('app.name'))->toBe('Configured Title');
 });
 
-test('the administration email is applied to the mail sender', function () {
-    Setting::factory()->create(['admin_email' => 'owner@example.com']);
+test('the administration email does not override the configured mail sender', function () {
+    config(['mail.from.address' => 'noreply@luinuxscl.com']);
+    Setting::factory()->create([
+        'site_title' => 'Configured Title',
+        'admin_email' => 'owner@example.com',
+    ]);
 
     $this->actingAs(rootUser())->get(route('dashboard'))->assertOk();
 
-    expect(config('mail.from.address'))->toBe('owner@example.com');
+    expect(config('mail.from.address'))->toBe('noreply@luinuxscl.com');
 });

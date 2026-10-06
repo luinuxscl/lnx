@@ -132,6 +132,15 @@ it('marks the test email as pending again when the admin email changed', functio
         ->assertSet('steps.email.status', 'pending');
 });
 
+it('reports the configured mail sender instead of the admin email', function () {
+    config(['mail.from.address' => 'noreply@luinuxscl.com']);
+    Setting::factory()->create(['admin_email' => 'owner@example.com']);
+
+    Livewire::actingAs(setupRoot())
+        ->test(SetupIndex::class)
+        ->assertSet('steps.email.from', 'noreply@luinuxscl.com');
+});
+
 function throwingNotifier(): NotificationDispatcher
 {
     return new class implements NotificationDispatcher
