@@ -21,6 +21,18 @@
                 </flux:menu>
             </flux:dropdown>
 
+            <flux:button
+                variant="ghost"
+                size="sm"
+                square
+                icon="envelope"
+                :href="route('messages.index')"
+                wire:navigate
+                class="cursor-pointer"
+                :aria-label="__('Messages')"
+                :title="__('Messages')"
+            />
+
             <livewire:notifications.bell />
 
             <flux:button

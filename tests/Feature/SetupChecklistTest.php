@@ -69,20 +69,18 @@ it('shows the checklist to root users', function () {
         ->assertSee('Checklist de puesta en marcha');
 });
 
-it('shows the checklist item in the sidebar only for root', function () {
-    $root = setupRoot();
-    $this->actingAs($root)
+it('shows the checklist entry only for root', function () {
+    $this->actingAs(setupRoot())
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Checklist de puesta en marcha')
-        ->assertSee('admin/setup');
+        ->assertSee(route('admin.setup.index'));
 
     $admin = User::factory()->create();
     $admin->assignRole(Role::Admin->value);
     $this->actingAs($admin)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertDontSee('Checklist de puesta en marcha');
+        ->assertDontSee(route('admin.setup.index'));
 });
 
 it('marks the site identity as pending until the title and admin email are set', function () {

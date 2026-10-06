@@ -37,6 +37,16 @@
             </x-statistics-panel>
         </section>
 
+        <section class="space-y-4" aria-label="{{ __('Tool cards') }}">
+            <flux:heading level="2">{{ __('Tool cards') }}</flux:heading>
+
+            <div class="grid grid-cols-12 gap-4">
+                <x-tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Chat')" :description="__('Have interactive conversations with the AI assistant.')" icon="chat-bubble-left-right" color="violet" :href="route('chat')" />
+                <x-tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Users')" :description="__('Manage accounts, roles, and invitations.')" icon="users" color="blue" :href="route('admin.users.index')" />
+                <x-tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Repository')" :description="__('Open the project repository in a new tab.')" icon="folder-git-2" external href="https://github.com/luinuxscl/lnx" />
+            </div>
+        </section>
+
         <div class="grid gap-6 lg:grid-cols-2">
             <flux:card class="space-y-4">
                 <flux:heading level="2">{{ __('Loading') }}</flux:heading>

@@ -24,6 +24,7 @@ Esta referencia registra decisiones reutilizables al aprobar componentes de la b
 | Cabecera y métricas de un panel | `space-y-4` entre cabecera y grilla; el panel contiene una grilla de 12 columnas y cada métrica recibe su `col-span-*` desde la invocación. | `resources/views/components/statistics-panel.blade.php` |
 | Métricas como tarjetas individuales | Un contenedor externo usa `grid grid-cols-12 gap-4` y asigna el `col-span-*` a cada `x-stat-card`; la tarjeta reutiliza `x-stat`. | `resources/views/components/stat-card.blade.php` |
 | Tarjetas de tendencia | El padre asigna `col-span-12 md:col-span-6 xl:col-span-4` para mostrar una, dos o tres tarjetas por fila según el ancho. | `resources/views/components/trend-card.blade.php` |
+| Tarjetas-enlace a un área | `x-tool-card` envuelve un `flux:card` completo en un `<a>` de bloque; el contenedor asigna `col-span-12 sm:col-span-6 xl:col-span-4` (tres por fila) o `xl:col-span-3` (cuatro por fila). | `resources/views/components/tool-card.blade.php` |
 
 ## Superficie, color e interacción
 
