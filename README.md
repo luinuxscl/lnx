@@ -103,6 +103,9 @@ La función requiere `SESSION_DRIVER=database`; con otros drivers se muestra un 
 | `php artisan test`      | Ejecuta la suite de Pest             |
 | `vendor/bin/pint`       | Formatea el código PHP               |
 | `vendor/bin/phpstan`    | Análisis estático                    |
+| `php artisan lnx:reset` | Reinicia el entorno de desarrollo    |
+
+`lnx:reset` es una herramienta de desarrollo (bloqueada en producción): limpia cachés, ejecuta `migrate:fresh`, siembra roles y root, y crea cuentas demo — Samantha (`admin@lnx.dev`, rol `admin`), Leonora (`user@lnx.dev`, sin rol) y 100 usuarios de ejemplo (90 verificados / 10 sin verificar) — todas con contraseña `password`. Opciones: `--faker=0` (sin usuarios de ejemplo), `--no-fresh` (sembrar sobre la base actual sin migrar), `--no-cache`, `--seed=` (datos reproducibles) y `--force` (omite la confirmación). El seeder puede ejecutarse por separado con `php artisan db:seed --class=DemoUserSeeder`.
 
 ## Theming
 
