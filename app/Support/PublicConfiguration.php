@@ -30,10 +30,10 @@ class PublicConfiguration
                 'timezone' => (string) config('app.timezone'),
             ],
             'site' => [
-                'title' => $settings->site_title,
-                'tagline' => $settings->site_tagline,
+                'title' => $settings->title(),
+                'tagline' => $settings->tagline(),
                 'meta_description' => $settings->description(),
-                'footer_text' => $settings->footer_text,
+                'footer_text' => $settings->footer(),
                 'registration_mode' => $settings->registration_mode,
                 'maintenance_mode' => $settings->maintenance_mode,
             ],

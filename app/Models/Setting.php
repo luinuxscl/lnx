@@ -64,6 +64,15 @@ class Setting extends Model
     public const CACHE_KEY = 'settings';
 
     /**
+     * Default branding assets shipped with the kit, relative to the public root.
+     */
+    public const DEFAULT_LOGO = 'branding/lnx-logo.png';
+
+    public const DEFAULT_FAVICON = 'favicon.png';
+
+    public const DEFAULT_APPLE_TOUCH_ICON = 'apple-touch-icon.png';
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -113,7 +122,23 @@ class Setting extends Model
      */
     public function title(): string
     {
-        return $this->site_title ?: (string) config('app.name', 'Laravel');
+        return $this->site_title ?: (string) config('app.name', 'LNX');
+    }
+
+    /**
+     * Get the site tagline, falling back to the configured kit default.
+     */
+    public function tagline(): ?string
+    {
+        return $this->site_tagline ?: (config('app.tagline') ?: null);
+    }
+
+    /**
+     * Get the footer text, falling back to the configured kit default.
+     */
+    public function footer(): ?string
+    {
+        return $this->footer_text ?: (config('app.footer_text') ?: null);
     }
 
     /**
@@ -121,15 +146,15 @@ class Setting extends Model
      */
     public function description(): ?string
     {
-        return $this->meta_description ?: $this->site_tagline;
+        return $this->meta_description ?: $this->tagline();
     }
 
     /**
-     * Get the public URL of the logo.
+     * Get the public URL of the logo, falling back to the default kit logo.
      */
     public function logoUrl(): ?string
     {
-        return $this->fileUrl($this->logo_path);
+        return $this->fileUrl($this->logo_path) ?? asset(self::DEFAULT_LOGO);
     }
 
     /**
@@ -141,19 +166,19 @@ class Setting extends Model
     }
 
     /**
-     * Get the public URL of the favicon.
+     * Get the public URL of the favicon, falling back to the default kit favicon.
      */
     public function faviconUrl(): ?string
     {
-        return $this->fileUrl($this->favicon_path);
+        return $this->fileUrl($this->favicon_path) ?? asset(self::DEFAULT_FAVICON);
     }
 
     /**
-     * Get the public URL of the Apple touch icon.
+     * Get the public URL of the Apple touch icon, falling back to the default.
      */
     public function appleTouchIconUrl(): ?string
     {
-        return $this->fileUrl($this->apple_touch_icon_path);
+        return $this->fileUrl($this->apple_touch_icon_path) ?? asset(self::DEFAULT_APPLE_TOUCH_ICON);
     }
 
     /**

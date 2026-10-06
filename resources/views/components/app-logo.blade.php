@@ -3,9 +3,9 @@
 ])
 
 @php
-    $siteName = ($site ?? null)?->title() ?? config('app.name', 'Laravel');
-    $siteTagline = ($site ?? null)?->site_tagline;
-    $logoUrl = ($site ?? null)?->logoDarkUrl() ?? ($site ?? null)?->logoUrl();
+    $siteName = ($site ?? null)?->title() ?? config('app.name', 'LNX');
+    $siteTagline = ($site ?? null)?->tagline();
+    $logoUrl = ($site ?? null)?->logoDarkUrl() ?? asset(\App\Models\Setting::DEFAULT_LOGO);
 @endphp
 
 @if($sidebar)

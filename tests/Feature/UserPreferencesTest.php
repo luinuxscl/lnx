@@ -19,6 +19,14 @@ function preferencesUser(array $attributes = []): User
     return User::factory()->create($attributes);
 }
 
+/**
+ * Build a record instant from a UTC wall time, stored in the application time zone.
+ */
+function activityInstant(string $utc): Carbon
+{
+    return Carbon::parse($utc, 'UTC')->setTimezone((string) config('app.timezone'));
+}
+
 /*
 |--------------------------------------------------------------------------
 | Locale
@@ -166,7 +174,7 @@ it('renders dates in the account time zone', function () {
     $root->assignRole(Role::Root->value);
 
     AdministrativeActivity::factory()->create([
-        'occurred_at' => Carbon::parse('2026-01-01 23:30:00', 'UTC'),
+        'occurred_at' => activityInstant('2026-01-01 23:30:00'),
     ]);
 
     $this->actingAs($root)
@@ -180,7 +188,7 @@ it('interprets day filters in the account time zone', function () {
     $root->assignRole(Role::Root->value);
 
     $activity = AdministrativeActivity::factory()->create([
-        'occurred_at' => Carbon::parse('2026-01-02 02:00:00', 'UTC'),
+        'occurred_at' => activityInstant('2026-01-02 02:00:00'),
     ]);
 
     $this->actingAs($root);
@@ -198,13 +206,13 @@ it('keeps the application time zone for users without a preference', function ()
     $root->assignRole(Role::Root->value);
 
     AdministrativeActivity::factory()->create([
-        'occurred_at' => Carbon::parse('2026-01-01 23:30:00', 'UTC'),
+        'occurred_at' => activityInstant('2026-01-01 23:30:00'),
     ]);
 
     $this->actingAs($root)
         ->get(route('admin.activity.index'))
         ->assertOk()
-        ->assertSee('2026-01-01 23:30:00');
+        ->assertSee('2026-01-01 20:30:00');
 });
 
 /*

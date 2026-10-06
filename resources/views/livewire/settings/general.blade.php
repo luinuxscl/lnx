@@ -31,7 +31,7 @@
 
                 @if ($logo)
                     <img src="{{ $logo->temporaryUrl() }}" alt="{{ __('Logo preview') }}" class="h-10 w-auto rounded" />
-                @elseif ($settings->logoUrl())
+                @elseif ($settings->logo_path)
                     <div class="flex items-center gap-3">
                         <img src="{{ $settings->logoUrl() }}" alt="{{ __('Logo preview') }}" class="h-10 w-auto rounded" />
 
@@ -39,6 +39,8 @@
                             {{ __('Remove') }}
                         </flux:button>
                     </div>
+                @elseif ($settings->logoUrl())
+                    <img src="{{ $settings->logoUrl() }}" alt="{{ __('Logo preview') }}" class="h-10 w-auto rounded" />
                 @endif
             </div>
 
@@ -63,7 +65,7 @@
 
                 @if ($favicon)
                     <flux:text>{{ $favicon->getClientOriginalName() }}</flux:text>
-                @elseif ($settings->faviconUrl())
+                @elseif ($settings->favicon_path)
                     <div class="flex items-center gap-3">
                         <img src="{{ $settings->faviconUrl() }}" alt="{{ __('Favicon preview') }}" class="size-8 rounded" />
 
@@ -71,6 +73,8 @@
                             {{ __('Remove') }}
                         </flux:button>
                     </div>
+                @elseif ($settings->faviconUrl())
+                    <img src="{{ $settings->faviconUrl() }}" alt="{{ __('Favicon preview') }}" class="size-8 rounded" />
                 @endif
             </div>
 
@@ -79,7 +83,7 @@
 
                 @if ($apple_touch_icon)
                     <img src="{{ $apple_touch_icon->temporaryUrl() }}" alt="{{ __('Apple touch icon preview') }}" class="size-12 rounded" />
-                @elseif ($settings->appleTouchIconUrl())
+                @elseif ($settings->apple_touch_icon_path)
                     <div class="flex items-center gap-3">
                         <img src="{{ $settings->appleTouchIconUrl() }}" alt="{{ __('Apple touch icon preview') }}" class="size-12 rounded" />
 
@@ -87,6 +91,8 @@
                             {{ __('Remove') }}
                         </flux:button>
                     </div>
+                @elseif ($settings->appleTouchIconUrl())
+                    <img src="{{ $settings->appleTouchIconUrl() }}" alt="{{ __('Apple touch icon preview') }}" class="size-12 rounded" />
                 @endif
             </div>
         </div>

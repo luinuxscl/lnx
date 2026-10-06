@@ -54,11 +54,11 @@ class General extends Component
 
         $settings = Setting::current();
 
-        $this->site_title = $settings->site_title ?? '';
-        $this->site_tagline = $settings->site_tagline ?? '';
+        $this->site_title = $settings->title();
+        $this->site_tagline = $settings->tagline() ?? '';
         $this->meta_description = $settings->meta_description ?? '';
         $this->admin_email = $settings->admin_email ?? '';
-        $this->footer_text = $settings->footer_text ?? '';
+        $this->footer_text = $settings->footer() ?? '';
         $this->analytics_id = $settings->analytics_id ?? '';
         $this->maintenance_mode = (bool) $settings->maintenance_mode;
         $this->registration_mode = $settings->registration_mode ?? 'open';
