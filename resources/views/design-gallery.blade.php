@@ -30,11 +30,11 @@
                 <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
                 <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Products')" value="1.423k" icon="shopping-cart" color="rose" />
                 <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Revenue')" value="$9745" icon="currency-dollar" color="emerald" />
-            </x-statistics-panel>
+            </x-lnx-ui::statistics-panel>
 
             <x-lnx-ui::statistics-panel :title="__('Statistics without update')">
                 <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" />
-            </x-statistics-panel>
+            </x-lnx-ui::statistics-panel>
         </section>
 
         <section class="space-y-4" aria-label="{{ __('Tool cards') }}">
