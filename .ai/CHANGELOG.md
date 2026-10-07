@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.10.0] - 2026-10-07
+
+### Mejorado
+- Componente `x-lnx-ui::statistics-panel` (paquete `lnx-ui` v1.2.0): título `level="2"` con `size="lg"`; `updated-at` pasa a `updated-label` y se añade `updated-icon`; nuevos slots `actions`, `description` y `empty`; la grilla interna usa `gap-4` y la tarjeta se marca con `role="group"` + `aria-label`. Se actualizan el ejemplo de `/design-gallery`, el README de lnx y `.ai/skills/create-ui-component/references/style-foundations.md`.
+
 ## [1.9.0] - 2026-10-07
 
 ### Mejorado
