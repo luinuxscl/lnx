@@ -40,6 +40,12 @@
                             {{ __('AI') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
+
+                    <flux:sidebar.group :heading="__('Packages')" icon="cube">
+                        <flux:sidebar.item icon="squares-2x2" :href="route('admin.packages.lnx-ui')" :current="request()->routeIs('admin.packages.*')" wire:navigate>
+                            {{ __('UI/UX components') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
                 @endif
 
                 <flux:sidebar.group :heading="__('AI Tools')" icon="sparkles" expandable :expanded="request()->routeIs('chat*', 'knowledge.*', 'documents.*')">
