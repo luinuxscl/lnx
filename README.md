@@ -697,7 +697,7 @@ En cada aplicación:
 - Consumo con namespace: `<x-lnx-ui::trend-card ... />`.
 - Override de un componente: `resources/views/vendor/lnx-ui/components/*.blade.php`; Laravel lo resuelve antes que el paquete. `php artisan vendor:publish --tag=lnx-ui-views` publica todas las vistas para copiarlas.
 
-La galería `/design-gallery` cataloga los componentes **por tipo** y da a cada uno un **nombre y ancla estable** (`#<nombre>`) para referenciarlo con la IA (p. ej. «ajusta el componente `trend-card`»). Al añadir o cambiar un componente, actualiza su ejemplo en la galería.
+El catálogo de la galería vive en el paquete (vista `lnx-ui::design-gallery`): agrupa los componentes **por tipo** y da a cada uno un **nombre y ancla estable** (`#<nombre>`) para referenciarlo con la IA (p. ej. «ajusta el componente `trend-card`»). La app solo aporta el layout, la ruta y el gating, e incluye la vista del paquete con `@include('lnx-ui::design-gallery')`. Al añadir o cambiar un componente, actualiza su ejemplo en la vista del paquete.
 
 La skill usa `tailwind-design-system` de [wshobson/agents](https://github.com/wshobson/agents), fijada a una revisión en `skills-lock.json`. En un checkout nuevo, restáurala con `npx skills experimental_install` y sincroniza las skills propias con `php artisan boost:update --no-discover --no-interaction`.
 
