@@ -2732,11 +2732,11 @@
         },
         {
             "name": "luinuxscl/lnx-ui",
-            "version": "dev-main",
+            "version": "dev-develop",
             "dist": {
                 "type": "path",
                 "url": "../lnx-ui",
-                "reference": "0754d00fe424ffd16b4a84e2e22ce61357629bdf"
+                "reference": "deec241e085f45d9d9f1186e813a79d565950dcf"
             },
             "require": {
                 "illuminate/support": "^13.0",
