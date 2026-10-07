@@ -2,6 +2,17 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.6.0] - 2026-10-07
+
+### Añadido
+- Paquete Composer privado `luinuxscl/lnx-ui` como fuente única de componentes UI presentacionales para lnx y sus apps derivadas: Blade anónimos bajo el namespace `lnx-ui` (`<x-lnx-ui::... />`) y override por app vía `resources/views/vendor/lnx-ui` (Laravel resuelve la app antes que el paquete).
+- Primer componente migrado: `x-lnx-ui::trend-card` (antes `x-trend-card`); se elimina la copia local en lnx y en las apps derivadas.
+- Reglas genéricas en `.ai/rules/general.md` y `.ai/rules/views.md`: qué componentes se extraen, cómo se consume el paquete, el alta por app y la precedencia de overrides.
+
+### Notas de migración
+- Cada app derivada añade el repositorio y `composer require luinuxscl/lnx-ui`, la línea `@source '../../vendor/luinuxscl/lnx-ui/resources/views';` en `resources/css/app.css`, sustituye `<x-trend-card ... />` por `<x-lnx-ui::trend-card ... />` y elimina `resources/views/components/trend-card.blade.php`.
+- En desarrollo local el paquete se enlaza con un repositorio `type: path` (`../lnx-ui`); en despliegue, con un repositorio VCS privado apuntando a un tag.
+
 ## [1.5.0] - 2026-10-07
 
 ### Añadido
