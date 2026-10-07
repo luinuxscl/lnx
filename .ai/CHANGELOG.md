@@ -11,7 +11,7 @@ Todas las modificaciones notables al kit para agentes se documentarán en este a
 
 ### Notas de migración
 - Cada app derivada añade el repositorio y `composer require luinuxscl/lnx-ui`, la línea `@source '../../vendor/luinuxscl/lnx-ui/resources/views';` en `resources/css/app.css`, sustituye `<x-trend-card ... />` por `<x-lnx-ui::trend-card ... />` y elimina `resources/views/components/trend-card.blade.php`.
-- En desarrollo local el paquete se enlaza con un repositorio `type: path` (`../lnx-ui`); en despliegue, con un repositorio VCS privado apuntando a un tag.
+- El paquete se consume con un repositorio VCS privado (`git@github.com:luinuxscl/lnx-ui.git`, tag `^0.1`); para desarrollo local en vivo se superpone temporalmente un repositorio `type: path` a `../lnx-ui`. CI y despliegue necesitan acceso al repositorio privado (deploy key o token).
 
 ## [1.5.0] - 2026-10-07
 
