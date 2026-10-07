@@ -5,11 +5,65 @@
             <flux:text class="mt-1">{{ __('Examples of the interface states used across this application.') }}</flux:text>
         </div>
 
-        <section class="space-y-4" aria-label="{{ __('Statistics components') }}">
-            <flux:heading level="2">{{ __('Statistics components') }}</flux:heading>
+        {{-- Component index: each entry links to its stable anchor (#name). --}}
+        <nav aria-label="{{ __('Component index') }}" class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+            <flux:heading level="2" size="sm">{{ __('Component index') }}</flux:heading>
+            <ul class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-sm sm:grid-cols-3 lg:grid-cols-4">
+                @foreach (['stat', 'stat-card', 'statistics-panel', 'trend-card', 'tool-card', 'placeholder-pattern', 'auth-header', 'auth-session-status', 'loading', 'empty-state', 'error-state', 'validation', 'actions-statuses', 'messaging'] as $anchor)
+                    <li><a href="#{{ $anchor }}" class="text-accent-content hover:underline">{{ $anchor }}</a></li>
+                @endforeach
+            </ul>
+        </nav>
 
-            <div class="space-y-3">
-                <flux:heading level="3">{{ __('Trend cards') }}</flux:heading>
+        <section class="space-y-8" aria-label="{{ __('Shared library (lnx-ui)') }}">
+            <div>
+                <flux:heading level="2">{{ __('Shared library (lnx-ui)') }}</flux:heading>
+                <flux:text class="mt-1">{{ __('Reusable components from the lnx-ui package. Each one has a stable name and anchor (#name) to reference it with the AI.') }}</flux:text>
+            </div>
+
+            {{-- stat --}}
+            <div id="stat" class="scroll-mt-24 space-y-3">
+                <flux:heading level="3"><code class="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm dark:bg-zinc-800">x-lnx-ui::stat</code></flux:heading>
+
+                <div class="grid grid-cols-12 gap-4">
+                    <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
+                    <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
+                    <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Products')" value="1.423k" icon="shopping-cart" color="rose" />
+                    <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Revenue')" value="$9745" icon="currency-dollar" color="emerald" />
+                </div>
+            </div>
+
+            {{-- stat-card --}}
+            <div id="stat-card" class="scroll-mt-24 space-y-3">
+                <flux:heading level="3"><code class="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm dark:bg-zinc-800">x-lnx-ui::stat-card</code></flux:heading>
+
+                <div class="grid grid-cols-12 gap-4">
+                    <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
+                    <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
+                    <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Products')" value="1.423k" icon="shopping-cart" color="rose" />
+                    <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Revenue')" value="$9745" icon="currency-dollar" color="emerald" />
+                </div>
+            </div>
+
+            {{-- statistics-panel --}}
+            <div id="statistics-panel" class="scroll-mt-24 space-y-3">
+                <flux:heading level="3"><code class="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm dark:bg-zinc-800">x-lnx-ui::statistics-panel</code></flux:heading>
+
+                <x-lnx-ui::statistics-panel :title="__('Statistics')" :updated-at="__('Updated 1 month ago')">
+                    <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
+                    <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
+                    <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Products')" value="1.423k" icon="shopping-cart" color="rose" />
+                    <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Revenue')" value="$9745" icon="currency-dollar" color="emerald" />
+                </x-lnx-ui::statistics-panel>
+
+                <x-lnx-ui::statistics-panel :title="__('Statistics without update')">
+                    <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" />
+                </x-lnx-ui::statistics-panel>
+            </div>
+
+            {{-- trend-card --}}
+            <div id="trend-card" class="scroll-mt-24 space-y-3">
+                <flux:heading level="3"><code class="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm dark:bg-zinc-800">x-lnx-ui::trend-card</code></flux:heading>
 
                 <div class="grid grid-cols-12 gap-4">
                     <x-lnx-ui::trend-card class="col-span-12 md:col-span-6 xl:col-span-4" :label="__('Product sold')" value="2.968" :change="__(':change last week', ['change' => '+3.2%'])" :series="[28, 16, 34, 42, 51, 75, 78, 80, 72, 21]" color="emerald" />
@@ -18,78 +72,94 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-12 gap-4">
-                <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
-                <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
-                <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Products')" value="1.423k" icon="shopping-cart" color="rose" />
-                <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Revenue')" value="$9745" icon="currency-dollar" color="emerald" />
+            {{-- tool-card --}}
+            <div id="tool-card" class="scroll-mt-24 space-y-3">
+                <flux:heading level="3"><code class="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm dark:bg-zinc-800">x-lnx-ui::tool-card</code></flux:heading>
+
+                <div class="grid grid-cols-12 gap-4">
+                    <x-lnx-ui::tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Chat')" :description="__('Have interactive conversations with the AI assistant.')" icon="chat-bubble-left-right" color="violet" :href="route('chat')" />
+                    <x-lnx-ui::tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Users')" :description="__('Manage accounts, roles, and invitations.')" icon="users" color="blue" :href="route('admin.users.index')" />
+                    <x-lnx-ui::tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Repository')" :description="__('Open the project repository in a new tab.')" icon="folder-git-2" external href="https://github.com/luinuxscl/lnx" />
+                </div>
             </div>
 
-            <x-lnx-ui::statistics-panel :title="__('Statistics')" :updated-at="__('Updated 1 month ago')">
-                <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
-                <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
-                <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Products')" value="1.423k" icon="shopping-cart" color="rose" />
-                <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Revenue')" value="$9745" icon="currency-dollar" color="emerald" />
-            </x-lnx-ui::statistics-panel>
+            {{-- placeholder-pattern --}}
+            <div id="placeholder-pattern" class="scroll-mt-24 space-y-3">
+                <flux:heading level="3"><code class="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm dark:bg-zinc-800">x-lnx-ui::placeholder-pattern</code></flux:heading>
 
-            <x-lnx-ui::statistics-panel :title="__('Statistics without update')">
-                <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" />
-            </x-lnx-ui::statistics-panel>
+                <div class="size-32 rounded-lg border border-zinc-200 text-zinc-300 dark:border-zinc-800 dark:text-zinc-700">
+                    <x-lnx-ui::placeholder-pattern class="size-full [&_path]:fill-none [&_path]:stroke-current" />
+                </div>
+            </div>
+
+            {{-- auth-header --}}
+            <div id="auth-header" class="scroll-mt-24 space-y-3">
+                <flux:heading level="3"><code class="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm dark:bg-zinc-800">x-lnx-ui::auth-header</code></flux:heading>
+
+                <flux:card>
+                    <x-lnx-ui::auth-header :title="__('Log in to your account')" :description="__('Enter your email and password below to log in')" />
+                </flux:card>
+            </div>
+
+            {{-- auth-session-status --}}
+            <div id="auth-session-status" class="scroll-mt-24 space-y-3">
+                <flux:heading level="3"><code class="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm dark:bg-zinc-800">x-lnx-ui::auth-session-status</code></flux:heading>
+
+                <flux:card>
+                    <x-lnx-ui::auth-session-status :status="__('Your password has been reset.')" />
+                </flux:card>
+            </div>
         </section>
 
-        <section class="space-y-4" aria-label="{{ __('Tool cards') }}">
-            <flux:heading level="2">{{ __('Tool cards') }}</flux:heading>
+        <section class="space-y-4" aria-label="{{ __('Interface states') }}">
+            <flux:heading level="2">{{ __('Interface states') }}</flux:heading>
 
-            <div class="grid grid-cols-12 gap-4">
-                <x-lnx-ui::tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Chat')" :description="__('Have interactive conversations with the AI assistant.')" icon="chat-bubble-left-right" color="violet" :href="route('chat')" />
-                <x-lnx-ui::tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Users')" :description="__('Manage accounts, roles, and invitations.')" icon="users" color="blue" :href="route('admin.users.index')" />
-                <x-lnx-ui::tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Repository')" :description="__('Open the project repository in a new tab.')" icon="folder-git-2" external href="https://github.com/luinuxscl/lnx" />
+            <div class="grid gap-6 lg:grid-cols-2">
+                <flux:card id="loading" class="scroll-mt-24 space-y-4">
+                    <flux:heading level="3">{{ __('Loading') }}</flux:heading>
+                    <flux:skeleton class="h-5 w-2/3" />
+                    <flux:skeleton class="h-5 w-full" />
+                    <flux:skeleton class="h-9 w-28" />
+                </flux:card>
+
+                <flux:card id="empty-state" class="scroll-mt-24 space-y-4">
+                    <flux:heading level="3">{{ __('Empty state') }}</flux:heading>
+                    <flux:text>{{ __('No invitations found.') }}</flux:text>
+                    <flux:button :href="route('admin.users.create')" wire:navigate>{{ __('Invite user') }}</flux:button>
+                </flux:card>
+
+                <flux:card id="error-state" class="scroll-mt-24 space-y-4">
+                    <flux:heading level="3">{{ __('Error state') }}</flux:heading>
+                    <flux:callout variant="danger" icon="x-circle">
+                        <flux:callout.heading>{{ __('The invitation could not be sent.') }}</flux:callout.heading>
+                        <flux:callout.text>{{ __('Please try again.') }}</flux:callout.text>
+                    </flux:callout>
+                </flux:card>
+
+                <flux:card id="validation" class="scroll-mt-24 space-y-4">
+                    <flux:heading level="3">{{ __('Validation') }}</flux:heading>
+                    <flux:field>
+                        <flux:label>{{ __('Email') }}</flux:label>
+                        <flux:input type="email" value="invalid-email" aria-invalid="true" />
+                        <flux:error name="email" :message="__('Enter a valid email address.')" />
+                    </flux:field>
+                </flux:card>
             </div>
         </section>
 
-        <div class="grid gap-6 lg:grid-cols-2">
+        <section id="actions-statuses" class="scroll-mt-24" aria-label="{{ __('Actions and statuses') }}">
             <flux:card class="space-y-4">
-                <flux:heading level="2">{{ __('Loading') }}</flux:heading>
-                <flux:skeleton class="h-5 w-2/3" />
-                <flux:skeleton class="h-5 w-full" />
-                <flux:skeleton class="h-9 w-28" />
+                <flux:heading level="2">{{ __('Actions and statuses') }}</flux:heading>
+                <div class="flex flex-wrap items-center gap-3">
+                    <flux:badge color="green">{{ __('Active') }}</flux:badge>
+                    <flux:badge color="amber">{{ __('Suspended') }}</flux:badge>
+                    <flux:button variant="primary" :href="route('admin.users.create')" wire:navigate>{{ __('Invite user') }}</flux:button>
+                    <flux:button variant="ghost" :href="route('admin.users.index')" wire:navigate>{{ __('Cancel') }}</flux:button>
+                </div>
             </flux:card>
+        </section>
 
-            <flux:card class="space-y-4">
-                <flux:heading level="2">{{ __('Empty state') }}</flux:heading>
-                <flux:text>{{ __('No invitations found.') }}</flux:text>
-                <flux:button :href="route('admin.users.create')" wire:navigate>{{ __('Invite user') }}</flux:button>
-            </flux:card>
-
-            <flux:card class="space-y-4">
-                <flux:heading level="2">{{ __('Error state') }}</flux:heading>
-                <flux:callout variant="danger" icon="x-circle">
-                    <flux:callout.heading>{{ __('The invitation could not be sent.') }}</flux:callout.heading>
-                    <flux:callout.text>{{ __('Please try again.') }}</flux:callout.text>
-                </flux:callout>
-            </flux:card>
-
-            <flux:card class="space-y-4">
-                <flux:heading level="2">{{ __('Validation') }}</flux:heading>
-                <flux:field>
-                    <flux:label>{{ __('Email') }}</flux:label>
-                    <flux:input type="email" value="invalid-email" aria-invalid="true" />
-                    <flux:error name="email" :message="__('Enter a valid email address.')" />
-                </flux:field>
-            </flux:card>
-        </div>
-
-        <flux:card class="space-y-4">
-            <flux:heading level="2">{{ __('Actions and statuses') }}</flux:heading>
-            <div class="flex flex-wrap items-center gap-3">
-                <flux:badge color="green">{{ __('Active') }}</flux:badge>
-                <flux:badge color="amber">{{ __('Suspended') }}</flux:badge>
-                <flux:button variant="primary" :href="route('admin.users.create')" wire:navigate>{{ __('Invite user') }}</flux:button>
-                <flux:button variant="ghost" :href="route('admin.users.index')" wire:navigate>{{ __('Cancel') }}</flux:button>
-            </div>
-        </flux:card>
-
-        <section class="space-y-4" aria-label="{{ __('Messaging components') }}">
+        <section id="messaging" class="scroll-mt-24 space-y-4" aria-label="{{ __('Messaging components') }}">
             <flux:heading level="2">{{ __('Messaging components') }}</flux:heading>
             <flux:card class="space-y-4">
                 <div class="flex items-center justify-between">

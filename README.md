@@ -647,7 +647,7 @@ La galería `/design-gallery` solo se registra en `local` y `testing`, tras aute
 
 ### Componentes desde capturas
 
-La skill `.ai/skills/create-ui-component/SKILL.md` guía la adaptación de una captura a un componente Blade o Livewire reutilizable. Con la captura y su propósito prepara una ficha breve de estructura, datos, acciones, estados y ancho responsivo antes de implementar. El contenedor asigna columnas de una grilla de 12; por ejemplo, una tarjeta de estadísticas puede ocupar `col-span-12 md:col-span-6 xl:col-span-3`. El componente no recibe una prop de ancho. Tras revisar y aprobar el candidato para la biblioteca, se incorpora a `/design-gallery` con las variantes pertinentes y un ejemplo de invocación. Empieza en esta aplicación; cuando la API esté estabilizada y el componente sea presentacional puro (sin modelos, rutas ni servicios del host) se extrae al paquete compartido `luinuxscl/lnx-ui` (ver «Componentes compartidos»).
+La skill `.ai/skills/create-ui-component/SKILL.md` guía la adaptación de una captura a un componente Blade o Livewire reutilizable. Con la captura y su propósito prepara una ficha breve de estructura, datos, acciones, estados y ancho responsivo antes de implementar. El contenedor asigna columnas de una grilla de 12; por ejemplo, una tarjeta de estadísticas puede ocupar `col-span-12 md:col-span-6 xl:col-span-3`. El componente no recibe una prop de ancho. Tras revisar y aprobar el candidato para la biblioteca, se incorpora a `/design-gallery` con las variantes pertinentes y un ejemplo de invocación. Por defecto, el componente se crea en el paquete compartido `luinuxscl/lnx-ui` (ver «Componentes compartidos»); solo se crean en la app los componentes muy específicos o acoplados al host (modelos, rutas o servicios).
 
 La biblioteca del paquete incluye `x-lnx-ui::stat` (`label`, `value`, `icon` Flux y `color`), `x-lnx-ui::stat-card` (una tarjeta individual que reutiliza `stat` y las mismas props) y `x-lnx-ui::statistics-panel` (`title`, `updated-at` opcional y slot de métricas). El panel usa `flux:card` y una grilla de 12 columnas; el contenedor externo asigna el ancho a cada tarjeta individual. `color` acepta `accent` (predeterminado), `violet`, `cyan`, `rose`, `emerald`, `blue` y `amber`. El consumidor aporta cifras ya formateadas y textos traducidos, sin consultas ni lógica de negocio dentro de los componentes. Cuando se entrega `updated-at`, el panel muestra un icono cuyo tooltip contiene ese texto; sin la prop, no muestra el icono.
 
@@ -688,7 +688,7 @@ Los estilos reutilizables aprobados se registran en `.ai/skills/create-ui-compon
 
 ### Componentes compartidos (paquete `luinuxscl/lnx-ui`)
 
-Los componentes presentacionales reutilizables viven en el paquete Composer privado `luinuxscl/lnx-ui`, fuente única para lnx y sus apps derivadas. Un componente es candidato a migrar cuando no consulta la base de datos ni lee modelos, rutas o servicios del host; los acoplados (`app-logo`, `user-avatar`, `desktop-user-menu`, `dev-credentials-warning`, `settings/layout`) se quedan en `resources/views/components/` de cada app.
+Los componentes presentacionales reutilizables viven en el paquete Composer privado `luinuxscl/lnx-ui`, fuente única para lnx y sus apps derivadas. Por defecto, **todo componente visual reutilizable nuevo se crea en el paquete**, no en la app; solo los muy específicos o acoplados al host (`app-logo`, `user-avatar`, `desktop-user-menu`, `dev-credentials-warning`, `settings/layout`) se quedan en `resources/views/components/` de cada app. El clon local para desarrollar el paquete se registra en `.ai/rules/local.md`.
 
 En cada aplicación:
 
@@ -697,7 +697,7 @@ En cada aplicación:
 - Consumo con namespace: `<x-lnx-ui::trend-card ... />`.
 - Override de un componente: `resources/views/vendor/lnx-ui/components/*.blade.php`; Laravel lo resuelve antes que el paquete. `php artisan vendor:publish --tag=lnx-ui-views` publica todas las vistas para copiarlas.
 
-`x-lnx-ui::trend-card` es el primer componente migrado; conserva la API y los ejemplos que tenía `x-trend-card`.
+La galería `/design-gallery` cataloga los componentes **por tipo** y da a cada uno un **nombre y ancla estable** (`#<nombre>`) para referenciarlo con la IA (p. ej. «ajusta el componente `trend-card`»). Al añadir o cambiar un componente, actualiza su ejemplo en la galería.
 
 La skill usa `tailwind-design-system` de [wshobson/agents](https://github.com/wshobson/agents), fijada a una revisión en `skills-lock.json`. En un checkout nuevo, restáurala con `npx skills experimental_install` y sincroniza las skills propias con `php artisan boost:update --no-discover --no-interaction`.
 

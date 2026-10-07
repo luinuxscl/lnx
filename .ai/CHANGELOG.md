@@ -2,6 +2,13 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.8.0] - 2026-10-07
+
+### Añadido
+- Regla por defecto: todo componente visual reutilizable nuevo se crea en el paquete `luinuxscl/lnx-ui`; solo los muy específicos de su dominio o acoplados al host se crean en la app (`.ai/rules/views.md`, `.ai/rules/general.md`, skill `create-ui-component`).
+- La carpeta de desarrollo en vivo del paquete se registra en `.ai/rules/local.md` de cada proyecto, para que los agentes del entorno local sepan dónde editar los componentes.
+- La galería `/design-gallery` cataloga los componentes por tipo, con un nombre y un ancla estable (`#<nombre>`) para poder referenciarlos con la IA.
+
 ## [1.7.0] - 2026-10-07
 
 ### Añadido
