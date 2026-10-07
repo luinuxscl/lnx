@@ -797,5 +797,10 @@
     "or you can": "or you can",
     "or, enter the code manually": "or, enter the code manually",
     "participants": "participants",
-    "tokens": "tokens"
+    "tokens": "tokens",
+    "Component index": "Component index",
+    "Interface states": "Interface states",
+    "Shared library (lnx-ui)": "Shared library (lnx-ui)",
+    "Reusable components from the lnx-ui package. Each one has a stable name and anchor (#name) to reference it with the AI.": "Reusable components from the lnx-ui package. Each one has a stable name and anchor (#name) to reference it with the AI.",
+    "Your password has been reset.": "Your password has been reset."
 }

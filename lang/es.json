@@ -809,5 +809,10 @@
     "or you can": "o puede",
     "or, enter the code manually": "o introduzca el código manualmente",
     "participants": "participantes",
-    "tokens": "tokens"
+    "tokens": "tokens",
+    "Component index": "Índice de componentes",
+    "Interface states": "Estados de la interfaz",
+    "Shared library (lnx-ui)": "Biblioteca compartida (lnx-ui)",
+    "Reusable components from the lnx-ui package. Each one has a stable name and anchor (#name) to reference it with the AI.": "Componentes reutilizables del paquete lnx-ui. Cada uno tiene un nombre y un ancla estables (#nombre) para referenciarlo con la IA.",
+    "Your password has been reset.": "Tu contraseña se ha restablecido."
 }
