@@ -6,3 +6,4 @@ Before planning or editing, find the row whose globs match the file's path and r
 | --- | --- |
 | ** | .ai/rules/general.md |
 | resources/views/** | .ai/rules/views.md |
+| ** | .ai/rules/local.md |
