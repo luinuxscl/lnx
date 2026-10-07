@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.9.0] - 2026-10-07
+
+### Mejorado
+- La galería de diseño vive en el paquete (`lnx-ui::design-gallery`): el catálogo por tipo, con nombre y ancla de cada componente, se mantiene en el paquete y las apps solo aportan layout, ruta y gating. Reglas y skill `create-ui-component` actualizadas para crear los componentes en el paquete y catalogarlos en esa vista.
+
 ## [1.8.0] - 2026-10-07
 
 ### Añadido
