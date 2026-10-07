@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a30efce593d4eaac2fbde697eef0c176",
+    "content-hash": "3366ac0eb42b29ed8dd1263e8d7f8c25",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -2729,6 +2729,68 @@
                 }
             ],
             "time": "2026-09-14T19:27:16+00:00"
+        },
+        {
+            "name": "luinuxscl/lnx-ui",
+            "version": "dev-develop",
+            "dist": {
+                "type": "path",
+                "url": "../lnx-ui",
+                "reference": "deec241e085f45d9d9f1186e813a79d565950dcf"
+            },
+            "require": {
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "livewire/flux": "^2.20",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "orchestra/testbench": "^11.3",
+                "pestphp/pest": "^5.3",
+                "pestphp/pest-plugin-laravel": "^5.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Luinuxscl\\LnxUi\\LnxUiServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Luinuxscl\\LnxUi\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Luinuxscl\\LnxUi\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "vendor/bin/pint"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Componentes UI compartidos para aplicaciones derivadas del kit lnx (Blade anónimos, override-friendly).",
+            "keywords": [
+                "blade",
+                "components",
+                "laravel",
+                "lnx",
+                "ui"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "monolog/monolog",
@@ -11956,7 +12018,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "luinuxscl/lnx-ui": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

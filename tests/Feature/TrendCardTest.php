@@ -1,7 +1,7 @@
 <?php
 
 it('renders a trend line for two or more numeric values', function () {
-    $view = $this->blade('<x-trend-card label="Sales" value="2,968" change="+3.2%" :series="$series" color="emerald" />', [
+    $view = $this->blade('<x-lnx-ui::trend-card label="Sales" value="2,968" change="+3.2%" :series="$series" color="emerald" />', [
         'series' => [10, 20, 15],
     ]);
 
@@ -11,7 +11,7 @@ it('renders a trend line for two or more numeric values', function () {
 });
 
 it('keeps the metric without a trend line when the series is insufficient', function () {
-    $view = $this->blade('<x-trend-card label="Sales" value="2,968" change="+3.2%" :series="$series" />', [
+    $view = $this->blade('<x-lnx-ui::trend-card label="Sales" value="2,968" change="+3.2%" :series="$series" />', [
         'series' => [10, 'invalid'],
     ]);
 
@@ -20,7 +20,7 @@ it('keeps the metric without a trend line when the series is insufficient', func
 });
 
 it('escapes metric text supplied by the consumer', function () {
-    $view = $this->blade('<x-trend-card :label="$label" value="2,968" change="+3.2%" />', [
+    $view = $this->blade('<x-lnx-ui::trend-card :label="$label" value="2,968" change="+3.2%" />', [
         'label' => '<script>alert(1)</script>',
     ]);
 
