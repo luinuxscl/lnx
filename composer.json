@@ -8,6 +8,15 @@
         "framework"
     ],
     "license": "MIT",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../lnx-ui",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "require": {
         "php": "^8.3",
         "laravel/ai": "^1.0",
@@ -19,6 +28,7 @@
         "livewire/blaze": "^1.0",
         "livewire/flux": "^2.13.1",
         "livewire/livewire": "^4.1",
+        "luinuxscl/lnx-ui": "@dev",
         "resend/resend-php": "^1.15",
         "spatie/laravel-permission": "^8.3"
     },

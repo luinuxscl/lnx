@@ -12,9 +12,9 @@
                 <flux:heading level="3">{{ __('Trend cards') }}</flux:heading>
 
                 <div class="grid grid-cols-12 gap-4">
-                    <x-trend-card class="col-span-12 md:col-span-6 xl:col-span-4" :label="__('Product sold')" value="2.968" :change="__(':change last week', ['change' => '+3.2%'])" :series="[28, 16, 34, 42, 51, 75, 78, 80, 72, 21]" color="emerald" />
-                    <x-trend-card class="col-span-12 md:col-span-6 xl:col-span-4" :label="__('Total balance')" value="24.699" :change="__(':change last week', ['change' => '+0.6%'])" :series="[62, 58, 54, 49, 70, 79, 91, 57, 42, 58]" color="amber" />
-                    <x-trend-card class="col-span-12 md:col-span-6 xl:col-span-4" :label="__('Sales profit')" value="2.368" :change="__(':change last week', ['change' => '+0.9%'])" :series="[31, 78, 46, 50, 55, 29, 23, 18, 15, 22]" color="rose" />
+                    <x-lnx-ui::trend-card class="col-span-12 md:col-span-6 xl:col-span-4" :label="__('Product sold')" value="2.968" :change="__(':change last week', ['change' => '+3.2%'])" :series="[28, 16, 34, 42, 51, 75, 78, 80, 72, 21]" color="emerald" />
+                    <x-lnx-ui::trend-card class="col-span-12 md:col-span-6 xl:col-span-4" :label="__('Total balance')" value="24.699" :change="__(':change last week', ['change' => '+0.6%'])" :series="[62, 58, 54, 49, 70, 79, 91, 57, 42, 58]" color="amber" />
+                    <x-lnx-ui::trend-card class="col-span-12 md:col-span-6 xl:col-span-4" :label="__('Sales profit')" value="2.368" :change="__(':change last week', ['change' => '+0.9%'])" :series="[31, 78, 46, 50, 55, 29, 23, 18, 15, 22]" color="rose" />
                 </div>
             </div>
 
