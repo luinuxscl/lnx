@@ -2,6 +2,15 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.5.0] - 2026-10-07
+
+### Añadido
+- Regla local del proyecto `.ai/rules/local.md`, declarada en `local_customizations`: el proyecto derivado escribe aquí sus decisiones permanentes propias y el updater nunca la sobrescribe.
+- Fila de `.ai/rules/local.md` en `.ai/rules/index.md`, de modo que cada proyecto derivado recibe el índice ya preparado y no necesita editar un archivo mantenido por el kit.
+
+### Mejorado
+- La personalización de la app derivada deja de requerir tocar archivos `kit_maintained`: las reglas propias viven en `local.md` y `scripts/update-agent-kit.py` se aplica sin conflictos.
+
 ## [1.4.0] - 2026-10-06
 
 ### Añadido

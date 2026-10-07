@@ -17,15 +17,24 @@ Este procedimiento establece el flujo para comprobar la compatibilidad, previsua
 - Para actualizar dependencias de PHP (`composer.json`) o JS (`package.json`) de la aplicación (usar Composer/npm directamente).
 - Para sincronizar código de negocio o modelos de la aplicación derivada.
 
+## Dónde vive cada cambio
+Antes de editar, decide la propiedad del cambio:
+
+- **Genérico y reutilizable** (patrón de regla, skill, componente base): va en `lnx`. Se versiona ahí, se sube `kit_version` y se propaga con esta herramienta.
+- **Propio del proyecto derivado** (marca, dominio, contenido, roles, navegación, despliegue): va en el proyecto, nunca en archivos `kit_maintained`.
+
+Las personalizaciones del proyecto se escriben en las rutas declaradas en `local_customizations` — `.ai/rules/local.md` (reglas propias), `.env` y `.env.example` — y en el código de la aplicación. El updater no las toca. No edites `.ai/rules/index.md`, `.ai/rules/views.md`, `.ai/rules/general.md` ni otros archivos `kit_maintained` para dejar reglas propias: eso produce `CONFLICT` y bloquea o pierde actualizaciones del kit. Si al previsualizar aparece un `CONFLICT`, mueve ese contenido a `local.md` y restaura el archivo del kit.
+
 ## Requisitos y entradas
 1. **Manifiesto del kit**: Archivo `.ai/kit-manifest.json` presente en la raíz del proyecto.
-2. **Entorno local listo**: Python 3.9+ disponible para ejecutar la herramienta de actualización.
-3. **Estado git limpio o recuperable**: Árbol de trabajo sin cambios no guardados antes de aplicar actualizaciones.
+2. **Checkout de lnx**: Ruta local del repositorio `lnx` (el `--source-kit` no tiene valor útil por defecto: apunta al propio proyecto, así que hay que pasarla explícitamente).
+3. **Entorno local listo**: Python 3.9+ disponible para ejecutar la herramienta de actualización.
+4. **Estado git limpio o recuperable**: Árbol de trabajo sin cambios no guardados antes de aplicar actualizaciones.
 
 ## Resultado esperado
 - Verificación exitosa de compatibilidad de stack (PHP, Laravel, Livewire, Tailwind) y agentes.
 - Previsualización clara (`--preview`) de archivos a añadir, modificar o conservar sin escribir cambios silenciosos.
-- Preservación determinista de personalizaciones locales (`local_customizations` y `extensions`).
+- Preservación determinista de las personalizaciones locales declaradas en `local_customizations` (`.ai/rules/local.md`, `.env`, `.env.example`) y en `extensions`.
 - Actualización explícita de archivos del kit (`kit_maintained`) y actualización del manifiesto `.ai/kit-manifest.json`.
 - Verificación posterior limpia mediante `python3 scripts/check-agent-context.py`.
 - Capacidad de reversión probada (`--rollback`) en caso de necesitar restaurar el estado previo.
@@ -38,7 +47,7 @@ Este procedimiento establece el flujo para comprobar la compatibilidad, previsua
 Ejecutar la comprobación de compatibilidad con la versión/fuente del kit:
 
 ```bash
-python3 scripts/update-agent-kit.py --check-compat
+python3 scripts/update-agent-kit.py --source-kit <ruta-lnx> --check-compat
 ```
 
 Verificar que la versión de PHP, Laravel y los agentes configurados sean compatibles antes de proceder.
@@ -47,7 +56,7 @@ Verificar que la versión de PHP, Laravel y los agentes configurados sean compat
 Antes de modificar cualquier archivo, ejecutar la previsualización de diferencias:
 
 ```bash
-python3 scripts/update-agent-kit.py --preview
+python3 scripts/update-agent-kit.py --source-kit <ruta-lnx> --preview
 ```
 
 El script mostrará la lista de archivos mantenidos por el kit (`kit_maintained`), indicando:
@@ -60,11 +69,11 @@ Una vez revisadas las diferencias, aplicar la actualización especificando la es
 
 - **Conservar personalizaciones locales por defecto**:
   ```bash
-  python3 scripts/update-agent-kit.py --apply --strategy keep-local
+  python3 scripts/update-agent-kit.py --source-kit <ruta-lnx> --apply --strategy keep-local
   ```
 - **Aceptar la versión del kit para archivos conflictivos**:
   ```bash
-  python3 scripts/update-agent-kit.py --apply --strategy accept-kit
+  python3 scripts/update-agent-kit.py --source-kit <ruta-lnx> --apply --strategy accept-kit
   ```
 
 El script creará un snapshot de seguridad/backup previo a la modificación.
