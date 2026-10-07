@@ -292,7 +292,7 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 
 `/dashboard` (`dashboard`) mantiene los middleware `auth` y `verified`. La bienvenida muestra el nombre escapado. El panel es un componente Livewire de clase que comprueba los roles y las policies en cada renderizado; sus datos se pasan solo a la vista, sin conservarlos en propiedades públicas.
 
-**root**: el dashboard es un panel de acceso a herramientas mediante tarjetas-enlace (`x-tool-card`). La sección principal **Administración** reúne las herramientas de root —Soporte, Usuarios, Actividad, Configuración, Checklist e IA— y la sección secundaria **Herramientas de la app** enlaza Chat, Messages, RAG y Document AI. Cada tarjeta navega a la página de detalle del área; el dashboard no muestra cifras ni resúmenes (queda abierto a añadir métricas o widgets de root más adelante). El detalle de cada área, incluido el consumo de IA, vive en su propia pantalla.
+**root**: el dashboard es un panel de acceso a herramientas mediante tarjetas-enlace (`x-lnx-ui::tool-card`). La sección principal **Administración** reúne las herramientas de root —Soporte, Usuarios, Actividad, Configuración, Checklist e IA— y la sección secundaria **Herramientas de la app** enlaza Chat, Messages, RAG y Document AI. Cada tarjeta navega a la página de detalle del área; el dashboard no muestra cifras ni resúmenes (queda abierto a añadir métricas o widgets de root más adelante). El detalle de cada área, incluido el consumo de IA, vive en su propia pantalla.
 
 **admin**: ve usuarios totales, activos (`suspended_at` nulo) y suspendidos (`suspended_at` presente), junto con los accesos de cuenta (perfil y seguridad). Los conteos incluyen **todas las cuentas**, también las de root y admin. Puede abrir la lista completa, los filtros `status=active` y `status=suspended`, invitaciones y la creación de una invitación. Las invitaciones pendientes son las no aceptadas ni revocadas cuyo vencimiento es futuro, aunque haya fallado el envío; si no hay ninguna, el panel lo indica expresamente.
 
@@ -647,31 +647,31 @@ La galería `/design-gallery` solo se registra en `local` y `testing`, tras aute
 
 ### Componentes desde capturas
 
-La skill `.ai/skills/create-ui-component/SKILL.md` guía la adaptación de una captura a un componente Blade o Livewire reutilizable. Con la captura y su propósito prepara una ficha breve de estructura, datos, acciones, estados y ancho responsivo antes de implementar. El contenedor asigna columnas de una grilla de 12; por ejemplo, una tarjeta de estadísticas puede ocupar `col-span-12 md:col-span-6 xl:col-span-3`. El componente no recibe una prop de ancho. Tras revisar y aprobar el candidato para la biblioteca, se incorpora a `/design-gallery` con las variantes pertinentes y un ejemplo de invocación. Empieza en esta aplicación y puede ser usado por packages diseñados para ella; su extracción a un package se decide cuando la API esté estabilizada.
+La skill `.ai/skills/create-ui-component/SKILL.md` guía la adaptación de una captura a un componente Blade o Livewire reutilizable. Con la captura y su propósito prepara una ficha breve de estructura, datos, acciones, estados y ancho responsivo antes de implementar. El contenedor asigna columnas de una grilla de 12; por ejemplo, una tarjeta de estadísticas puede ocupar `col-span-12 md:col-span-6 xl:col-span-3`. El componente no recibe una prop de ancho. Tras revisar y aprobar el candidato para la biblioteca, se incorpora a `/design-gallery` con las variantes pertinentes y un ejemplo de invocación. Por defecto, el componente se crea en el paquete compartido `luinuxscl/lnx-ui` (ver «Componentes compartidos»); solo se crean en la app los componentes muy específicos o acoplados al host (modelos, rutas o servicios).
 
-La biblioteca incluye `x-stat` (`label`, `value`, `icon` Flux y `color`), `x-stat-card` (una tarjeta individual que reutiliza `x-stat` y las mismas props) y `x-statistics-panel` (`title`, `updated-at` opcional y slot de métricas). El panel usa `flux:card` y una grilla de 12 columnas; el contenedor externo asigna el ancho a cada tarjeta individual. `color` acepta `accent` (predeterminado), `violet`, `cyan`, `rose`, `emerald`, `blue` y `amber`. El consumidor aporta cifras ya formateadas y textos traducidos, sin consultas ni lógica de negocio dentro de los componentes. Cuando se entrega `updated-at`, el panel muestra un icono cuyo tooltip contiene ese texto; sin la prop, no muestra el icono.
+La biblioteca del paquete incluye `x-lnx-ui::stat` (`label`, `value`, `icon` Flux y `color`), `x-lnx-ui::stat-card` (una tarjeta individual que reutiliza `stat` y las mismas props) y `x-lnx-ui::statistics-panel` (`title`; `updated-label` y `updated-icon` opcionales; slots de métricas, `actions`, `description` y `empty`). El panel usa `flux:card`, un título de sección (`level="2"`, `size="lg"`) y una grilla de 12 columnas; el contenedor externo asigna el ancho a cada tarjeta individual. `color` acepta `accent` (predeterminado), `violet`, `cyan`, `rose`, `emerald`, `blue` y `amber`. El consumidor aporta cifras ya formateadas y textos traducidos, sin consultas ni lógica de negocio dentro de los componentes. Cuando se entrega `updated-label`, el panel muestra un icono (`updated-icon`, por defecto `arrow-path`) cuyo tooltip contiene ese texto; sin la prop, no muestra el icono. El slot `actions` coloca acciones a la derecha de la cabecera; `description` añade un texto de apoyo bajo el título y `empty` sustituye la grilla cuando no se aportan métricas.
 
-`x-trend-card` muestra una métrica con línea de tendencia y tiene ejemplos aprobados en `/design-gallery`. Recibe `label`, `value` y `change` ya formateados y traducidos, `series` como arreglo de cifras ordenadas y `color` (`accent`, `emerald`, `amber` o `rose`). Dibuja una línea decorativa si hay al menos dos puntos válidos; sin ellos mantiene el texto de la métrica. El contenedor asigna su ancho, normalmente `col-span-12 md:col-span-6 xl:col-span-4` para tres tarjetas por fila en escritorio.
+`x-lnx-ui::trend-card` (paquete `luinuxscl/lnx-ui`) muestra una métrica con línea de tendencia y tiene ejemplos aprobados en `/design-gallery`. Recibe `label`, `value` y `change` ya formateados y traducidos, `series` como arreglo de cifras ordenadas y `color` (`accent`, `emerald`, `amber` o `rose`). Dibuja una línea decorativa si hay al menos dos puntos válidos; sin ellos mantiene el texto de la métrica. El contenedor asigna su ancho, normalmente `col-span-12 md:col-span-6 xl:col-span-4` para tres tarjetas por fila en escritorio.
 
-`x-tool-card` es una tarjeta-enlace a un área de la aplicación y tiene un ejemplo aprobado en `/design-gallery`. Recibe `title`, `description`, `icon` (icono Flux), `href`, `color` (`accent` predeterminado y las mismas variantes que `x-stat`) y `external` (abre en una pestaña nueva con `rel="noopener noreferrer"`). Todo el bloque es un enlace; internamente navega con `wire:navigate` salvo cuando `external` es verdadero. El contenedor asigna su ancho, normalmente `col-span-12 sm:col-span-6 xl:col-span-4` (tres por fila) o `xl:col-span-3` (cuatro por fila).
+`x-lnx-ui::tool-card` es una tarjeta-enlace a un área de la aplicación y tiene un ejemplo aprobado en `/design-gallery`. Recibe `title`, `description`, `icon` (icono Flux), `href`, `color` (`accent` predeterminado y las mismas variantes que `x-lnx-ui::stat`) y `external` (abre en una pestaña nueva con `rel="noopener noreferrer"`). Todo el bloque es un enlace; internamente navega con `wire:navigate` salvo cuando `external` es verdadero. El contenedor asigna su ancho, normalmente `col-span-12 sm:col-span-6 xl:col-span-4` (tres por fila) o `xl:col-span-3` (cuatro por fila).
 
-El dashboard de admin usa `x-stat` dentro de las tarjetas de usuarios que incluyen acciones; el dashboard de root usa `x-tool-card` para enlazar las herramientas de root y las de la app. Los estados vacíos y los enlaces siguen en la pantalla; `x-trend-card` se reserva para datos que tengan una serie histórica real.
+El dashboard de admin usa `x-lnx-ui::stat` dentro de las tarjetas de usuarios que incluyen acciones; el dashboard de root usa `x-lnx-ui::tool-card` para enlazar las herramientas de root y las de la app. Los estados vacíos y los enlaces siguen en la pantalla; `x-lnx-ui::trend-card` se reserva para datos que tengan una serie histórica real.
 
 ```blade
-<x-statistics-panel :title="__('Statistics')" :updated-at="__('Updated 1 month ago')">
-    <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
-    <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
-</x-statistics-panel>
+<x-lnx-ui::statistics-panel :title="__('Statistics')" :updated-label="__('Updated 1 month ago')">
+    <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
+    <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
+</x-lnx-ui::statistics-panel>
 
 <div class="grid grid-cols-12 gap-4">
-    <x-stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
-    <x-stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
+    <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
+    <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
 </div>
 ```
 
 ```blade
 <div class="grid grid-cols-12 gap-4">
-    <x-trend-card
+    <x-lnx-ui::trend-card
         class="col-span-12 md:col-span-6 xl:col-span-4"
         :label="__('Product sold')"
         value="2.968"
@@ -685,6 +685,19 @@ El dashboard de admin usa `x-stat` dentro de las tarjetas de usuarios que incluy
 `resources/views/design-gallery.blade.php` sitúa estos componentes al inicio: tarjetas de tendencia, tarjetas individuales, el panel con cuatro métricas y la variante sin fecha de actualización. Las decisiones visuales reutilizables figuran en `.ai/skills/create-ui-component/references/style-foundations.md`.
 
 Los estilos reutilizables aprobados se registran en `.ai/skills/create-ui-component/references/style-foundations.md`: espaciado, fuente, jerarquía de títulos, superficies y foco. `resources/css/app.css` sigue siendo la fuente de tokens CSS. Después de incorporar un componente se puede abrir una revisión de la skill si el trabajo reveló una mejora generalizable; las particularidades de una captura quedan en el componente.
+
+### Componentes compartidos (paquete `luinuxscl/lnx-ui`)
+
+Los componentes presentacionales reutilizables viven en el paquete Composer privado `luinuxscl/lnx-ui`, fuente única para lnx y sus apps derivadas. Por defecto, **todo componente visual reutilizable nuevo se crea en el paquete**, no en la app; solo los muy específicos o acoplados al host (`app-logo`, `user-avatar`, `desktop-user-menu`, `dev-credentials-warning`, `settings/layout`) se quedan en `resources/views/components/` de cada app. El clon local para desarrollar el paquete se registra en `.ai/rules/local.md`.
+
+En cada aplicación:
+
+- `composer.json`: repositorio VCS privado (`git@github.com:luinuxscl/lnx-ui.git`) y `composer require luinuxscl/lnx-ui`. Para desarrollo local en vivo, superpón temporalmente un repositorio `path` a `../lnx-ui`. El `LnxUiServiceProvider` se autodescubre (`extra.laravel.providers`); no hay que registrarlo a mano. CI y despliegue necesitan acceso al repositorio privado (deploy key o token).
+- `resources/css/app.css`: `@source '../../vendor/luinuxscl/lnx-ui/resources/views';`, porque Tailwind 4 no escanea `vendor/`.
+- Consumo con namespace: `<x-lnx-ui::trend-card ... />`.
+- Override de un componente: `resources/views/vendor/lnx-ui/components/*.blade.php`; Laravel lo resuelve antes que el paquete. `php artisan vendor:publish --tag=lnx-ui-views` publica todas las vistas para copiarlas.
+
+El catálogo de la galería vive en el paquete (vista `lnx-ui::design-gallery`): agrupa los componentes **por tipo** y da a cada uno un **nombre y ancla estable** (`#<nombre>`) para referenciarlo con la IA (p. ej. «ajusta el componente `trend-card`»). La app solo aporta el layout, la ruta y el gating, e incluye la vista del paquete con `@include('lnx-ui::design-gallery')`. Al añadir o cambiar un componente, actualiza su ejemplo en la vista del paquete.
 
 La skill usa `tailwind-design-system` de [wshobson/agents](https://github.com/wshobson/agents), fijada a una revisión en `skills-lock.json`. En un checkout nuevo, restáurala con `npx skills experimental_install` y sincroniza las skills propias con `php artisan boost:update --no-discover --no-interaction`.
 

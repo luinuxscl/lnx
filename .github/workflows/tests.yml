@@ -31,6 +31,15 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Configure lnx-ui deploy key
+        if: ${{ secrets.LNX_UI_DEPLOY_KEY != '' }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.LNX_UI_DEPLOY_KEY }}" > ~/.ssh/lnx_ui
+          chmod 600 ~/.ssh/lnx_ui
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          echo "GIT_SSH_COMMAND=ssh -i ~/.ssh/lnx_ui -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
+
       - name: Setup Application
         run: composer setup
 

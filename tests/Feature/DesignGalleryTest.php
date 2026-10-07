@@ -24,7 +24,8 @@ it('renders interface states for a root user in both locales', function () {
 
     $this->actingAs($user)->get(route('design-gallery'))
         ->assertSee('Galería de diseño')
-        ->assertSee('Tarjetas de tendencia')
+        ->assertSee('Biblioteca compartida (lnx-ui)')
+        ->assertSee('x-lnx-ui::trend-card')
         ->assertSee('Productos vendidos')
         ->assertSee('Estado vacío')
         ->assertSee('Estado de error')
@@ -33,7 +34,8 @@ it('renders interface states for a root user in both locales', function () {
 
     $this->withSession(['locale' => 'en'])->actingAs($user)->get(route('design-gallery'))
         ->assertSee('Design gallery')
-        ->assertSee('Trend cards')
+        ->assertSee('Shared library (lnx-ui)')
+        ->assertSee('x-lnx-ui::trend-card')
         ->assertSee('Product sold')
         ->assertSee('Empty state')
         ->assertSee('Error state')

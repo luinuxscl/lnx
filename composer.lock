@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a30efce593d4eaac2fbde697eef0c176",
+    "content-hash": "a1ce58016082bc55bd2cc602fa22ec71",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -2729,6 +2729,71 @@
                 }
             ],
             "time": "2026-09-14T19:27:16+00:00"
+        },
+        {
+            "name": "luinuxscl/lnx-ui",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:luinuxscl/lnx-ui.git",
+                "reference": "940a5cfba7df5d9dc17e4bd1be9465b9fdd2a88a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/luinuxscl/lnx-ui/zipball/940a5cfba7df5d9dc17e4bd1be9465b9fdd2a88a",
+                "reference": "940a5cfba7df5d9dc17e4bd1be9465b9fdd2a88a",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "livewire/flux": "^2.20",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "orchestra/testbench": "^11.3",
+                "pestphp/pest": "^5.3",
+                "pestphp/pest-plugin-laravel": "^5.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Luinuxscl\\LnxUi\\LnxUiServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Luinuxscl\\LnxUi\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Luinuxscl\\LnxUi\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "vendor/bin/pint"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Componentes UI compartidos para aplicaciones derivadas del kit lnx (Blade anónimos, override-friendly).",
+            "keywords": [
+                "blade",
+                "components",
+                "laravel",
+                "lnx",
+                "ui"
+            ],
+            "time": "2026-10-07T22:17:39+00:00"
         },
         {
             "name": "monolog/monolog",
