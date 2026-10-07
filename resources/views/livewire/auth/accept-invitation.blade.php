@@ -1,6 +1,6 @@
 <x-layouts::auth :title="__('Accept invitation')">
     <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Accept invitation')" :description="__('Complete your account to join.')" />
+        <x-lnx-ui::auth-header :title="__('Accept invitation')" :description="__('Complete your account to join.')" />
 
         @if (auth()->check())
             <flux:callout variant="warning">{{ __('Sign out before accepting an invitation.') }}</flux:callout>
