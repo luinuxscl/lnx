@@ -1,11 +1,11 @@
 <x-layouts::auth :title="__('Confirm password')">
     <div class="flex flex-col gap-6">
-        <x-auth-header
+        <x-lnx-ui::auth-header
             :title="__('Confirm password')"
             :description="__('This is a secure area of the application. Please confirm your password before continuing.')"
         />
 
-        <x-auth-session-status class="text-center" :status="session('status')" />
+        <x-lnx-ui::auth-session-status class="text-center" :status="session('status')" />
 
         <x-passkey-verify
             options-route="passkey.confirm-options"

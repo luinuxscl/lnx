@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "76fe088e87b0a147a4df8ccf2f71525c",
+    "content-hash": "a1ce58016082bc55bd2cc602fa22ec71",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -2732,16 +2732,16 @@
         },
         {
             "name": "luinuxscl/lnx-ui",
-            "version": "v0.1.0",
+            "version": "v1.0.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:luinuxscl/lnx-ui.git",
-                "reference": "deec241e085f45d9d9f1186e813a79d565950dcf"
+                "reference": "d6cfc14e53842c1acb0bd54427678e288043eb46"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/luinuxscl/lnx-ui/zipball/deec241e085f45d9d9f1186e813a79d565950dcf",
-                "reference": "deec241e085f45d9d9f1186e813a79d565950dcf",
+                "url": "https://api.github.com/repos/luinuxscl/lnx-ui/zipball/d6cfc14e53842c1acb0bd54427678e288043eb46",
+                "reference": "d6cfc14e53842c1acb0bd54427678e288043eb46",
                 "shasum": ""
             },
             "require": {
@@ -2793,7 +2793,7 @@
                 "lnx",
                 "ui"
             ],
-            "time": "2026-10-07T20:39:29+00:00"
+            "time": "2026-10-07T20:55:30+00:00"
         },
         {
             "name": "monolog/monolog",

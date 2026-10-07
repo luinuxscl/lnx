@@ -19,21 +19,21 @@
             </div>
 
             <div class="grid grid-cols-12 gap-4">
-                <x-stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
-                <x-stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
-                <x-stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Products')" value="1.423k" icon="shopping-cart" color="rose" />
-                <x-stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Revenue')" value="$9745" icon="currency-dollar" color="emerald" />
+                <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
+                <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
+                <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Products')" value="1.423k" icon="shopping-cart" color="rose" />
+                <x-lnx-ui::stat-card class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Revenue')" value="$9745" icon="currency-dollar" color="emerald" />
             </div>
 
-            <x-statistics-panel :title="__('Statistics')" :updated-at="__('Updated 1 month ago')">
-                <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
-                <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
-                <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Products')" value="1.423k" icon="shopping-cart" color="rose" />
-                <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Revenue')" value="$9745" icon="currency-dollar" color="emerald" />
+            <x-lnx-ui::statistics-panel :title="__('Statistics')" :updated-at="__('Updated 1 month ago')">
+                <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
+                <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Customers')" value="8.549k" icon="users" color="cyan" />
+                <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Products')" value="1.423k" icon="shopping-cart" color="rose" />
+                <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Revenue')" value="$9745" icon="currency-dollar" color="emerald" />
             </x-statistics-panel>
 
-            <x-statistics-panel :title="__('Statistics without update')">
-                <x-stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" />
+            <x-lnx-ui::statistics-panel :title="__('Statistics without update')">
+                <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" />
             </x-statistics-panel>
         </section>
 
@@ -41,9 +41,9 @@
             <flux:heading level="2">{{ __('Tool cards') }}</flux:heading>
 
             <div class="grid grid-cols-12 gap-4">
-                <x-tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Chat')" :description="__('Have interactive conversations with the AI assistant.')" icon="chat-bubble-left-right" color="violet" :href="route('chat')" />
-                <x-tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Users')" :description="__('Manage accounts, roles, and invitations.')" icon="users" color="blue" :href="route('admin.users.index')" />
-                <x-tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Repository')" :description="__('Open the project repository in a new tab.')" icon="folder-git-2" external href="https://github.com/luinuxscl/lnx" />
+                <x-lnx-ui::tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Chat')" :description="__('Have interactive conversations with the AI assistant.')" icon="chat-bubble-left-right" color="violet" :href="route('chat')" />
+                <x-lnx-ui::tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Users')" :description="__('Manage accounts, roles, and invitations.')" icon="users" color="blue" :href="route('admin.users.index')" />
+                <x-lnx-ui::tool-card class="col-span-12 sm:col-span-6 xl:col-span-4" :title="__('Repository')" :description="__('Open the project repository in a new tab.')" icon="folder-git-2" external href="https://github.com/luinuxscl/lnx" />
             </div>
         </section>
 
