@@ -17,6 +17,7 @@ use App\Livewire\Knowledge\Index;
 use App\Livewire\Knowledge\Show;
 use App\Livewire\Messages\Index as MessagesIndex;
 use App\Livewire\Notifications\Index as NotificationsIndex;
+use App\Livewire\Packages\LnxUi;
 use App\Livewire\Setup\Index as SetupIndex;
 use App\Livewire\Support\Index as SupportIndex;
 use App\Livewire\Support\Show as SupportShow;
@@ -40,12 +41,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('documents', DocumentsIndex::class)->name('documents.index');
     Route::livewire('documents/{document}', DocumentsShow::class)->name('documents.show');
     Route::get('documents/{document}/download', [DocumentDownloadController::class, 'download'])->name('documents.download');
-
-    if (app()->environment(['local', 'testing']) && config('app.design_gallery_enabled')) {
-        Route::view('design-gallery', 'design-gallery')
-            ->middleware('role:'.Role::Root->value)
-            ->name('design-gallery');
-    }
 });
 
 Route::middleware('auth')->group(function () {
@@ -68,6 +63,10 @@ Route::livewire('admin/setup', SetupIndex::class)
 Route::livewire('admin/ai', AiStatus::class)
     ->middleware(['auth', 'role:'.Role::Root->value])
     ->name('admin.ai.index');
+
+Route::livewire('admin/packages/lnx-ui', LnxUi::class)
+    ->middleware(['auth', 'role:'.Role::Root->value])
+    ->name('admin.packages.lnx-ui');
 
 Route::livewire('admin/ai/usage', AiUsage::class)
     ->middleware(['auth', 'role:'.Role::Root->value])

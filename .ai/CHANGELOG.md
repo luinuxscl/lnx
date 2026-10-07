@@ -2,6 +2,15 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.11.0] - 2026-10-07
+
+### Añadido
+- Página `admin/packages/lnx-ui` (Livewire `App\Livewire\Packages\LnxUi`, rol `root`, disponible en todos los entornos; grupo `Packages` → ítem `UI/UX components` del sidebar): muestra la versión instalada y la última disponible del paquete `luinuxscl/lnx-ui`, busca actualizaciones contra la API de GitHub (`GITHUB_TOKEN`) y ofrece el comando de actualización; debajo incluye la galería de diseño.
+- Config `config/lnx_ui.php` (`repository`, `token`, `check_ttl`) y las variables `GITHUB_TOKEN`/`LNX_UI_REPOSITORY` en `.env.example`.
+
+### Cambiado
+- La ruta `design-gallery` (solo `local`/`testing`) se reemplaza por `admin/packages/lnx-ui` en todos los entornos; se elimina `resources/views/design-gallery.blade.php`. La página se nombra por el paquete (`lnx-ui`), no con un término genérico, y el menú se agrupa en `Packages`. `DESIGN_GALLERY_ENABLED` ahora oculta solo la galería dentro de la página. Reglas de vistas y README de lnx actualizados.
+
 ## [1.10.0] - 2026-10-07
 
 ### Mejorado
