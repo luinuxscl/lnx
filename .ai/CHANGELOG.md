@@ -2,6 +2,16 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.7.0] - 2026-10-07
+
+### Añadido
+- Migrados al paquete `luinuxscl/lnx-ui` (ahora v1.0.0) todos los componentes presentacionales compartidos: `stat`, `stat-card`, `statistics-panel`, `tool-card`, `placeholder-pattern`, `auth-header` y `auth-session-status`, además de `trend-card`. Se eliminan sus copias locales en lnx y en las apps derivadas.
+- Las apps consumidoras requieren `^1.0`: las adiciones de componentes llegan con `composer update luinuxscl/lnx-ui` sin tocar `composer.json`.
+
+### Notas de migración
+- Sustituye `<x-stat ... />`, `<x-stat-card ... />`, `<x-statistics-panel ... />`, `<x-tool-card ... />`, `<x-placeholder-pattern ... />`, `<x-auth-header ... />` y `<x-auth-session-status ... />` por su equivalente `x-lnx-ui::` y elimina los archivos locales en `resources/views/components/` (solo permanecen en la app los componentes acoplados al host).
+- Actualiza `composer.json` a `"luinuxscl/lnx-ui": "^1.0"` y ejecuta `composer update luinuxscl/lnx-ui`.
+
 ## [1.6.0] - 2026-10-07
 
 ### Añadido
