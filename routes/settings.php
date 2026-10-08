@@ -34,5 +34,12 @@ Route::middleware([
     'auth',
     'role:'.Role::Root->value,
 ])->prefix('admin/settings')->name('admin.settings.')->group(function () {
-    Route::livewire('/', General::class)->name('edit');
+    Route::livewire('/', General::class)->name('edit')->menu([
+        'label' => 'Settings',
+        'icon' => 'cog',
+        'group' => 'Administration',
+        'group_icon' => 'cog-6-tooth',
+        'audiences' => ['root'],
+        'roles' => ['root'],
+    ]);
 });

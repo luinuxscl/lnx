@@ -11,7 +11,14 @@ Route::middleware([
     'auth',
     'role:'.Role::Root->value.'|'.Role::Admin->value,
 ])->prefix('admin/users')->name('admin.users.')->group(function () {
-    Route::livewire('/', Index::class)->name('index');
+    Route::livewire('/', Index::class)->name('index')->menu([
+        'label' => 'Users',
+        'icon' => 'users',
+        'group' => 'Administration',
+        'group_icon' => 'cog-6-tooth',
+        'audiences' => ['root', 'admin'],
+        'roles' => ['root', 'admin'],
+    ]);
     Route::livewire('create', Create::class)->name('create');
     Route::livewire('invitations', Invitations::class)->name('invitations');
     Route::livewire('{user}/edit', Edit::class)->name('edit');
