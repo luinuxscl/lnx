@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.12.0] - 2026-10-07
+
+### Añadido
+- Skill `lnx-ui-release` (`.ai/skills/lnx-ui-release/SKILL.md`): publica el paquete `luinuxscl/lnx-ui` — verifica, commitea en `develop`, mergea a `main`, crea el tag SemVer anotado y sube todo a `origin` — y ofrece actualizar los proyectos que lo requieren, siempre preguntando la lista. Su fuente canónica vive en el propio paquete (`resources/boost/skills/lnx-ui-release/SKILL.md`), que Boost distribuye a cada instancia; esta copia se mantiene en sincronía para la propagación vía `update-agent-kit`.
+
 ## [1.11.0] - 2026-10-07
 
 ### Añadido
