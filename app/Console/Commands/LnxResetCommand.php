@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Support\DemoUsers;
 use Database\Seeders\DemoUserSeeder;
+use Database\Seeders\NavigationSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Database\Seeder;
@@ -63,6 +64,7 @@ class LnxResetCommand extends Command
         }
 
         $this->seed(RolePermissionSeeder::class);
+        $this->seed(NavigationSeeder::class);
 
         $this->seed(DemoUserSeeder::class, [
             'faker' => max(0, (int) $this->option('faker')),
