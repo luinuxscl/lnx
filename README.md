@@ -655,6 +655,10 @@ La biblioteca del paquete incluye `x-lnx-ui::stat` (`label`, `value`, `icon` Flu
 
 `x-lnx-ui::trend-card` (paquete `luinuxscl/lnx-ui`) muestra una métrica con línea de tendencia y tiene ejemplos aprobados en `/admin/packages/lnx-ui`. Recibe `label`, `value` y `change` ya formateados y traducidos, `series` como arreglo de cifras ordenadas y `color` (`accent`, `emerald`, `amber` o `rose`). Dibuja una línea decorativa si hay al menos dos puntos válidos; sin ellos mantiene el texto de la métrica. El contenedor asigna su ancho, normalmente `col-span-12 md:col-span-6 xl:col-span-4` para tres tarjetas por fila en escritorio.
 
+`x-lnx-ui::chart-card` es una tarjeta de métrica con gráfico y tiene ejemplos aprobados en `/admin/packages/lnx-ui`. Recibe `label` y `value`; `description` (subtítulo con el periodo), `change`, `trend`, `change-style`, `series` (arreglo de cifras ordenadas), `chart` (`line` por defecto o `bar`), `labels` (etiquetas bajo las barras, p. ej. los días) y `color` (las mismas variantes que `x-lnx-ui::stat`) son opcionales. Con `chart="line"` dibuja una línea suavizada con área degradada; con `chart="bar"`, barras proporcionales al máximo. Necesita al menos dos puntos (uno en barras) para dibujar; sin ellos mantiene el título y el valor. El contenedor asigna su ancho, normalmente `col-span-12 md:col-span-6 xl:col-span-3`.
+
+`x-lnx-ui::metric-card` es la variante de KPI con chip de icono y tiene ejemplos aprobados en `/admin/packages/lnx-ui`. Recibe `label`, `value` e `icon`; `description`, `change`, `trend`, `change-style` (`badge` por defecto) y `color` son opcionales. Muestra el icono en un chip de color, el título y el subtítulo, la cifra y la variación. El contenedor asigna su ancho, normalmente `col-span-12 md:col-span-6 xl:col-span-3`. En ambas tarjetas, `change` se colorea en verde o rojo según su signo y `trend` (`up`/`down`) lo sobrescribe; `change-style` alterna entre texto y pastilla.
+
 `x-lnx-ui::tool-card` es una tarjeta-enlace a un área de la aplicación y tiene un ejemplo aprobado en `/admin/packages/lnx-ui`. Recibe `title`, `description`, `icon` (icono Flux), `href`, `color` (`accent` predeterminado y las mismas variantes que `x-lnx-ui::stat`) y `external` (abre en una pestaña nueva con `rel="noopener noreferrer"`). Todo el bloque es un enlace; internamente navega con `wire:navigate` salvo cuando `external` es verdadero. El contenedor asigna su ancho, normalmente `col-span-12 sm:col-span-6 xl:col-span-4` (tres por fila) o `xl:col-span-3` (cuatro por fila).
 
 `x-lnx-ui::resource-card` es una tarjeta de catálogo para un ítem (skill, paquete o herramienta) y tiene un ejemplo aprobado en `/admin/packages/lnx-ui`. Recibe `title`, `description`, `icon` (icono Flux), `eyebrow` (etiqueta corta junto al icono), `href`, `external` y `color` (las mismas variantes que `x-lnx-ui::stat`), y los slots `badges` (cabecera) y `tags`, `meta` y `actions` (pie). La descripción se recorta a dos líneas. El enlace es adaptativo: toda la tarjeta enlaza con `wire:navigate` cuando hay `href` y no se aportan acciones de pie; si hay acciones, solo el título enlaza, para no anidar elementos interactivos. El contenedor asigna su ancho, normalmente `col-span-12 md:col-span-6 xl:col-span-3` (cuatro por fila) o `col-span-12 sm:col-span-6 xl:col-span-4` (tres por fila).
@@ -681,6 +685,32 @@ El dashboard de admin usa `x-lnx-ui::stat` dentro de las tarjetas de usuarios qu
         value="2.968"
         :change="__(':change last week', ['change' => '+3.2%'])"
         :series="[28, 16, 34, 42, 51, 75, 78, 80, 72, 21]"
+        color="emerald"
+    />
+</div>
+```
+
+```blade
+<div class="grid grid-cols-12 gap-4">
+    <x-lnx-ui::chart-card
+        class="col-span-12 md:col-span-6 xl:col-span-3"
+        :label="__('Revenue Growth')"
+        :description="__('Weekly Report')"
+        value="$4,673"
+        change="+15.2%"
+        :series="[30, 45, 25, 55, 60, 95, 70]"
+        chart="bar"
+        :labels="__('Weekdays')"
+        color="emerald"
+    />
+
+    <x-lnx-ui::metric-card
+        class="col-span-12 md:col-span-6 xl:col-span-3"
+        :label="__('Total Sales')"
+        :description="__('Last week')"
+        value="24.67k"
+        change="+24.5%"
+        icon="shopping-bag"
         color="emerald"
     />
 </div>

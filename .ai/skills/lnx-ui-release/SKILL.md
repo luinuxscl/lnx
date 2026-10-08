@@ -101,13 +101,18 @@ Si `main` local no existe, créala siguiendo `origin/main`.
 
 ### Paso 5: Crear y subir el tag
 
-El tag se crea sobre el commit de `develop` (igual que las versiones anteriores), anotado:
+El tag va sobre el **commit de `develop`** que se acaba de publicar, no sobre el commit de merge de `main`. Es anotado. Estando en `develop`, confirma el commit antes de etiquetar y verifica que el tag apunta ahí:
 
 ```sh
+git branch --show-current                     # debe ser develop
+git rev-parse develop                         # commit que se va a etiquetar
 git tag -a vX.Y.Z -m "vX.Y.Z"
 git push origin vX.Y.Z
 git ls-remote --tags origin | grep "vX.Y.Z"   # verifica que el tag está publicado
+git rev-parse "vX.Y.Z^{commit}"               # debe coincidir con el commit de develop
 ```
+
+Algunas versiones anteriores (`v1.4.0`, `v1.4.1`, `v1.5.0`) quedaron sobre el commit de merge de `main`; `v1.3.0` y `v1.6.0` siguen esta convención. Un tag publicado no se mueve ni se reescribe: si una versión quedó mal ubicada, se corrige con una versión nueva.
 
 ### Paso 6: Dejar el repo limpio
 
