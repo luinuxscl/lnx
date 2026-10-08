@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Route;
  */
 class MenuResolver
 {
+    public function __construct(private readonly NavigationCatalog $catalog) {}
+
     /**
      * @return array<int, array{label: ?string, icon: ?string, items: array<int, array{label: string, icon: ?string, href: ?string, current: bool, external: bool}>}>
      */
@@ -69,7 +71,7 @@ class MenuResolver
             ? $this->fromDatabase($menu)
             : $this->fromRouteTags($audience);
 
-        Cache::put($cacheKey, $structure, now()->addHour());
+        Cache::put($cacheKey, $structure, now()->addSeconds((int) config('navigation.cache_ttl', 3600)));
 
         return $structure;
     }
@@ -120,40 +122,27 @@ class MenuResolver
     {
         $groups = [];
 
-        foreach (Route::getRoutes()->getRoutes() as $route) {
-            $tag = $route->defaults['menu'] ?? null;
-
-            if (! is_array($tag) || $route->getName() === null) {
-                continue;
-            }
-
-            $audiences = $tag['audiences'] ?? null;
-
-            if (is_array($audiences) && ! in_array($audience->value, $audiences, true)) {
-                continue;
-            }
-
-            $groupKey = $tag['group'] ?? null;
-            $index = $groupKey ?? '';
+        foreach ($this->catalog->entriesFor($audience) as $entry) {
+            $index = $entry['group_key'] ?? '';
 
             if (! isset($groups[$index])) {
                 $groups[$index] = [
-                    'label_key' => $groupKey,
+                    'label_key' => $entry['group_key'],
                     'label_es' => null,
                     'label_en' => null,
-                    'icon' => $tag['group_icon'] ?? null,
+                    'icon' => $entry['group_icon'],
                     'items' => [],
                 ];
             }
 
             $groups[$index]['items'][] = [
                 'type' => NavigationItemType::Route->value,
-                'route_name' => $route->getName(),
+                'route_name' => $entry['route_name'],
                 'url' => null,
-                'label_key' => $tag['label'] ?? null,
+                'label_key' => $entry['label_key'],
                 'label_es' => null,
                 'label_en' => null,
-                'icon' => $tag['icon'] ?? null,
+                'icon' => $entry['icon'],
             ];
         }
 

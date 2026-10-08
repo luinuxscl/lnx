@@ -877,5 +877,15 @@
     "Navigation Item Updated": "Navigation Item Updated",
     "Navigation Item Deleted": "Navigation Item Deleted",
     "Navigation group": "Navigation group",
-    "Navigation item": "Navigation item"
+    "Navigation item": "Navigation item",
+    "Add": "Add",
+    "Auto": "Auto",
+    "Available": "Available",
+    "Edited by root": "Edited by root",
+    "Restore default": "Restore default",
+    "Routes offered by packages that are not placed in this audience yet.": "Routes offered by packages that are not placed in this audience yet.",
+    "No available routes for this audience.": "No available routes for this audience.",
+    "Route added to the menu.": "Route added to the menu.",
+    "Group restored to defaults.": "Group restored to defaults.",
+    "Item restored to defaults.": "Item restored to defaults."
 }

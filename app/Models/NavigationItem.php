@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\NavigationItemType;
+use App\Enums\NavigationSource;
 use App\Support\Navigation\NavigationCache;
 use Database\Factories\NavigationItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -24,10 +25,12 @@ use Illuminate\Support\Facades\Route;
  * @property string|null $icon
  * @property int $position
  * @property bool $enabled
+ * @property NavigationSource $source
+ * @property bool $overridden
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['navigation_group_id', 'type', 'route_name', 'url', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled'])]
+#[Fillable(['navigation_group_id', 'type', 'route_name', 'url', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled', 'source', 'overridden'])]
 class NavigationItem extends Model
 {
     /** @use HasFactory<NavigationItemFactory> */
@@ -35,7 +38,13 @@ class NavigationItem extends Model
 
     protected function casts(): array
     {
-        return ['type' => NavigationItemType::class, 'enabled' => 'boolean', 'position' => 'integer'];
+        return [
+            'type' => NavigationItemType::class,
+            'enabled' => 'boolean',
+            'position' => 'integer',
+            'source' => NavigationSource::class,
+            'overridden' => 'boolean',
+        ];
     }
 
     protected static function booted(): void
@@ -102,9 +111,23 @@ class NavigationItem extends Model
     }
 
     /**
+     * Provenance status used by the admin UI: an item auto-published from a
+     * package that root has not touched (`auto`), one root has edited
+     * (`overridden`) or one root authored from scratch (`root`).
+     */
+    public function status(): string
+    {
+        if ($this->source === NavigationSource::Root) {
+            return 'root';
+        }
+
+        return $this->overridden ? 'overridden' : 'auto';
+    }
+
+    /**
      * @return array<string, mixed>
      */
-    private function routeTag(): array
+    public function routeTag(): array
     {
         if ($this->type !== NavigationItemType::Route || $this->route_name === null) {
             return [];

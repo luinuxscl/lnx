@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\NavigationSource;
 use App\Models\NavigationGroup;
 use App\Models\NavigationMenu;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,6 +27,16 @@ class NavigationGroupFactory extends Factory
             'icon' => 'cog-6-tooth',
             'position' => 0,
             'enabled' => true,
+            'source' => NavigationSource::Root,
+            'overridden' => false,
         ];
+    }
+
+    public function catalog(): static
+    {
+        return $this->state(fn (): array => [
+            'source' => NavigationSource::Catalog,
+            'overridden' => false,
+        ]);
     }
 }
