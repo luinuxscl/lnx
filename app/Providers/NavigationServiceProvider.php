@@ -19,7 +19,15 @@ class NavigationServiceProvider extends ServiceProvider
      *         'group_icon' => 'chart-bar',
      *         'audiences' => ['admin'],    // suggested audiences
      *         'roles' => ['admin'],        // allowed roles (omit for everyone)
+     *         'auto' => true,              // autopublish in those audiences
+     *         'order' => 2,                // default item order within the group
+     *         'group_order' => 1,          // default order of the group
      *     ]);
+     *
+     * Autopublishing is opt-in per route (`auto => true`) or global via
+     * `config('navigation.autopublish')`. An explicit `auto => false` always
+     * wins over the global switch. `order` and `group_order` fall back to route
+     * registration order when omitted.
      */
     public function boot(): void
     {

@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Navigation;
 
+use App\Actions\NavigationSync;
 use App\Actions\RecordAdministrativeActivity;
 use App\Enums\AdministrativeAction;
 use App\Enums\NavigationAudience;
 use App\Enums\NavigationItemType;
+use App\Enums\NavigationSource;
 use App\Enums\Role;
 use App\Models\NavigationGroup;
 use App\Models\NavigationItem;
@@ -126,7 +128,7 @@ class Index extends Component
         if ($this->editingGroupId !== null) {
             $group = $this->groupOrFail($this->editingGroupId);
             $before = $group->only(array_keys($attributes));
-            $group->update($attributes);
+            $group->update($this->markOverridden($group, $attributes));
             $this->record(AdministrativeAction::NavigationGroupUpdated, $group, $before, $group->only(array_keys($attributes)));
             Flux::toast(variant: 'success', text: __('Group updated.'));
         } else {
@@ -146,7 +148,7 @@ class Index extends Component
         $this->authorizeRoot();
         $group = $this->groupOrFail($groupId);
         $before = ['enabled' => $group->enabled];
-        $group->update(['enabled' => ! $group->enabled]);
+        $group->update($this->markOverridden($group, ['enabled' => ! $group->enabled]));
         $this->record(AdministrativeAction::NavigationGroupUpdated, $group, $before, ['enabled' => $group->enabled]);
     }
 
@@ -155,8 +157,25 @@ class Index extends Component
         $this->authorizeRoot();
         $group = $this->groupOrFail($groupId);
         $this->record(AdministrativeAction::NavigationGroupDeleted, $group, $this->groupSnapshot($group));
-        $group->delete();
+
+        if ($group->source === NavigationSource::Catalog) {
+            $group->update(['overridden' => true, 'enabled' => false]);
+        } else {
+            $group->delete();
+        }
+
         Flux::toast(variant: 'success', text: __('Group deleted.'));
+    }
+
+    public function restoreGroup(int $groupId): void
+    {
+        $this->authorizeRoot();
+        $group = $this->groupOrFail($groupId);
+
+        app(NavigationSync::class)->restoreGroup($group);
+
+        $this->record(AdministrativeAction::NavigationGroupUpdated, $group, [], ['overridden' => false, 'enabled' => true]);
+        Flux::toast(variant: 'success', text: __('Group restored to defaults.'));
     }
 
     public function handleGroupSort(int $id, int $position): void
@@ -235,7 +254,7 @@ class Index extends Component
         if ($this->editingItemId !== null) {
             $item = $this->itemOrFail($this->editingItemId);
             $before = $item->only(array_keys($attributes));
-            $item->update($attributes);
+            $item->update($this->markOverridden($item, $attributes));
             $this->record(AdministrativeAction::NavigationItemUpdated, $item, $before, $item->only(array_keys($attributes)));
             Flux::toast(variant: 'success', text: __('Item updated.'));
         } else {
@@ -256,7 +275,7 @@ class Index extends Component
         $this->authorizeRoot();
         $item = $this->itemOrFail($itemId);
         $before = ['enabled' => $item->enabled];
-        $item->update(['enabled' => ! $item->enabled]);
+        $item->update($this->markOverridden($item, ['enabled' => ! $item->enabled]));
         $this->record(AdministrativeAction::NavigationItemUpdated, $item, $before, ['enabled' => $item->enabled]);
     }
 
@@ -265,8 +284,38 @@ class Index extends Component
         $this->authorizeRoot();
         $item = $this->itemOrFail($itemId);
         $this->record(AdministrativeAction::NavigationItemDeleted, $item, $this->itemSnapshot($item));
-        $item->delete();
+
+        if ($item->source === NavigationSource::Catalog) {
+            $item->update(['overridden' => true, 'enabled' => false]);
+        } else {
+            $item->delete();
+        }
+
         Flux::toast(variant: 'success', text: __('Item deleted.'));
+    }
+
+    public function restoreItem(int $itemId): void
+    {
+        $this->authorizeRoot();
+        $item = $this->itemOrFail($itemId);
+
+        app(NavigationSync::class)->restoreItem($item);
+
+        $item->refresh();
+        $this->record(AdministrativeAction::NavigationItemUpdated, $item, [], $this->itemSnapshot($item));
+        Flux::toast(variant: 'success', text: __('Item restored to defaults.'));
+    }
+
+    public function placeRoute(string $routeName): void
+    {
+        $this->authorizeRoot();
+
+        $item = app(NavigationSync::class)->place($this->menu(), $routeName);
+
+        if ($item !== null) {
+            $this->record(AdministrativeAction::NavigationItemCreated, $item, [], $this->itemSnapshot($item));
+            Flux::toast(variant: 'success', text: __('Route added to the menu.'));
+        }
     }
 
     public function handleItemSort(int $id, int $position, int $groupId): void
@@ -300,10 +349,13 @@ class Index extends Component
     {
         $this->authorizeRoot();
 
+        $menu = $this->menu();
+
         return view('livewire.navigation.index', [
-            'groups' => $this->menu()->groups()->with('items')->get(),
+            'groups' => $menu->groups()->with('items')->get(),
             'audiences' => NavigationAudience::cases(),
             'routeOptions' => $this->routeOptions(),
+            'available' => app(NavigationSync::class)->availableFor($menu),
         ])->layout('layouts.app', [
             'breadcrumbs' => [
                 ['label' => __('Administration')],
@@ -433,6 +485,11 @@ class Index extends Component
             $model::query()->whereKey($orderId)->update(['position' => $index]);
         }
 
+        $model::query()
+            ->whereIn('id', $ids)
+            ->where('source', NavigationSource::Catalog)
+            ->update(['overridden' => true]);
+
         NavigationCache::flush();
     }
 
@@ -450,6 +507,22 @@ class Index extends Component
     private function itemSnapshot(NavigationItem $item): array
     {
         return $item->only(['audience', 'type', 'route_name', 'url', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled']);
+    }
+
+    /**
+     * Mark a catalog-authored model as overridden so the reconciler never
+     * overwrites root's decision. Root-authored models are returned untouched.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    private function markOverridden(NavigationItem|NavigationGroup $model, array $attributes): array
+    {
+        if ($model->source === NavigationSource::Catalog) {
+            $attributes['overridden'] = true;
+        }
+
+        return $attributes;
     }
 
     /**

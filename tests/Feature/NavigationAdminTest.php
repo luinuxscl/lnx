@@ -3,6 +3,7 @@
 use App\Enums\AdministrativeAction;
 use App\Enums\NavigationAudience;
 use App\Enums\NavigationItemType;
+use App\Enums\NavigationSource;
 use App\Enums\Role;
 use App\Livewire\Navigation\Index;
 use App\Models\AdministrativeActivity;
@@ -152,13 +153,37 @@ it('reorders groups', function () {
     expect(NavigationGroup::query()->whereKey($last)->firstOrFail()->position)->toBe(0);
 });
 
-it('deletes an item', function () {
+it('marks a catalog item as overridden instead of deleting it', function () {
     $item = adminAudienceMenu()->groups()->firstOrFail()->items()->firstOrFail();
+    expect($item->source)->toBe(NavigationSource::Catalog);
+
+    Livewire::actingAs(navigationRootUser())->test(Index::class)
+        ->call('deleteItem', $item->id)
+        ->assertHasNoErrors();
+
+    $item->refresh();
+    expect($item->overridden)->toBeTrue();
+    expect($item->enabled)->toBeFalse();
+    expect(AdministrativeActivity::query()->where('action', AdministrativeAction::NavigationItemDeleted)->exists())->toBeTrue();
+});
+
+it('deletes an item authored by root', function () {
+    $item = adminAudienceMenu()->groups()->firstOrFail()->items()->firstOrFail();
+    $item->update(['source' => NavigationSource::Root]);
 
     Livewire::actingAs(navigationRootUser())->test(Index::class)
         ->call('deleteItem', $item->id)
         ->assertHasNoErrors();
 
     expect(NavigationItem::query()->whereKey($item->id)->exists())->toBeFalse();
-    expect(AdministrativeActivity::query()->where('action', AdministrativeAction::NavigationItemDeleted)->exists())->toBeTrue();
+});
+
+it('marks a catalog item as overridden when root edits it', function () {
+    $item = adminAudienceMenu()->groups()->firstOrFail()->items()->firstOrFail();
+
+    Livewire::actingAs(navigationRootUser())->test(Index::class)
+        ->call('toggleItem', $item->id)
+        ->assertHasNoErrors();
+
+    expect($item->fresh()->overridden)->toBeTrue();
 });

@@ -41,9 +41,21 @@
                         @endif
                     </div>
 
+                    @if ($group->source === \App\Enums\NavigationSource::Catalog)
+                        <flux:badge :color="$group->overridden ? 'amber' : 'blue'">
+                            {{ $group->overridden ? __('Edited by root') : __('Auto') }}
+                        </flux:badge>
+                    @endif
+
                     @unless ($group->enabled)
                         <flux:badge color="amber">{{ __('Hidden') }}</flux:badge>
                     @endunless
+
+                    @if ($group->source === \App\Enums\NavigationSource::Catalog && $group->overridden)
+                        <flux:button size="sm" variant="ghost" icon="arrow-path" wire:click="restoreGroup({{ $group->id }})">
+                            {{ __('Restore default') }}
+                        </flux:button>
+                    @endif
 
                     <flux:button
                         size="sm"
@@ -92,9 +104,21 @@
 
                             <flux:badge color="zinc">{{ $item->type === \App\Enums\NavigationItemType::Route ? __('Route') : __('Link') }}</flux:badge>
 
+                            @if ($item->source === \App\Enums\NavigationSource::Catalog)
+                                <flux:badge :color="$item->overridden ? 'amber' : 'blue'">
+                                    {{ $item->overridden ? __('Edited by root') : __('Auto') }}
+                                </flux:badge>
+                            @endif
+
                             @unless ($item->enabled)
                                 <flux:badge color="amber">{{ __('Hidden') }}</flux:badge>
                             @endunless
+
+                            @if ($item->source === \App\Enums\NavigationSource::Catalog && $item->overridden)
+                                <flux:button size="sm" variant="ghost" icon="arrow-path" wire:click="restoreItem({{ $item->id }})">
+                                    {{ __('Restore default') }}
+                                </flux:button>
+                            @endif
 
                             <flux:button
                                 size="sm"
@@ -134,6 +158,46 @@
             </flux:card>
         @endforelse
     </div>
+
+    <flux:card>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="space-y-1">
+                <flux:heading>{{ __('Available routes') }}</flux:heading>
+                <flux:text>{{ __('Routes offered by packages that are not placed in this audience yet.') }}</flux:text>
+            </div>
+            <flux:badge color="zinc">{{ count($available) }}</flux:badge>
+        </div>
+
+        <div class="mt-4 space-y-2">
+            @forelse ($available as $entry)
+                <div
+                    wire:key="available-{{ $entry['route_name'] }}"
+                    class="flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-zinc-300 px-3 py-2 dark:border-zinc-600"
+                >
+                    <flux:icon :name="$entry['icon'] ?? 'link'" variant="mini" class="size-4 text-zinc-400" />
+
+                    <div class="min-w-0 flex-1">
+                        <flux:text class="truncate font-medium">{{ __($entry['label_key'] ?? $entry['route_name']) }}</flux:text>
+                        <flux:text class="truncate text-xs text-zinc-500">{{ $entry['route_name'] }}</flux:text>
+                    </div>
+
+                    @if ($entry['group_key'] !== null)
+                        <flux:badge color="zinc">{{ __($entry['group_key']) }}</flux:badge>
+                    @endif
+
+                    <flux:badge :color="$entry['auto'] ? 'blue' : 'zinc'">
+                        {{ $entry['auto'] ? __('Auto') : __('Available') }}
+                    </flux:badge>
+
+                    <flux:button size="sm" variant="ghost" icon="plus" wire:click="placeRoute('{{ $entry['route_name'] }}')">
+                        {{ __('Add') }}
+                    </flux:button>
+                </div>
+            @empty
+                <flux:text class="text-sm text-zinc-500">{{ __('No available routes for this audience.') }}</flux:text>
+            @endforelse
+        </div>
+    </flux:card>
 
     <flux:modal name="navigation-group" wire:model.self="showGroupModal" @close="closeGroupModal" class="max-w-md space-y-6">
         <flux:heading size="lg">{{ $editingGroupId === null ? __('Add group') : __('Edit group') }}</flux:heading>

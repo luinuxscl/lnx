@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Actions\NavigationSync;
 use App\Enums\NavigationAudience;
 use App\Enums\NavigationItemType;
+use App\Enums\NavigationSource;
 use App\Models\NavigationMenu;
 use Illuminate\Database\Seeder;
 
@@ -11,7 +13,8 @@ use Illuminate\Database\Seeder;
  * Materializes the default sidebar into the database so a fresh install works
  * out of the box and root can then reorder or hide items. It only creates the
  * menu when none exists for the audience, so re-running it never overwrites a
- * root's configuration.
+ * root's configuration. Route items are marked as catalog; links root-authored.
+ * Any route tagged for autopublishing is then reconciled by NavigationSync.
  */
 class NavigationSeeder extends Seeder
 {
@@ -20,6 +23,8 @@ class NavigationSeeder extends Seeder
         $this->buildMenu(NavigationAudience::Root, $this->rootGroups());
         $this->buildMenu(NavigationAudience::Admin, $this->adminGroups());
         $this->buildMenu(NavigationAudience::User, $this->userGroups());
+
+        app(NavigationSync::class)->handle();
     }
 
     /**
@@ -39,11 +44,15 @@ class NavigationSeeder extends Seeder
                 'icon' => $group['icon'],
                 'position' => $groupPosition,
                 'enabled' => true,
+                'source' => NavigationSource::Catalog,
+                'overridden' => false,
             ]);
 
             foreach (array_values($group['items']) as $itemPosition => $item) {
+                $type = $item['type'] ?? NavigationItemType::Route;
+
                 $created->items()->create([
-                    'type' => $item['type'] ?? NavigationItemType::Route,
+                    'type' => $type,
                     'route_name' => $item['route_name'] ?? null,
                     'url' => $item['url'] ?? null,
                     'label_key' => $item['label_key'] ?? null,
@@ -52,6 +61,8 @@ class NavigationSeeder extends Seeder
                     'icon' => $item['icon'] ?? null,
                     'position' => $itemPosition,
                     'enabled' => true,
+                    'source' => $type === NavigationItemType::Link ? NavigationSource::Root : NavigationSource::Catalog,
+                    'overridden' => false,
                 ]);
             }
         }

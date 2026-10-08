@@ -115,7 +115,7 @@ La función requiere `SESSION_DRIVER=database`; con otros drivers se muestra un 
 
 El sidebar se administra desde `/admin/navigation` (solo `root`). Por audiencia (`root`, `admin` y usuarios sin rol) root crea, ordena, activa u oculta grupos e ítems, de modo que cada rol ve su propia combinación. Un usuario con varios roles ve el menú de la audiencia de mayor jerarquía (root > admin > usuario).
 
-- **Rutas etiquetadas por packages**: cualquier ruta puede anotarse con la macro `->menu([...])` para ofrecerse en el selector del gestor con su etiqueta traducible, icono, grupo y roles permitidos:
+- **Rutas etiquetadas por packages**: cualquier ruta puede anotarse con la macro `->menu([...])` para ofrecerse en el selector del gestor y, opcionalmente, autopublicarse, con su etiqueta traducible, icono, grupo, orden y roles permitidos:
 
 ```php
 Route::livewire('reports', ReportsIndex::class)
@@ -127,12 +127,19 @@ Route::livewire('reports', ReportsIndex::class)
         'group_icon' => 'chart-bar',
         'audiences' => ['admin'],   // audiencias sugeridas
         'roles' => ['admin'],       // roles con acceso (omitir = todos)
+        'auto' => true,             // autopublicar en esas audiencias
+        'order' => 2,               // orden por defecto dentro del grupo
+        'group_order' => 1,         // orden por defecto del grupo
     ]);
 ```
 
+- **Autopublicación desde packages**: una ruta con `'auto' => true` aparece y se activa sola en sus `audiences` al reconciliar (`php artisan navigation:sync`, también tras `migrate --seed`), sin que root coloque nada a mano. El interruptor global `NAVIGATION_AUTOPUBLISH` autopublica todas las rutas etiquetadas; un `'auto' => false` explícito siempre gana. Los ítems autopublicados toman grupo y orden de la etiqueta y, si faltan, del orden de registro de rutas.
+- **Precedencia de root**: si root reordena, oculta, mueve de grupo o borra un ítem o grupo autopublicado, la decisión queda marcada como `overridden` y la reconciliación no la pisa. Borrar un ítem autopublicado no lo elimina: lo oculta como override (nunca se borran ítems de root). La UI ofrece «restaurar por defecto» para limpiar el override de un ítem o grupo.
 - **Ítems de root**: además de rutas internas (etiquetadas o en modo avanzado), root puede añadir enlaces externos o descargas con etiqueta obligatoria en español e inglés. Los destinos se validan: solo `http(s)` o rutas internas, rechazando `javascript:`, `data:` y URLs protocol-relative.
 - **Autorización**: la visibilidad del menú es solo presentación. Las rutas conservan su middleware y el resolver oculta a cada usuario los ítems que no puede usar.
-- **Valores por defecto**: `NavigationSeeder` siembra el sidebar actual al instalar. Si no existe el menú de una audiencia, se construye desde las rutas etiquetadas, por lo que el sidebar nunca queda vacío.
+- **Valores por defecto**: `NavigationSeeder` siembra el sidebar actual al instalar. Si no existe el menú de una audiencia, se construye desde las rutas etiquetadas, por lo que el sidebar nunca queda vacío. Al sembrar se reconcilian las rutas autopublicables.
+- **Reconciliación idempotente**: `NavigationSync` materializa por audiencia las rutas autopublicables, respeta los overrides, oculta (nunca borra) los ítems de catálogo cuya ruta desaparece o deja de estar etiquetada y nunca toca los ítems de root. Ejecutarla dos veces no duplica ni reordena nada.
+- **Origen y estado**: cada grupo e ítem guarda `source` (`catalog` de un package o `root`) y `overridden`; la UI distingue **Auto**, **Editado por root** y **Disponible** (etiquetada pero sin colocar) y permite colocar rutas disponibles.
 - **Persistencia y auditoría**: el menú vive en las tablas `navigation_menus`, `navigation_groups` y `navigation_items`; cada cambio se registra en Actividad administrativa.
 
 ## Comandos útiles
@@ -143,6 +150,7 @@ Route::livewire('reports', ReportsIndex::class)
 | `npm run build`         | Compila assets de producción         |
 | `php artisan serve`     | Servidor local (puerto 8000)         |
 | `php artisan test`      | Ejecuta la suite de Pest             |
+| `php artisan navigation:sync` | Reconcilia el sidebar con las rutas etiquetadas |
 | `vendor/bin/pint`       | Formatea el código PHP               |
 | `vendor/bin/phpstan`    | Análisis estático                    |
 | `php artisan lnx:reset` | Reinicia el entorno de desarrollo    |
