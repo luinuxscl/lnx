@@ -18,4 +18,10 @@ enum AdministrativeAction: string
     case InvitationAccepted = 'invitation_accepted';
     case InvitationSent = 'invitation_sent';
     case InvitationSendFailed = 'invitation_send_failed';
+    case NavigationGroupCreated = 'navigation_group_created';
+    case NavigationGroupUpdated = 'navigation_group_updated';
+    case NavigationGroupDeleted = 'navigation_group_deleted';
+    case NavigationItemCreated = 'navigation_item_created';
+    case NavigationItemUpdated = 'navigation_item_updated';
+    case NavigationItemDeleted = 'navigation_item_deleted';
 }

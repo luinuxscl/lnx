@@ -16,6 +16,7 @@ use App\Livewire\Documents\Show as DocumentsShow;
 use App\Livewire\Knowledge\Index;
 use App\Livewire\Knowledge\Show;
 use App\Livewire\Messages\Index as MessagesIndex;
+use App\Livewire\Navigation\Index as NavigationIndex;
 use App\Livewire\Notifications\Index as NotificationsIndex;
 use App\Livewire\Packages\LnxUi;
 use App\Livewire\Setup\Index as SetupIndex;
@@ -32,19 +33,48 @@ Route::post('invitations/{invitation}/{token}', [AcceptInvitationController::cla
     ->middleware('throttle:10,1')->name('invitations.accept.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::livewire('dashboard', Dashboard::class)->name('dashboard');
+    Route::livewire('dashboard', Dashboard::class)->name('dashboard')->menu([
+        'label' => 'Dashboard',
+        'icon' => 'home',
+        'audiences' => ['root', 'admin', 'user'],
+    ]);
     Route::livewire('messages', MessagesIndex::class)->name('messages.index');
     Route::livewire('notifications', NotificationsIndex::class)->name('notifications.index');
-    Route::livewire('chat/{conversation?}', AiChat::class)->name('chat');
-    Route::livewire('knowledge', Index::class)->name('knowledge.index');
+    Route::livewire('chat/{conversation?}', AiChat::class)->name('chat')->menu([
+        'label' => 'Chat',
+        'icon' => 'chat-bubble-left-right',
+        'group' => 'AI Tools',
+        'group_icon' => 'sparkles',
+        'audiences' => ['root', 'admin', 'user'],
+    ]);
+    Route::livewire('knowledge', Index::class)->name('knowledge.index')->menu([
+        'label' => 'RAG',
+        'icon' => 'book-open',
+        'group' => 'AI Tools',
+        'group_icon' => 'sparkles',
+        'audiences' => ['root', 'admin', 'user'],
+    ]);
     Route::livewire('knowledge/{document}', Show::class)->name('knowledge.show');
-    Route::livewire('documents', DocumentsIndex::class)->name('documents.index');
+    Route::livewire('documents', DocumentsIndex::class)->name('documents.index')->menu([
+        'label' => 'Document AI',
+        'icon' => 'document-text',
+        'group' => 'AI Tools',
+        'group_icon' => 'sparkles',
+        'audiences' => ['root', 'admin', 'user'],
+    ]);
     Route::livewire('documents/{document}', DocumentsShow::class)->name('documents.show');
     Route::get('documents/{document}/download', [DocumentDownloadController::class, 'download'])->name('documents.download');
 });
 
 Route::middleware('auth')->group(function () {
-    Route::livewire('support', SupportIndex::class)->name('support.index');
+    Route::livewire('support', SupportIndex::class)->name('support.index')->menu([
+        'label' => 'Support',
+        'icon' => 'inbox',
+        'group' => 'Administration',
+        'group_icon' => 'cog-6-tooth',
+        'audiences' => ['root'],
+        'roles' => ['root'],
+    ]);
     Route::livewire('support/{ticket}', SupportShow::class)->name('support.show');
     Route::get('support/attachments/{attachment}', SupportAttachmentController::class)->name('support.attachments.show');
 });
@@ -54,23 +84,67 @@ require __DIR__.'/users.php';
 
 Route::livewire('admin/activity', ActivityIndex::class)
     ->middleware(['auth', 'role:'.Role::Root->value])
-    ->name('admin.activity.index');
+    ->name('admin.activity.index')
+    ->menu([
+        'label' => 'Activity',
+        'icon' => 'clock',
+        'group' => 'Administration',
+        'group_icon' => 'cog-6-tooth',
+        'audiences' => ['root'],
+        'roles' => ['root'],
+    ]);
 
 Route::livewire('admin/setup', SetupIndex::class)
     ->middleware(['auth', 'role:'.Role::Root->value])
-    ->name('admin.setup.index');
+    ->name('admin.setup.index')
+    ->menu([
+        'label' => 'Checklist',
+        'icon' => 'clipboard-document-check',
+        'group' => 'Administration',
+        'group_icon' => 'cog-6-tooth',
+        'audiences' => ['root'],
+        'roles' => ['root'],
+    ]);
 
 Route::livewire('admin/ai', AiStatus::class)
     ->middleware(['auth', 'role:'.Role::Root->value])
-    ->name('admin.ai.index');
+    ->name('admin.ai.index')
+    ->menu([
+        'label' => 'AI',
+        'icon' => 'sparkles',
+        'group' => 'Administration',
+        'group_icon' => 'cog-6-tooth',
+        'audiences' => ['root'],
+        'roles' => ['root'],
+    ]);
 
 Route::livewire('admin/packages/lnx-ui', LnxUi::class)
     ->middleware(['auth', 'role:'.Role::Root->value])
-    ->name('admin.packages.lnx-ui');
+    ->name('admin.packages.lnx-ui')
+    ->menu([
+        'label' => 'UI/UX components',
+        'icon' => 'squares-2x2',
+        'group' => 'Packages',
+        'group_icon' => 'cube',
+        'audiences' => ['root'],
+        'roles' => ['root'],
+    ]);
 
 Route::livewire('admin/ai/usage', AiUsage::class)
     ->middleware(['auth', 'role:'.Role::Root->value])
     ->name('admin.ai.usage');
+
+Route::livewire('admin/navigation', NavigationIndex::class)
+    ->middleware(['auth', 'role:'.Role::Root->value])
+    ->name('admin.navigation.index')
+    ->menu([
+        'label' => 'Navigation',
+        'icon' => 'bars-3',
+        'group' => 'Administration',
+        'group_icon' => 'cog-6-tooth',
+        'audiences' => ['root'],
+        'roles' => ['root'],
+    ]);
 
 if (config('lnx_ai.text_assistant.demo_enabled')) {
     Route::livewire('admin/ai/text-assistant', AiTextAssistantDemo::class)

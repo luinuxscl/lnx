@@ -111,6 +111,30 @@ El cierre rota el `remember_token` del usuario, por lo que también revoca los i
 
 La función requiere `SESSION_DRIVER=database`; con otros drivers se muestra un aviso y no se listan sesiones, ya que no es posible consultarlas ni revocarlas.
 
+## Navegación gestionada
+
+El sidebar se administra desde `/admin/navigation` (solo `root`). Por audiencia (`root`, `admin` y usuarios sin rol) root crea, ordena, activa u oculta grupos e ítems, de modo que cada rol ve su propia combinación. Un usuario con varios roles ve el menú de la audiencia de mayor jerarquía (root > admin > usuario).
+
+- **Rutas etiquetadas por packages**: cualquier ruta puede anotarse con la macro `->menu([...])` para ofrecerse en el selector del gestor con su etiqueta traducible, icono, grupo y roles permitidos:
+
+```php
+Route::livewire('reports', ReportsIndex::class)
+    ->name('reports.index')
+    ->menu([
+        'label' => 'Reports',       // clave de traducción (es/en)
+        'icon' => 'chart-bar',
+        'group' => 'Analytics',     // grupo sugerido
+        'group_icon' => 'chart-bar',
+        'audiences' => ['admin'],   // audiencias sugeridas
+        'roles' => ['admin'],       // roles con acceso (omitir = todos)
+    ]);
+```
+
+- **Ítems de root**: además de rutas internas (etiquetadas o en modo avanzado), root puede añadir enlaces externos o descargas con etiqueta obligatoria en español e inglés. Los destinos se validan: solo `http(s)` o rutas internas, rechazando `javascript:`, `data:` y URLs protocol-relative.
+- **Autorización**: la visibilidad del menú es solo presentación. Las rutas conservan su middleware y el resolver oculta a cada usuario los ítems que no puede usar.
+- **Valores por defecto**: `NavigationSeeder` siembra el sidebar actual al instalar. Si no existe el menú de una audiencia, se construye desde las rutas etiquetadas, por lo que el sidebar nunca queda vacío.
+- **Persistencia y auditoría**: el menú vive en las tablas `navigation_menus`, `navigation_groups` y `navigation_items`; cada cambio se registra en Actividad administrativa.
+
 ## Comandos útiles
 
 | Comando                 | Descripción                          |

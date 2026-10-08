@@ -4,6 +4,8 @@ namespace App\Actions;
 
 use App\Enums\AdministrativeAction;
 use App\Models\AdministrativeActivity;
+use App\Models\NavigationGroup;
+use App\Models\NavigationItem;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\UserInvitation;
@@ -15,6 +17,8 @@ class RecordAdministrativeActivity
         'user' => ['name', 'email', 'role', 'suspended_at', 'avatar_path'],
         'invitation' => ['email', 'role', 'locale', 'expires_at', 'sent_at', 'send_failed_at', 'accepted_at', 'revoked_at'],
         'setting' => ['site_title', 'site_tagline', 'meta_description', 'admin_email', 'footer_text', 'analytics_id', 'maintenance_mode', 'registration_mode', 'maintenance_message', 'logo_path', 'logo_dark_path', 'favicon_path', 'apple_touch_icon_path'],
+        'navigation_group' => ['audience', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled'],
+        'navigation_item' => ['audience', 'type', 'route_name', 'url', 'label_key', 'label_es', 'label_en', 'icon', 'position'],
     ];
 
     /**
@@ -27,6 +31,8 @@ class RecordAdministrativeActivity
             $resource instanceof User => 'user',
             $resource instanceof UserInvitation => 'invitation',
             $resource instanceof Setting => 'setting',
+            $resource instanceof NavigationGroup => 'navigation_group',
+            $resource instanceof NavigationItem => 'navigation_item',
             default => throw new \InvalidArgumentException('Unsupported administrative resource.'),
         };
 
@@ -41,7 +47,7 @@ class RecordAdministrativeActivity
             }
         }
 
-        if ($changes === [] && in_array($action, [AdministrativeAction::UserUpdated, AdministrativeAction::SettingsUpdated], true)) {
+        if ($changes === [] && in_array($action, [AdministrativeAction::UserUpdated, AdministrativeAction::SettingsUpdated, AdministrativeAction::NavigationGroupUpdated, AdministrativeAction::NavigationItemUpdated], true)) {
             return null;
         }
 

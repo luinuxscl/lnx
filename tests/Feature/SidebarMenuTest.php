@@ -2,12 +2,14 @@
 
 use App\Enums\Role;
 use App\Models\User;
+use Database\Seeders\NavigationSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
+    $this->seed(NavigationSeeder::class);
 });
 
 it('hides the configuration menu from users without an admin role', function () {
@@ -85,6 +87,28 @@ it('shows administration domain group to admin and root users', function () {
         ->assertSee('Administración')
         ->assertSee('Soporte')
         ->assertSee(route('admin.settings.edit'));
+});
+
+it('renders the managed sidebar without leaking template directives', function () {
+    $user = User::factory()->create();
+    $user->assignRole(Role::Root->value);
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertDontSee('@if')
+        ->assertDontSee('@endif');
+});
+
+it('opens only the group that contains the current page', function () {
+    $user = User::factory()->create();
+    $user->assignRole(Role::Root->value);
+
+    $users = $this->actingAs($user)->get(route('admin.users.index'))->getContent();
+    expect(preg_match_all('/open\s+data-flux-sidebar-group/', $users))->toBe(1);
+
+    $dashboard = $this->actingAs($user)->get(route('dashboard'))->getContent();
+    expect(preg_match_all('/open\s+data-flux-sidebar-group/', $dashboard))->toBe(0);
 });
 
 it('shows the uploaded avatar in desktop and mobile menus with Gravatar fallback', function () {
