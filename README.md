@@ -602,7 +602,7 @@ lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`kn
 
 - `README.md` — este archivo, panorámica del proyecto.
 - `.ai/rules/` — reglas del kit (`index.md`, `general.md`, `views.md`); las reglas propias del proyecto derivado se escriben en `.ai/rules/local.md` (personalización local que el kit no sobrescribe).
-- `.ai/skills/` — skills propias versionadas (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`, `brand-logos`); Boost las distribuye a los clientes configurados.
+- `.ai/skills/` — skills propias versionadas (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`, `brand-logos`, `lnx-ui-release`); Boost las distribuye a los clientes configurados.
 - `.ai/kit-manifest.json` — manifiesto versionado del kit para agentes (versión, origen, compatibilidad y componentes mantenidos).
 - `.ai/CHANGELOG.md` — registro de cambios y notas de migración del kit de agentes.
 - `git-closeout` — skill global (fuera del repo) para cerrar el ciclo: documentación, commits, integración de ramas y push.
@@ -619,7 +619,7 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 | Módulos, rutas y estructura | `app/`, `routes/`, `resources/`; `php artisan route:list --except-vendor` |
 | Reglas por ruta | `.ai/rules/index.md`, luego los archivos indicados |
 | Reglas locales del proyecto | `.ai/rules/local.md` (personalización local; el updater del kit no la sobrescribe) |
-| Skills propias | `.ai/skills/` (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`, `brand-logos`); Boost las distribuye a los clientes configurados |
+| Skills propias | `.ai/skills/` (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`, `brand-logos`, `lnx-ui-release`); Boost las distribuye a los clientes configurados |
 | Skills de paquetes instalados | `php artisan boost:list-skills --no-interaction`; pueden variar por instalación |
 | Actualización del kit de agentes | `.ai/kit-manifest.json`; `python3 scripts/update-agent-kit.py --source-kit <ruta-lnx> --preview` (previsualizar) o `--apply` (aplicar) |
 | MCP | Laravel Boost (`php artisan boost:mcp`) cuando el cliente lo configure; el servidor de aplicación de lectura se documenta en **Servidor MCP (lectura)** y no presupone plugins personales |
@@ -644,6 +644,8 @@ La referencia de tokens es `resources/css/app.css`: Instrument Sans, escala de e
 | Carga y error | La galería en `/admin/packages/lnx-ui` (`resources/views/livewire/packages/lnx-ui.blade.php`) y `resources/views/livewire/users/invitations.blade.php` |
 
 La página `/admin/packages/lnx-ui` (rol `root`, disponible en todos los entornos; grupo `Packages` → ítem `UI/UX components` del sidebar) muestra la versión instalada y la última disponible del paquete `luinuxscl/lnx-ui`, permite buscar actualizaciones contra la API de GitHub y ofrece el comando de actualización; debajo incluye la galería de diseño. El token se configura con `GITHUB_TOKEN` (o `LNX_UI_GITHUB_TOKEN`); sin él solo se muestra la versión instalada. `DESIGN_GALLERY_ENABLED=false` oculta solo la galería, no la tarjeta de versión. La galería muestra estados de carga, vacío, error, validación y acciones con componentes Flux existentes. Para revisar una pantalla, comparar móvil estrecho y escritorio, temas claro/oscuro, los seis acentos, navegación por teclado y foco visible; anotar capturas y correcciones en el PR. El selector de acento en `resources/views/livewire/settings/appearance.blade.php` es el primer caso aplicado: sus botones muestran un contorno de foco explícito. Si cambia un patrón, actualizar implementación, ejemplo de galería y esta guía en el mismo cambio. La skill `.ai/skills/design-screen/SKILL.md` indica el recorrido de revisión sin duplicar estas decisiones.
+
+Para publicar cambios del paquete, la skill `.ai/skills/lnx-ui-release/SKILL.md` (cuya fuente canónica es el paquete `lnx-ui`) describe el flujo: editar en el checkout de desarrollo del paquete, verificar, commitear en `develop`, mergear a `main`, crear el tag SemVer anotado, subir todo a `origin` y, preguntando la lista, actualizar con `composer update luinuxscl/lnx-ui` las instancias de lnx que lo requieren.
 
 ### Componentes desde capturas
 
