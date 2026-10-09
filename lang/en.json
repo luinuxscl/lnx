@@ -887,5 +887,6 @@
     "No available routes for this audience.": "No available routes for this audience.",
     "Route added to the menu.": "Route added to the menu.",
     "Group restored to defaults.": "Group restored to defaults.",
-    "Item restored to defaults.": "Item restored to defaults."
+    "Item restored to defaults.": "Item restored to defaults.",
+    "The selected icon does not exist.": "The selected icon does not exist."
 }

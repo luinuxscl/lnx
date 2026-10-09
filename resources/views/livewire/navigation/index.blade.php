@@ -32,7 +32,7 @@
                 <div class="flex flex-wrap items-center gap-3">
                     <flux:button size="sm" variant="ghost" icon="bars-3" wire:sort:handle :aria-label="__('Reorder group')" />
 
-                    <flux:icon :name="$group->icon ?? 'folder'" variant="mini" class="size-4 text-zinc-400" />
+                    <flux:icon :name="$group->menuIcon()" variant="mini" class="size-4 text-zinc-400" />
 
                     <div class="min-w-0 flex-1">
                         <flux:heading>{{ $group->label() ?? __('No heading') }}</flux:heading>

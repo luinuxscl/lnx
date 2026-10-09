@@ -99,7 +99,10 @@ class MenuResolver
                     'label_key' => $item->label_key,
                     'label_es' => $item->label_es,
                     'label_en' => $item->label_en,
-                    'icon' => $item->icon,
+                    'icon' => NavigationIcon::safeOrNull(
+                        $item->icon,
+                        $item->type === NavigationItemType::Link ? 'arrow-top-right-on-square' : 'link',
+                    ),
                 ];
             }
 
@@ -107,7 +110,7 @@ class MenuResolver
                 'label_key' => $group->label_key,
                 'label_es' => $group->label_es,
                 'label_en' => $group->label_en,
-                'icon' => $group->icon,
+                'icon' => NavigationIcon::safeOrNull($group->icon, 'folder'),
                 'items' => $items,
             ];
         }
@@ -130,7 +133,7 @@ class MenuResolver
                     'label_key' => $entry['group_key'],
                     'label_es' => null,
                     'label_en' => null,
-                    'icon' => $entry['group_icon'],
+                    'icon' => NavigationIcon::safeOrNull($entry['group_icon'], 'folder'),
                     'items' => [],
                 ];
             }
@@ -142,7 +145,7 @@ class MenuResolver
                 'label_key' => $entry['label_key'],
                 'label_es' => null,
                 'label_en' => null,
-                'icon' => $entry['icon'],
+                'icon' => NavigationIcon::safeOrNull($entry['icon'], 'link'),
             ];
         }
 
@@ -196,9 +199,12 @@ class MenuResolver
 
         $match = $tag['match'] ?? $routeName;
 
+        $icon = $tag['icon'] ?? ($item['icon'] ?? null);
+        $icon = is_string($icon) ? $icon : null;
+
         return [
             'label' => $label,
-            'icon' => $tag['icon'] ?? ($item['icon'] ?? null),
+            'icon' => NavigationIcon::safeOrNull($icon, 'link'),
             'href' => route($routeName),
             'current' => request()->routeIs($match),
             'external' => false,

@@ -899,5 +899,6 @@
     "No available routes for this audience.": "No hay rutas disponibles para esta audiencia.",
     "Route added to the menu.": "Ruta añadida al menú.",
     "Group restored to defaults.": "Grupo restaurado a los valores por defecto.",
-    "Item restored to defaults.": "Ítem restaurado a los valores por defecto."
+    "Item restored to defaults.": "Ítem restaurado a los valores por defecto.",
+    "The selected icon does not exist.": "El icono seleccionado no existe."
 }
