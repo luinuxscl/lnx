@@ -12,6 +12,7 @@ use App\Enums\Role;
 use App\Models\NavigationGroup;
 use App\Models\NavigationItem;
 use App\Models\NavigationMenu;
+use App\Rules\ExistsNavigationIcon;
 use App\Rules\SafeNavigationUrl;
 use App\Support\Navigation\NavigationCache;
 use Flux\Flux;
@@ -115,7 +116,7 @@ class Index extends Component
         $data = $this->validate([
             'groupLabelEs' => ['required', 'string', 'max:255'],
             'groupLabelEn' => ['required', 'string', 'max:255'],
-            'groupIcon' => ['nullable', 'string', 'max:255'],
+            'groupIcon' => ['nullable', 'string', 'max:255', new ExistsNavigationIcon],
         ]);
 
         $attributes = [
@@ -373,7 +374,7 @@ class Index extends Component
             'itemUrl' => ['required', 'string', new SafeNavigationUrl],
             'itemLabelEs' => ['required', 'string', 'max:255'],
             'itemLabelEn' => ['required', 'string', 'max:255'],
-            'itemIcon' => ['nullable', 'string', 'max:255'],
+            'itemIcon' => ['nullable', 'string', 'max:255', new ExistsNavigationIcon],
         ]);
 
         return [
@@ -394,7 +395,7 @@ class Index extends Component
     {
         $this->validate([
             'itemRoute' => ['required', 'string', 'max:255'],
-            'itemIcon' => ['nullable', 'string', 'max:255'],
+            'itemIcon' => ['nullable', 'string', 'max:255', new ExistsNavigationIcon],
         ]);
 
         if (! Route::has($this->itemRoute)) {

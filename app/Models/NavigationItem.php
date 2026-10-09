@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\NavigationItemType;
 use App\Enums\NavigationSource;
 use App\Support\Navigation\NavigationCache;
+use App\Support\Navigation\NavigationIcon;
 use Database\Factories\NavigationItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -95,14 +96,20 @@ class NavigationItem extends Model
     }
 
     /**
-     * The icon shown in the admin list: the route tag icon wins, then the
-     * stored icon.
+     * Icon shown in the admin list. A route tag icon wins over the stored one;
+     * an unknown name degrades to a type-appropriate fallback so Flux never
+     * throws while rendering.
      */
     public function menuIcon(): ?string
     {
         $tag = $this->routeTag();
+        $icon = $tag['icon'] ?? $this->icon;
+        $icon = is_string($icon) ? $icon : null;
 
-        return $tag['icon'] ?? $this->icon;
+        return NavigationIcon::safeOrNull(
+            $icon,
+            $this->type === NavigationItemType::Route ? 'link' : 'arrow-top-right-on-square',
+        );
     }
 
     public function destination(): ?string

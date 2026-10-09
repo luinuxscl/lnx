@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\NavigationSource;
 use App\Support\Navigation\NavigationCache;
+use App\Support\Navigation\NavigationIcon;
 use Database\Factories\NavigationGroupFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -77,6 +78,15 @@ class NavigationGroup extends Model
         return app()->getLocale() === 'en'
             ? ($this->label_en ?? $this->label_es)
             : ($this->label_es ?? $this->label_en);
+    }
+
+    /**
+     * Icon shown in the admin list, degrading an unknown name to a safe
+     * fallback so Flux never throws while rendering.
+     */
+    public function menuIcon(): string
+    {
+        return NavigationIcon::safe($this->icon, 'folder');
     }
 
     /**
