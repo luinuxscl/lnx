@@ -1,6 +1,11 @@
 <section class="w-full">
-    <flux:heading level="1">{{ __('Text assistant') }}</flux:heading>
-    <flux:text class="mt-1">{{ __('Try the reusable assistant on a scratch field. It applies changes to the form only when you accept them.') }}</flux:text>
+    <x-lnx-ui::page-header
+        :title="__('Text assistant')"
+        :subtitle="__('Try the reusable assistant on a scratch field. It applies changes to the form only when you accept them.')"
+        icon="sparkles"
+        color="violet"
+        :breadcrumbs="[['label' => __('AI'), 'href' => route('admin.ai.index')]]"
+    />
 
     <div class="mt-6 w-full max-w-5xl space-y-6">
         <livewire:ai.text-assistant wire:model="text" />

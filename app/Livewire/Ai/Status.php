@@ -68,9 +68,7 @@ class Status extends Component
 
         return view('livewire.ai.status', [
             'status' => app(AiConfig::class)->status(),
-        ])->layout('layouts.app', [
-            'breadcrumbs' => [['label' => __('AI')]],
-        ]);
+        ])->layout('layouts.app');
     }
 
     private function authorizeRoot(): void

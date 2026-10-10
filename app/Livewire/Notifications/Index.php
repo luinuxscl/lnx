@@ -108,8 +108,6 @@ class Index extends Component
             'notifications' => $user->notifications()->reorder()->orderByDesc('created_at')->orderByDesc('id')->paginate(10),
             'unreadCount' => $user->unreadNotifications()->count(),
             'timezone' => Appearance::currentTimezone($user),
-        ])->layout('layouts.app', [
-            'breadcrumbs' => [['label' => __('Notifications')]],
-        ]);
+        ])->layout('layouts.app');
     }
 }

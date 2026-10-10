@@ -1,12 +1,14 @@
 # Roadmap de prioridades
 
-Última revisión: 2026-10-05. Priorización acordada con el mantenedor.
+Última revisión: 2026-10-10. Priorización acordada con el mantenedor.
 
 Este documento conserva el orden global de trabajo. GitHub es la fuente del estado y los criterios de aceptación de cada issue; los órdenes parciales escritos en ellas se concilian aquí. Las etapas no son compromisos de fecha. El esfuerzo es comparativo por alcance, no una estimación de duración.
 
 ## Próximo trabajo
 
-La **Etapa 8** ([#34 Mensajería interna entre usuarios, sistema e IA integrada con soporte](https://github.com/luinuxscl/lnx/issues/34)) y la **Etapa 9: Modernización visual y UI/UX** ([#27](https://github.com/luinuxscl/lnx/issues/27) y [#35](https://github.com/luinuxscl/lnx/issues/35)) han sido completadas e integradas con éxito. No queda ninguna etapa activa: el próximo trabajo queda a la espera de nueva priorización del mantenedor.
+La **Etapa 8** ([#34 Mensajería interna entre usuarios, sistema e IA integrada con soporte](https://github.com/luinuxscl/lnx/issues/34)) y la **Etapa 9: Modernización visual y UI/UX** ([#27](https://github.com/luinuxscl/lnx/issues/27) y [#35](https://github.com/luinuxscl/lnx/issues/35)) han sido completadas e integradas con éxito.
+
+Está **abierta la Etapa 10** ([#39 Contrato de módulo](https://github.com/luinuxscl/lnx/issues/39)): el contrato que permite que un módulo declare permisos propios, cuotas de IA, notificaciones, página de paquete, skills y **escritura por MCP**. El estándar vive en [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) y se valida con el primer módulo real, **Luz** (`luinuxscl/luz`).
 
 ## Orden acordado
 
@@ -21,9 +23,11 @@ La **Etapa 8** ([#34 Mensajería interna entre usuarios, sistema e IA integrada 
 | 7. Incorporar conocimiento propio | [#17 Consulta con fuentes](https://github.com/luinuxscl/lnx/issues/17) (cerrada) y [#31 Formato numérico](https://github.com/luinuxscl/lnx/issues/31) (cerrada) | #17 (módulo RAG de base de conocimiento con embeddings) y #31 (formato numérico regional) completados y cerrados. | Muy alto |
 | 8. Mensajería interna y colaboración | [#34 Mensajería interna](https://github.com/luinuxscl/lnx/issues/34) (cerrada) | Habilitar comunicación directa entre usuarios, avisos de sistema y agentes de IA autorizados, integrando eventos y respuestas de soporte. Prerrequisito de soporte independiente completado. | Alto |
 | 9. Modernización visual y UI/UX | [#27 Diseño y dashboard](https://github.com/luinuxscl/lnx/issues/27) (cerrada) y [#35 UI/UX de soporte](https://github.com/luinuxscl/lnx/issues/35) (cerrada) | Unificar la jerarquía visual del dashboard por rol y vistas clave (#27) y pulir el flujo de soporte y tickets (#35) con componentes consolidados y estados claros. | Medio-Alto |
+| 10. Contrato de módulo | [#39 Contrato de módulo](https://github.com/luinuxscl/lnx/issues/39) (abierta) | Que un paquete declare permisos propios, cuotas de IA, notificaciones, página de paquete, skills y escritura por MCP declarable y auditable. Se valida con Luz. | Alto |
 
 ## Decisiones de secuencia
 
+- **Etapa 10 abierta (2026-10-10):** el sistema de módulos se consolida antes de sumar apps derivadas. La **escritura por MCP** queda **apagada por defecto** (`MCP_SERVER_ALLOW_WRITES=false`) y solo la obtienen los paquetes que la declaren explícitamente, con permisos por operación, idempotencia y auditoría con diff. Sin borrado ni sobrescritura de historial. El estándar completo vive en [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md).
 - #34 se completó: modelos `InternalConversation`, `InternalConversationParticipant`, `InternalMessage`, `MessagingService`, bypass de `root` acotado en `AppServiceProvider`, vistas bilingües `/messages`, notificaciones en base de datos, integración bidireccional con eventos de soporte y suite de pruebas Pest.
 - Etapa 9 completada y cerrada (#27 y #35): rediseño de la interfaz de mensajería con búsqueda en conversación, auto-scroll, agrupación de mensajes, compositor multilínea y accesibilidad; modernización visual del dashboard y vistas principales (#27) y del circuito de tickets de soporte (#35). Cierre confirmado por el mantenedor tras integrar la entrega en `main`.
 - Secuencia acordada (Ruta B, 2026-10-04): Se priorizó la funcionalidad de comunicación en la Etapa 8 ([#34](https://github.com/luinuxscl/lnx/issues/34)). El módulo base de soporte y feedback se encuentra completado e integrado en `develop`. La modernización visual y de experiencia de usuario se agrupa en la Etapa 9 ([#27](https://github.com/luinuxscl/lnx/issues/27) y [#35](https://github.com/luinuxscl/lnx/issues/35)).
@@ -50,7 +54,7 @@ La **Etapa 8** ([#34 Mensajería interna entre usuarios, sistema e IA integrada 
 
 ## Estado actual
 
-GitHub registra todas las etapas principales (1 a 9) cerradas, incluida la modernización visual y de UI/UX (Etapa 9: [#27](https://github.com/luinuxscl/lnx/issues/27) y [#35](https://github.com/luinuxscl/lnx/issues/35)). No hay trabajo de roadmap activo; el próximo trabajo queda a la espera de nueva priorización del mantenedor.
+GitHub registra las etapas **1 a 9 cerradas** (incluida la modernización visual y de UI/UX: [#27](https://github.com/luinuxscl/lnx/issues/27) y [#35](https://github.com/luinuxscl/lnx/issues/35)) y la **Etapa 10 abierta** ([#39](https://github.com/luinuxscl/lnx/issues/39) Contrato de módulo), que es el trabajo activo. El contrato se valida con Luz y, al cerrarlo, queda como estándar del kit.
 
 ## Mantenimiento
 

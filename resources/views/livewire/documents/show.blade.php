@@ -1,32 +1,34 @@
 <div class="flex flex-col gap-6 p-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-3">
-                <flux:heading size="xl" level="1">{{ $document->original_filename }}</flux:heading>
-                @if ($document->isPending())
-                    <flux:badge color="zinc">{{ __('Pending') }}</flux:badge>
-                @elseif ($document->isProcessing())
-                    <flux:badge color="sky">{{ __('Processing') }}</flux:badge>
-                @elseif ($document->isReviewRequired())
-                    <flux:badge color="amber">{{ __('Review Required') }}</flux:badge>
-                @elseif ($document->isConfirmed())
-                    <flux:badge color="emerald">{{ __('Confirmed') }}</flux:badge>
-                @elseif ($document->isFailed())
-                    <flux:badge color="red">{{ __('Failed') }}</flux:badge>
-                @endif
-            </div>
-            <flux:subheading>{{ __('Uploaded :date', ['date' => $document->created_at->format('Y-m-d H:i')]) }}</flux:subheading>
-        </div>
+    <x-lnx-ui::page-header
+        :title="$document->original_filename"
+        :subtitle="__('Uploaded :date', ['date' => $document->created_at->format('Y-m-d H:i')])"
+        icon="document-text"
+        color="cyan"
+        :breadcrumbs="[['label' => __('Document extraction'), 'href' => route('documents.index')]]"
+    >
+        <x-slot:meta>
+            @if ($document->isPending())
+                <flux:badge color="zinc">{{ __('Pending') }}</flux:badge>
+            @elseif ($document->isProcessing())
+                <flux:badge color="sky">{{ __('Processing') }}</flux:badge>
+            @elseif ($document->isReviewRequired())
+                <flux:badge color="amber">{{ __('Review Required') }}</flux:badge>
+            @elseif ($document->isConfirmed())
+                <flux:badge color="emerald">{{ __('Confirmed') }}</flux:badge>
+            @elseif ($document->isFailed())
+                <flux:badge color="red">{{ __('Failed') }}</flux:badge>
+            @endif
+        </x-slot:meta>
 
-        <div class="flex items-center gap-2">
+        <x-slot:actions>
             <flux:button variant="subtle" icon="arrow-down-tray" :href="route('documents.download', $document)" target="_blank">
                 {{ __('Download original file') }}
             </flux:button>
             <flux:button variant="subtle" icon="arrow-path" wire:click="reprocess">
                 {{ __('Re-process') }}
             </flux:button>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-lnx-ui::page-header>
 
     @if (session('status'))
         <flux:badge color="lime" size="lg" class="w-full justify-start p-4">

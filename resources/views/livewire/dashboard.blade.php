@@ -1,10 +1,8 @@
 <section class="w-full space-y-6">
-    <div>
-        <flux:heading level="1">{{ __('Welcome, :name', ['name' => $name]) }}</flux:heading>
-        <flux:text class="mt-1">
-            {{ $isRoot ? __('Your tools are here.') : __('Your account and site shortcuts are here.') }}
-        </flux:text>
-    </div>
+    <x-lnx-ui::page-header
+        :title="__('Welcome, :name', ['name' => $name])"
+        :subtitle="$isRoot ? __('Your tools are here.') : __('Your account and site shortcuts are here.')"
+    />
 
     @if ($isRoot)
         <section aria-labelledby="dashboard-administration-heading" class="space-y-4">

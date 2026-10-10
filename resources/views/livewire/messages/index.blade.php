@@ -1,15 +1,16 @@
 <section class="w-full space-y-4">
-    {{-- Page Header --}}
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <flux:heading level="1">{{ __('Messages') }}</flux:heading>
-            <flux:text class="mt-1">{{ __('Internal messaging between users, system, and support.') }}</flux:text>
-        </div>
-
-        <flux:button wire:click="openNewModal" variant="primary" icon="plus">
-            {{ __('New conversation') }}
-        </flux:button>
-    </div>
+    <x-lnx-ui::page-header
+        :title="__('Messages')"
+        :subtitle="__('Internal messaging between users, system, and support.')"
+        icon="envelope"
+        color="cyan"
+    >
+        <x-slot:actions>
+            <flux:button wire:click="openNewModal" variant="primary" icon="plus">
+                {{ __('New conversation') }}
+            </flux:button>
+        </x-slot:actions>
+    </x-lnx-ui::page-header>
 
     {{-- Main Messenger Layout Card --}}
     <div class="grid min-h-[700px] grid-cols-12 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-900/95">

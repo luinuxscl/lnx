@@ -1,15 +1,16 @@
 <div class="flex flex-col gap-6 p-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <flux:heading size="xl" level="1">{{ __('Knowledge Base') }}</flux:heading>
-            <flux:subheading>{{ __('Manage internal manuals, documents and procedures used for contextual RAG answers and verifiable references.') }}</flux:subheading>
-        </div>
-        <div>
+    <x-lnx-ui::page-header
+        :title="__('Knowledge Base')"
+        :subtitle="__('Manage internal manuals, documents and procedures used for contextual RAG answers and verifiable references.')"
+        icon="book-open"
+        color="emerald"
+    >
+        <x-slot:actions>
             <flux:button variant="primary" icon="plus" wire:click="openCreateModal">
                 {{ __('Add document') }}
             </flux:button>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-lnx-ui::page-header>
 
     <div class="flex items-center justify-between gap-4">
         <div class="w-full max-w-sm">

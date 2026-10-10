@@ -217,10 +217,6 @@ class General extends Component
     {
         return view('livewire.settings.general', [
             'settings' => Setting::current(),
-        ])->layout('layouts.app', [
-            'breadcrumbs' => [
-                ['label' => __('General settings')],
-            ],
-        ]);
+        ])->layout('layouts.app');
     }
 }

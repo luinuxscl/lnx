@@ -45,8 +45,6 @@ class Dashboard extends Component
             'userCounts' => $userCounts,
             'pendingInvitations' => $pendingInvitations,
             'canCreateInvitations' => $canCreateInvitations,
-        ])->layout('layouts.app', [
-            'breadcrumbs' => [['label' => __('Dashboard')]],
-        ]);
+        ])->layout('layouts.app');
     }
 }

@@ -152,10 +152,6 @@ class Chat extends Component
             'conversations' => $conversations,
             'activeConversation' => $activeConversation,
             'isReady' => $chatService->isReady(),
-        ])->layout('layouts.app', [
-            'breadcrumbs' => [
-                ['label' => __('Interactive Chat')],
-            ],
-        ]);
+        ])->layout('layouts.app');
     }
 }

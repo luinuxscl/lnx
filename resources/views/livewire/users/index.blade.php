@@ -1,4 +1,6 @@
 <section class="w-full space-y-6">
+    <x-lnx-ui::page-header :title="__('Users')" icon="users" color="blue" />
+
     <div class="grid grid-cols-12 gap-4">
         <x-lnx-ui::stat-card
             class="col-span-12 md:col-span-6 xl:col-span-3"

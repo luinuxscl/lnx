@@ -71,6 +71,6 @@ class Index extends Component
         }
 
         return view('livewire.activity.index', ['activities' => $activities, 'actions' => AdministrativeAction::cases()])
-            ->layout('layouts.app', ['breadcrumbs' => [['label' => __('Administrative activity')]]]);
+            ->layout('layouts.app');
     }
 }

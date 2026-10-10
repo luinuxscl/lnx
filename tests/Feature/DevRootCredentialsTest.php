@@ -55,7 +55,8 @@ it('shows the warning banner to the root user with the development password', fu
     $this->actingAs($root)
         ->get('/dashboard')
         ->assertOk()
-        ->assertSee(__('Development credentials in use'));
+        ->assertSee(__('Development credentials in use'))
+        ->assertSee(__('Dismiss'));
 });
 
 it('hides the warning banner once the root password is changed', function () {
