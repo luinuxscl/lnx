@@ -9,6 +9,7 @@ use App\Actions\SuspendUser;
 use App\Enums\AdministrativeAction;
 use App\Enums\Role;
 use App\Models\User;
+use App\Models\UserInvitation;
 use Flux\Flux;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -29,6 +30,9 @@ class Index extends Component
     #[Url(as: 'status')]
     public string $status = 'all';
 
+    #[Url(as: 'role')]
+    public string $role = 'all';
+
     public bool $showStatusModal = false;
 
     #[Locked]
@@ -43,6 +47,7 @@ class Index extends Component
     public function mount(): void
     {
         $this->normalizeStatus();
+        $this->normalizeRole();
     }
 
     public function updatingStatus(): void
@@ -55,11 +60,47 @@ class Index extends Component
         $this->normalizeStatus();
     }
 
+    public function updatingRole(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedRole(): void
+    {
+        $this->normalizeRole();
+    }
+
     private function normalizeStatus(): void
     {
         if (! in_array($this->status, SearchUsers::STATUSES, true)) {
             $this->status = 'all';
         }
+    }
+
+    private function normalizeRole(): void
+    {
+        if (! in_array($this->role, SearchUsers::ROLES, true)) {
+            $this->role = 'all';
+        }
+    }
+
+    /**
+     * Determine whether any filter is currently narrowing the list.
+     */
+    public function hasActiveFilters(): bool
+    {
+        return $this->search !== '' || $this->status !== 'all' || $this->role !== 'all';
+    }
+
+    /**
+     * Reset every filter and return to the first page.
+     */
+    public function clearFilters(): void
+    {
+        $this->search = '';
+        $this->status = 'all';
+        $this->role = 'all';
+        $this->resetPage();
     }
 
     public function confirmStatusChange(User $user, string $action): void
@@ -144,14 +185,36 @@ class Index extends Component
     {
         $this->authorize('viewAny', User::class);
         $this->normalizeStatus();
+        $this->normalizeRole();
 
-        $users = app(SearchUsers::class)->handle($this->search, $this->status);
+        $users = app(SearchUsers::class)->handle($this->search, $this->status, $this->role);
 
-        return view('livewire.users.index', ['users' => $users])
-            ->layout('layouts.app', [
-                'breadcrumbs' => [
-                    ['label' => __('Users')],
-                ],
-            ]);
+        return view('livewire.users.index', [
+            'users' => $users,
+            'stats' => $this->stats(),
+        ])->layout('layouts.app', [
+            'breadcrumbs' => [
+                ['label' => __('Users')],
+            ],
+        ]);
+    }
+
+    /**
+     * Headline counters shown above the list.
+     *
+     * @return array{total: int, active: int, suspended: int, pendingInvitations: int}
+     */
+    private function stats(): array
+    {
+        return [
+            'total' => User::query()->count(),
+            'active' => User::query()->whereNull('suspended_at')->count(),
+            'suspended' => User::query()->whereNotNull('suspended_at')->count(),
+            'pendingInvitations' => UserInvitation::query()
+                ->whereNull('accepted_at')
+                ->whereNull('revoked_at')
+                ->where('expires_at', '>', now())
+                ->count(),
+        ];
     }
 }

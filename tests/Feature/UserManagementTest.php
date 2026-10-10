@@ -40,6 +40,38 @@ it('lets admins and root users view the users list', function () {
         ->assertOk();
 });
 
+it('filters the user list by role and status', function () {
+    $admin = User::factory()->create(['name' => 'Ada Admin']);
+    $admin->assignRole(Role::Admin->value);
+
+    User::factory()->create(['name' => 'Plain User']);
+    User::factory()->create(['name' => 'Sam Suspended', 'suspended_at' => now()]);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('role', 'none')
+        ->assertSee('Plain User')
+        ->assertDontSee('Ada Admin');
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('status', 'suspended')
+        ->assertSee('Sam Suspended')
+        ->assertDontSee('Plain User');
+});
+
+it('shows the quick filters as clickable stat cards', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    $this->actingAs($admin)
+        ->get(route('admin.users.index', ['status' => 'active']))
+        ->assertOk()
+        ->assertSee(__('Active users'))
+        ->assertSee(__('Pending invitations'))
+        ->assertSee(route('admin.users.invitations'));
+});
+
 it('lets admins invite a user without creating their account', function () {
     Notification::fake();
     $admin = User::factory()->create();
