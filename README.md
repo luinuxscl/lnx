@@ -288,6 +288,8 @@ El correo se envía durante la solicitud para mostrar un fallo inmediatamente. L
 
 Las cuentas `root` no se pueden editar ni eliminar desde la gestión de usuarios. Nadie puede eliminar su propia cuenta. El ítem «Usuarios» vive en el grupo **Administración** del sidebar (ver `.ai/rules/views.md`).
 
+La lista permite buscar por nombre o correo, filtrar por estado (activo o suspendido), por rol y por verificación del correo, ordenar por nombre, correo, estado o fecha de registro, y elegir el tamaño de página (10, 25 o 50). Los filtros, el orden y el tamaño de página se conservan en la URL para compartir o marcar una vista. La barra de selección permite suspender, reactivar o eliminar varias cuentas a la vez; las cuentas `root` y la propia cuenta se omiten siempre. El botón **Exportar CSV** descarga la lista filtrada completa.
+
 ### Modalidad de registro
 
 En **Configuración general**, root puede elegir **Registro abierto** o **Solo invitaciones**. El valor inicial es registro abierto, también en instalaciones existentes que todavía no tienen una fila de configuración. En «Solo invitaciones» se ocultan los enlaces de registro público y tanto GET como POST de `/register` responden 403; los enlaces de invitación válidos siguen funcionando. El cambio se aplica al guardar, sin reconstruir la caché de rutas.
