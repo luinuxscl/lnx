@@ -393,11 +393,7 @@ class Index extends Component
             'stats' => $this->stats(),
             'pageIds' => $this->selectableIds($users->getCollection()),
             'perPageOptions' => SearchUsers::PER_PAGE,
-        ])->layout('layouts.app', [
-            'breadcrumbs' => [
-                ['label' => __('Users')],
-            ],
-        ]);
+        ])->layout('layouts.app');
     }
 
     /**

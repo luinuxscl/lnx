@@ -101,10 +101,6 @@ class Index extends Component
 
         return view('livewire.documents.index', [
             'documents' => $documents,
-        ])->layout('layouts.app', [
-            'breadcrumbs' => [
-                ['label' => __('Document extraction')],
-            ],
-        ]);
+        ])->layout('layouts.app');
     }
 }

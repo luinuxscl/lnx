@@ -198,8 +198,24 @@ Al desplegar, aplicar la migración `add_preferences_to_users_table` con `php ar
 - **Sidebar colapsable** (desktop): el `<flux:sidebar collapsible>` se colapsa a barra de iconos. El estado se persiste en `localStorage['flux-sidebar-collapsed-desktop']` (gestionado por Flux). `resources/views/partials/head.blade.php` siembra el valor `true` en la primera visita, por lo que arranca **colapsado por defecto**; cada toggle posterior lo sobrescribe. En móvil conserva el overlay. Al colapsar en escritorio, los grupos desplegables (`<flux:sidebar.group>`) se convierten automáticamente en un flyout dropdown hover.
 - **Botón de colapso en el sidebar**: `<flux:sidebar.collapse>` en el header del sidebar (patrón oficial de Flux). Al colapsar, el logo se oculta al hacer hover y es sustituido por el botón de expansión; por eso el botón debe estar presente en desktop (no usar `lg:hidden`).
 - **Marca del sidebar**: junto al logo, `x-app-logo` muestra el título en negrita y, debajo en texto más pequeño, `tagline()` (configurado o el default `APP_TAGLINE`). Si no hay lema, solo se muestra el título; si falta el título configurado, se usa `APP_NAME`. Los textos largos se truncan para dejar disponible el botón de colapso.
-- **Header de contenido** (solo desktop, `max-lg:hidden`): se renderiza dentro de `<flux:main>` en `layouts/app.blade.php` con el breadcrumb (`flux:breadcrumbs`) a la izquierda y, a la derecha, el botón `Messages` (enlace a `/messages`), la campana de notificaciones, el botón de modo claro/oscuro (`$flux.dark`) y el selector de idioma. En móvil, el botón `Messages` aparece junto a la campana en el header móvil del sidebar. El colapso del sidebar se controla solo desde su propio botón en el header del sidebar.
-- **Breadcrumbs por página**: cada página pasa un arreglo `['label' => string, 'href' => string|null]`; el último item sin `href` es la página actual. En Blade: `<x-layouts::app :breadcrumbs="[...]">`; en componentes Livewire full-page, `render()` devuelve `view(...)->layout('layouts.app', ['breadcrumbs' => [...]])`.
+- **Header de contenido** (solo desktop, `max-lg:hidden`): se renderiza dentro de `<flux:main>` en `layouts/app.blade.php` y agrupa únicamente los controles globales, alineados a la derecha: el menú `Feedback and support`, el botón `Messages` (enlace a `/messages`), la campana de notificaciones, el botón de modo claro/oscuro (`$flux.dark`) y el selector de idioma. Ya **no** muestra breadcrumb: la identidad de la página vive en el encabezado de contenido (ver abajo), que sí se ve también en móvil. En móvil, el botón `Messages` aparece junto a la campana en el header móvil del sidebar. El colapso del sidebar se controla solo desde su propio botón en el header del sidebar.
+- **Encabezado de página** (`x-lnx-ui::page-header`): cada página abre su contenido con este componente del paquete `lnx-ui`, que rinde un único `<h1>` con el título, un subtítulo opcional, un badge de icono opcional, un trail de breadcrumbs (solo ancestros; la página actual es el título) y un slot `actions` alineado a la derecha. Es el único lugar donde vive el título de la página, por lo que se ve igual en desktop y móvil. Invocación típica:
+
+  ```blade
+  <x-lnx-ui::page-header
+      :title="__('Invite user')"
+      :subtitle="__('The recipient will choose their name and password.')"
+      icon="user-plus"
+      color="blue"
+      :breadcrumbs="[['label' => __('Users'), 'href' => route('admin.users.index')]]"
+  >
+      <x-slot:actions>
+          <flux:button variant="primary" icon="plus">{{ __('Invite user') }}</flux:button>
+      </x-slot:actions>
+  </x-lnx-ui::page-header>
+  ```
+
+  El título del navegador sigue viniendo del atributo Livewire `#[Title('...')]` (cadena fuente en inglés); el `title` del componente es el texto visible. El layout ya no recibe `breadcrumbs`.
 - **Alto del contenido**: `<flux:main>` es una columna flex (`flex flex-col`) para que el header de contenido y los banners convivan con la página. Una página que debe ocupar el alto restante usa `flex-1` en su raíz, **nunca `h-full`**: `h-full` reclama el 100% del alto de `main` y, al sumarse el header/banner, desborda la fila del grid; ese desborde impide que la fila crezca y rompe el sidebar sticky (el sidebar deja de cubrir todo el alto y aparece un hueco al hacer scroll).
 
 ## Avatares de usuario
@@ -672,7 +688,7 @@ La referencia de tokens es `resources/css/app.css`: Instrument Sans, escala de e
 
 | Patrón | Implementación canónica |
 | --- | --- |
-| Navegación y breadcrumbs | `resources/views/layouts/app/sidebar.blade.php`, `resources/views/layouts/app.blade.php` |
+| Navegación y encabezado de página | `resources/views/layouts/app/sidebar.blade.php` (sidebar) y `x-lnx-ui::page-header` (título, breadcrumb y acciones de cada página) |
 | Formularios y validación | `resources/views/livewire/users/create.blade.php` y `resources/views/livewire/settings/general.blade.php` |
 | Página de lista (KPIs, filtros y tabla) | `resources/views/livewire/users/index.blade.php`: KPIs clicables con `x-lnx-ui::stat-card` (`href` + `active`) como filtros rápidos, y filtros, búsqueda y acciones en una sola fila sobre `x-lnx-ui::data-table` (slots `toolbar` y `actions`) |
 | Diálogos y acciones | Modal de suspensión en `resources/views/livewire/users/index.blade.php` |

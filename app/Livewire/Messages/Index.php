@@ -298,8 +298,6 @@ class Index extends Component
             'availableUsers' => $availableUsers,
             'canManageGroups' => $isRoot || $isAdmin,
             'timezone' => Appearance::currentTimezone($user),
-        ])->layout('layouts.app', [
-            'breadcrumbs' => [['label' => __('Messages')]],
-        ]);
+        ])->layout('layouts.app');
     }
 }

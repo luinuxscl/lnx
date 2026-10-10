@@ -115,11 +115,6 @@ class Edit extends Component
     public function render(): View
     {
         return view('livewire.users.edit')
-            ->layout('layouts.app', [
-                'breadcrumbs' => [
-                    ['label' => __('Users'), 'href' => route('admin.users.index')],
-                    ['label' => __('Edit user')],
-                ],
-            ]);
+            ->layout('layouts.app');
     }
 }

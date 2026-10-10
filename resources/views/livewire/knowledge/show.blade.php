@@ -1,24 +1,26 @@
 <div class="flex flex-col gap-6 p-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <div class="flex items-center gap-3">
-                <flux:heading size="xl" level="1">{{ $document->title }}</flux:heading>
-                @if ($document->status === 'indexed')
-                    <flux:badge color="emerald">{{ __('Indexed') }}</flux:badge>
-                @elseif ($document->status === 'indexing')
-                    <flux:badge color="sky">{{ __('Indexing') }}</flux:badge>
-                @elseif ($document->status === 'withdrawn')
-                    <flux:badge color="zinc">{{ __('Withdrawn') }}</flux:badge>
-                @elseif ($document->status === 'failed')
-                    <flux:badge color="red">{{ __('Failed') }}</flux:badge>
-                @else
-                    <flux:badge color="amber">{{ __('Draft') }}</flux:badge>
-                @endif
-            </div>
-            <flux:subheading>{{ __('Created :date by :user', ['date' => $document->created_at->diffForHumans(), 'user' => $document->user ? $document->user->name : __('Global')]) }}</flux:subheading>
-        </div>
+    <x-lnx-ui::page-header
+        :title="$document->title"
+        :subtitle="__('Created :date by :user', ['date' => $document->created_at->diffForHumans(), 'user' => $document->user ? $document->user->name : __('Global')])"
+        icon="book-open"
+        color="emerald"
+        :breadcrumbs="[['label' => __('Knowledge Base'), 'href' => route('knowledge.index')]]"
+    >
+        <x-slot:meta>
+            @if ($document->status === 'indexed')
+                <flux:badge color="emerald">{{ __('Indexed') }}</flux:badge>
+            @elseif ($document->status === 'indexing')
+                <flux:badge color="sky">{{ __('Indexing') }}</flux:badge>
+            @elseif ($document->status === 'withdrawn')
+                <flux:badge color="zinc">{{ __('Withdrawn') }}</flux:badge>
+            @elseif ($document->status === 'failed')
+                <flux:badge color="red">{{ __('Failed') }}</flux:badge>
+            @else
+                <flux:badge color="amber">{{ __('Draft') }}</flux:badge>
+            @endif
+        </x-slot:meta>
 
-        <div class="flex items-center gap-3">
+        <x-slot:actions>
             <flux:button variant="subtle" icon="arrow-path" wire:click="reindex">
                 {{ __('Reindex') }}
             </flux:button>
@@ -27,8 +29,8 @@
                     {{ __('Withdraw') }}
                 </flux:button>
             @endif
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-lnx-ui::page-header>
 
     @if ($document->error_message)
         <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200">

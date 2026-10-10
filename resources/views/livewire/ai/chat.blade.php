@@ -1,4 +1,10 @@
-<div class="flex flex-1 flex-col h-full max-w-7xl mx-auto w-full gap-4 max-lg:px-4 py-4">
+<div class="flex flex-1 flex-col max-w-7xl mx-auto w-full gap-4 max-lg:px-4 py-4">
+    <x-lnx-ui::page-header
+        :title="__('Interactive Chat')"
+        icon="chat-bubble-left-right"
+        color="violet"
+    />
+
     @if (!$isReady)
         <flux:callout variant="warning" icon="exclamation-triangle" class="mb-4">
             {{ __('AI features are not configured or available. Please verify OpenRouter configuration in admin settings.') }}

@@ -53,6 +53,6 @@ class Index extends Component
             'statuses' => TicketService::STATUSES,
             'types' => TicketService::TYPES,
             'priorities' => TicketService::PRIORITIES,
-        ])->layout('layouts.app', ['breadcrumbs' => [['label' => __('Support requests')]]]);
+        ])->layout('layouts.app');
     }
 }

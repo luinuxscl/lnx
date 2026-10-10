@@ -1,8 +1,10 @@
 <section class="w-full space-y-6">
-    <div>
-        <flux:heading level="1">{{ __('Administrative activity') }}</flux:heading>
-        <flux:text class="mt-1">{{ __('Administrative changes are recorded from the installation of this feature.') }}</flux:text>
-    </div>
+    <x-lnx-ui::page-header
+        :title="__('Administrative activity')"
+        :subtitle="__('Administrative changes are recorded from the installation of this feature.')"
+        icon="clock"
+        color="violet"
+    />
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <flux:input wire:model.live.debounce.300ms="actor" :label="__('Actor')" :placeholder="__('Name, email or ID')" />

@@ -1,5 +1,10 @@
 <section class="w-full">
-    <flux:heading level="1">{{ __('Edit user') }}</flux:heading>
+    <x-lnx-ui::page-header
+        :title="__('Edit user')"
+        icon="pencil-square"
+        color="blue"
+        :breadcrumbs="[['label' => __('Users'), 'href' => route('admin.users.index')]]"
+    />
 
     <form wire:submit="save" class="mt-6 w-full max-w-lg space-y-6">
         <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />

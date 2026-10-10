@@ -1,6 +1,10 @@
 <section class="w-full">
-    <flux:heading level="1">{{ __('AI') }}</flux:heading>
-    <flux:text class="mt-1">{{ __('Configure and check the OpenRouter integration used by AI features.') }}</flux:text>
+    <x-lnx-ui::page-header
+        :title="__('AI')"
+        :subtitle="__('Configure and check the OpenRouter integration used by AI features.')"
+        icon="sparkles"
+        color="violet"
+    />
 
     @if (config('lnx_ai.text_assistant.demo_enabled'))
         <div class="mt-4">

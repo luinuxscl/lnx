@@ -463,11 +463,6 @@ class Security extends Component
     public function render(): View
     {
         return view('livewire.settings.security')
-            ->layout('layouts.app', [
-                'breadcrumbs' => [
-                    ['label' => __('Settings'), 'href' => route('profile.edit')],
-                    ['label' => __('Security')],
-                ],
-            ]);
+            ->layout('layouts.app');
     }
 }

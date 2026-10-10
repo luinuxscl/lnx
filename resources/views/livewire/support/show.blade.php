@@ -1,5 +1,15 @@
 <section class="mx-auto w-full max-w-4xl space-y-6">
-    <div class="flex flex-wrap items-start justify-between gap-4"><div><flux:heading level="1">#{{ $ticket->id }} · {{ $ticket->title }}</flux:heading><flux:text>{{ $ticket->user->name }} · {{ $ticket->created_at->format('Y-m-d H:i') }}</flux:text></div><flux:badge>{{ __(str_replace('_', ' ', ucfirst($ticket->status))) }}</flux:badge></div>
+    <x-lnx-ui::page-header
+        :title="'#'.$ticket->id.' · '.$ticket->title"
+        :subtitle="$ticket->user->name.' · '.$ticket->created_at->format('Y-m-d H:i')"
+        icon="inbox"
+        color="rose"
+        :breadcrumbs="[['label' => __('Support requests'), 'href' => route('support.index')]]"
+    >
+        <x-slot:meta>
+            <flux:badge>{{ __(str_replace('_', ' ', ucfirst($ticket->status))) }}</flux:badge>
+        </x-slot:meta>
+    </x-lnx-ui::page-header>
     <flux:card class="space-y-3"><flux:heading level="2">{{ __('Request') }}</flux:heading><flux:text class="whitespace-pre-wrap">{{ $ticket->description }}</flux:text><flux:text>{{ __('Type') }}: {{ __(ucfirst($ticket->type)) }} · {{ __('Screen') }}: {{ $ticket->screen ?: '—' }}</flux:text>@if ($ticket->resolution)<flux:callout><flux:callout.text>{{ __('Resolution') }}: {{ $ticket->resolution }}</flux:callout.text></flux:callout>@endif
         @foreach ($ticket->attachments as $attachment) @if (! $attachment->support_message_id)<a class="underline" href="{{ route('support.attachments.show', $attachment) }}" target="_blank">{{ $attachment->original_name }}</a>@endif @endforeach
     </flux:card>

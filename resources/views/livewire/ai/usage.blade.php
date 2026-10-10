@@ -1,8 +1,11 @@
 <section class="w-full space-y-6">
-    <div>
-        <flux:heading level="1">{{ __('AI consumption') }}</flux:heading>
-        <flux:text class="mt-1">{{ __('Requests, tokens and cost recorded by the shared AI controls.') }}</flux:text>
-    </div>
+    <x-lnx-ui::page-header
+        :title="__('AI consumption')"
+        :subtitle="__('Requests, tokens and cost recorded by the shared AI controls.')"
+        icon="chart-bar"
+        color="violet"
+        :breadcrumbs="[['label' => __('AI'), 'href' => route('admin.ai.index')]]"
+    />
 
     <flux:callout icon="information-circle">
         <flux:callout.text>{{ __('Costs reported by OpenRouter are the provider figure. Estimates come from configured rates and are not an invoice. A missing cost is shown as unknown, never as zero. Local limits do not cap the provider bill exactly.') }}</flux:callout.text>
