@@ -649,6 +649,7 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 | Necesidad | Fuente o comando |
 | --- | --- |
 | Prioridades y próximo trabajo | [ROADMAP.md](ROADMAP.md); actualizar cuando cambien el estado de las issues, sus dependencias, bloqueos o prioridades acordadas |
+| Contrato de módulo | [CONTRATO-MODULO.md](CONTRATO-MODULO.md); qué puede declarar un paquete y el estándar de escritura por MCP (Etapa 10) |
 | Versiones PHP instaladas | `composer show --direct` |
 | Dependencias JS | `package.json` y `npm ls --depth=0` |
 | Módulos, rutas y estructura | `app/`, `routes/`, `resources/`; `php artisan route:list --except-vendor` |
