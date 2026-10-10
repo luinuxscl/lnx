@@ -10,6 +10,7 @@ use App\Listeners\SyncSupportTicketToMessaging;
 use App\Models\InternalConversation;
 use App\Models\User;
 use App\Support\DevRootCredentials;
+use App\Support\Permissions\PermissionRegistry;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(PermissionRegistry::class);
     }
 
     /**

@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.13.0] - 2026-10-10
+
+### Añadido
+- **Contrato de módulo — permisos por paquete (Etapa 10, #39):** un paquete declara sus propios permisos granulares en el `boot()` de su provider con `App\Support\Permissions\PermissionRegistry::register()`. El comando `permissions:sync` los materializa de forma idempotente (`findOrCreate`) y los concede al rol `admin`; `root` los omite vía `Gate::before` y `RolePermissionSeeder` ejecuta el mismo sync, así que `migrate --seed` deja los permisos listos. Los nombres deben llevar el prefijo del paquete (`luz.view_patient`); registrar uno sin prefijo es un error detectable. Documentado en `CONTRATO-MODULO.md` §3.1 y en `README.md`.
+
 ## [1.12.0] - 2026-10-07
 
 ### Añadido

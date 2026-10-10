@@ -23,17 +23,39 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | Menú del sidebar | Macro `->menu([...])` + `php artisan navigation:sync` (autopublicación y precedencia de root) | ✅ |
 | Skills para agentes | `resources/boost/skills/<skill>/SKILL.md`; Boost las distribuye | ✅ |
 
-## 3. El contrato (lo que falta)
+## 3. El contrato (puntos y estado)
 
 | # | Punto | Estado |
 | --- | --- | --- |
-| 1 | **Permisos propios**: el paquete registra y siembra sus permisos (idempotente); `admin` los recibe por defecto | En diseño |
+| 1 | **Permisos propios**: el paquete registra y siembra sus permisos (idempotente); `admin` los recibe por defecto | ✅ Implementado (§3.1) |
 | 2 | **Acceso por registro**: relacionar un usuario con los registros que puede ver | En diseño |
 | 3 | **Aplicaciones de IA**: el paquete declara sus aplicaciones, con cuota y consumo propios | En diseño |
 | 4 | **Notificaciones propias**: tipos del módulo dentro del centro existente | En diseño |
 | 5 | **Página de paquete genérica**: generalizar `LnxUiPackage` + `/admin/packages` a un registro de paquetes | En diseño |
 | 6 | **Escritura por MCP declarable** | **Estándar definido (§4)** |
 | 7 | **Skills del módulo vía Boost** | ✅ ya soportado; falta documentarlo |
+
+### 3.1 Permisos propios (implementado)
+
+Un paquete registra sus permisos granulares en el `boot()` de su provider; el kit los siembra de forma idempotente y `admin` los recibe por defecto.
+
+```php
+use App\Support\Permissions\PermissionRegistry;
+
+public function boot(): void
+{
+    app(PermissionRegistry::class)->register('luz', [
+        'luz.view_patient',
+        'luz.manage_patient',
+    ]);
+}
+```
+
+- Los nombres **deben** llevar el prefijo del paquete (`luz.`); registrar un nombre sin prefijo (o vacío) lanza `InvalidArgumentException`, para que un descuido sea un error detectable y no un permiso huérfano.
+- El comando `permissions:sync` crea cada permiso declarado con `findOrCreate` y lo concede al rol `admin`. `root` los omite por `Gate::before`.
+- `RolePermissionSeeder` ejecuta el mismo sync, de modo que `php artisan migrate --seed` deja los permisos listos en una instalación nueva.
+- Reejecutar la sincronización no duplica permisos ni concesiones.
+- Nada se concede por estar el paquete en `vendor/`: la declaración es explícita. Un token o usuario sin la concesión no pasa `$user->can('luz.view_patient')`.
 
 ## 4. Estándar de escritura por MCP
 
