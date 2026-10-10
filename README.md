@@ -115,7 +115,7 @@ La función requiere `SESSION_DRIVER=database`; con otros drivers se muestra un 
 
 El sidebar se administra desde `/admin/navigation` (solo `root`). Por audiencia (`root`, `admin` y usuarios sin rol) root crea, ordena, activa u oculta grupos e ítems, de modo que cada rol ve su propia combinación. Un usuario con varios roles ve el menú de la audiencia de mayor jerarquía (root > admin > usuario).
 
-- **Rutas etiquetadas por packages**: cualquier ruta puede anotarse con la macro `->menu([...])` para ofrecerse en el selector del gestor con su etiqueta traducible, icono, grupo y roles permitidos:
+- **Rutas etiquetadas por packages**: cualquier ruta puede anotarse con la macro `->menu([...])` para ofrecerse en el selector del gestor y, opcionalmente, autopublicarse, con su etiqueta traducible, icono, grupo, orden y roles permitidos:
 
 ```php
 Route::livewire('reports', ReportsIndex::class)
@@ -127,12 +127,20 @@ Route::livewire('reports', ReportsIndex::class)
         'group_icon' => 'chart-bar',
         'audiences' => ['admin'],   // audiencias sugeridas
         'roles' => ['admin'],       // roles con acceso (omitir = todos)
+        'auto' => true,             // autopublicar en esas audiencias
+        'order' => 2,               // orden por defecto dentro del grupo
+        'group_order' => 1,         // orden por defecto del grupo
     ]);
 ```
 
+- **Autopublicación desde packages**: una ruta con `'auto' => true` aparece y se activa sola en sus `audiences` al reconciliar (`php artisan navigation:sync`, también tras `migrate --seed`), sin que root coloque nada a mano. El interruptor global `NAVIGATION_AUTOPUBLISH` autopublica todas las rutas etiquetadas; un `'auto' => false` explícito siempre gana. Los ítems autopublicados toman grupo y orden de la etiqueta y, si faltan, del orden de registro de rutas.
+- **Precedencia de root**: si root reordena, oculta, mueve de grupo o borra un ítem o grupo autopublicado, la decisión queda marcada como `overridden` y la reconciliación no la pisa. Borrar un ítem autopublicado no lo elimina: lo oculta como override (nunca se borran ítems de root). La UI ofrece «restaurar por defecto» para limpiar el override de un ítem o grupo.
 - **Ítems de root**: además de rutas internas (etiquetadas o en modo avanzado), root puede añadir enlaces externos o descargas con etiqueta obligatoria en español e inglés. Los destinos se validan: solo `http(s)` o rutas internas, rechazando `javascript:`, `data:` y URLs protocol-relative.
+- **Iconos**: se referencian por nombre y Flux resuelve por defecto los **Heroicons** (`cog-6-tooth`, `chart-bar`…). Para un icono que no exista en Heroicons, se importa desde **Lucide** con `php artisan flux:icon <nombre>` (queda en `resources/views/flux/icon/`). El gestor valida el nombre al guardar y, si un icono guardado o etiquetado deja de existir, se degrada a un valor seguro (`folder`, `link`…) en vez de romper la página.
 - **Autorización**: la visibilidad del menú es solo presentación. Las rutas conservan su middleware y el resolver oculta a cada usuario los ítems que no puede usar.
-- **Valores por defecto**: `NavigationSeeder` siembra el sidebar actual al instalar. Si no existe el menú de una audiencia, se construye desde las rutas etiquetadas, por lo que el sidebar nunca queda vacío.
+- **Valores por defecto**: `NavigationSeeder` siembra el sidebar actual al instalar. Si no existe el menú de una audiencia, se construye desde las rutas etiquetadas, por lo que el sidebar nunca queda vacío. Al sembrar se reconcilian las rutas autopublicables.
+- **Reconciliación idempotente**: `NavigationSync` materializa por audiencia las rutas autopublicables, respeta los overrides, oculta (nunca borra) los ítems de catálogo cuya ruta desaparece o deja de estar etiquetada y nunca toca los ítems de root. Ejecutarla dos veces no duplica ni reordena nada.
+- **Origen y estado**: cada grupo e ítem guarda `source` (`catalog` de un package o `root`) y `overridden`; la UI distingue **Auto**, **Editado por root** y **Disponible** (etiquetada pero sin colocar) y permite colocar rutas disponibles.
 - **Persistencia y auditoría**: el menú vive en las tablas `navigation_menus`, `navigation_groups` y `navigation_items`; cada cambio se registra en Actividad administrativa.
 
 ## Comandos útiles
@@ -143,6 +151,7 @@ Route::livewire('reports', ReportsIndex::class)
 | `npm run build`         | Compila assets de producción         |
 | `php artisan serve`     | Servidor local (puerto 8000)         |
 | `php artisan test`      | Ejecuta la suite de Pest             |
+| `php artisan navigation:sync` | Reconcilia el sidebar con las rutas etiquetadas |
 | `vendor/bin/pint`       | Formatea el código PHP               |
 | `vendor/bin/phpstan`    | Análisis estático                    |
 | `php artisan lnx:reset` | Reinicia el entorno de desarrollo    |
@@ -663,11 +672,11 @@ La referencia de tokens es `resources/css/app.css`: Instrument Sans, escala de e
 | --- | --- |
 | Navegación y breadcrumbs | `resources/views/layouts/app/sidebar.blade.php`, `resources/views/layouts/app.blade.php` |
 | Formularios y validación | `resources/views/livewire/users/create.blade.php` y `resources/views/livewire/settings/general.blade.php` |
-| Tablas, filtros y vacío | `resources/views/livewire/users/index.blade.php` |
+| Página de lista (KPIs, filtros y tabla) | `resources/views/livewire/users/index.blade.php`: KPIs clicables con `x-lnx-ui::stat-card` (`href` + `active`) como filtros rápidos, y filtros, búsqueda y acciones en una sola fila sobre `x-lnx-ui::data-table` (slots `toolbar` y `actions`) |
 | Diálogos y acciones | Modal de suspensión en `resources/views/livewire/users/index.blade.php` |
 | Carga y error | La galería en `/admin/packages/lnx-ui` (`resources/views/livewire/packages/lnx-ui.blade.php`) y `resources/views/livewire/users/invitations.blade.php` |
 
-La página `/admin/packages/lnx-ui` (rol `root`, disponible en todos los entornos; grupo `Packages` → ítem `UI/UX components` del sidebar) muestra la versión instalada y la última disponible del paquete `luinuxscl/lnx-ui`, permite buscar actualizaciones contra la API de GitHub y ofrece el comando de actualización; debajo incluye la galería de diseño. El token se configura con `GITHUB_TOKEN` (o `LNX_UI_GITHUB_TOKEN`); sin él solo se muestra la versión instalada. `DESIGN_GALLERY_ENABLED=false` oculta solo la galería, no la tarjeta de versión. La galería muestra estados de carga, vacío, error, validación y acciones con componentes Flux existentes. Para revisar una pantalla, comparar móvil estrecho y escritorio, temas claro/oscuro, los seis acentos, navegación por teclado y foco visible; anotar capturas y correcciones en el PR. El selector de acento en `resources/views/livewire/settings/appearance.blade.php` es el primer caso aplicado: sus botones muestran un contorno de foco explícito. Si cambia un patrón, actualizar implementación, ejemplo de galería y esta guía en el mismo cambio. La skill `.ai/skills/design-screen/SKILL.md` indica el recorrido de revisión sin duplicar estas decisiones.
+La página `/admin/packages/lnx-ui` (rol `root`, disponible en todos los entornos; grupo `Packages` → ítem `UI/UX components` del sidebar) muestra la versión instalada y la última disponible del paquete `luinuxscl/lnx-ui`, permite buscar actualizaciones contra la API de GitHub y ofrece el comando de actualización; debajo incluye la galería de diseño. El token se configura con `GITHUB_TOKEN` (o `LNX_UI_GITHUB_TOKEN`); sin él solo se muestra la versión instalada. `DESIGN_GALLERY_ENABLED=false` oculta solo la galería, no la tarjeta de versión. La galería muestra estados de carga, vacío, error, validación y acciones con componentes Flux existentes. Para revisar una pantalla, comparar móvil estrecho y escritorio, temas claro/oscuro, los seis acentos, navegación por teclado y foco visible; anotar capturas y correcciones en el PR. El selector de acento en `resources/views/livewire/settings/appearance.blade.php` es el primer caso aplicado: sus botones muestran un contorno de foco explícito. Las **páginas de lista** comparten un patrón único: una fila de KPIs clicables (`x-lnx-ui::stat-card` con `href` y `active`, que actúan como filtros rápidos) sobre una tarjeta `x-lnx-ui::data-table` que reúne filtros, búsqueda, acciones, tabla y estado vacío. Si cambia un patrón, actualizar implementación, ejemplo de galería y esta guía en el mismo cambio. La skill `.ai/skills/design-screen/SKILL.md` indica el recorrido de revisión sin duplicar estas decisiones.
 
 Para publicar cambios del paquete, la skill `.ai/skills/lnx-ui-release/SKILL.md` (cuya fuente canónica es el paquete `lnx-ui`) describe el flujo: editar en el checkout de desarrollo del paquete, verificar, commitear en `develop`, mergear a `main`, crear el tag SemVer anotado, subir todo a `origin` y, preguntando la lista, actualizar con `composer update luinuxscl/lnx-ui` las instancias de lnx que lo requieren.
 

@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\NavigationSource;
 use App\Support\Navigation\NavigationCache;
+use App\Support\Navigation\NavigationIcon;
 use Database\Factories\NavigationGroupFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,10 +22,12 @@ use Illuminate\Support\Carbon;
  * @property string|null $icon
  * @property int $position
  * @property bool $enabled
+ * @property NavigationSource $source
+ * @property bool $overridden
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['navigation_menu_id', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled'])]
+#[Fillable(['navigation_menu_id', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled', 'source', 'overridden'])]
 class NavigationGroup extends Model
 {
     /** @use HasFactory<NavigationGroupFactory> */
@@ -31,7 +35,12 @@ class NavigationGroup extends Model
 
     protected function casts(): array
     {
-        return ['enabled' => 'boolean', 'position' => 'integer'];
+        return [
+            'enabled' => 'boolean',
+            'position' => 'integer',
+            'source' => NavigationSource::class,
+            'overridden' => 'boolean',
+        ];
     }
 
     protected static function booted(): void
@@ -69,5 +78,26 @@ class NavigationGroup extends Model
         return app()->getLocale() === 'en'
             ? ($this->label_en ?? $this->label_es)
             : ($this->label_es ?? $this->label_en);
+    }
+
+    /**
+     * Icon shown in the admin list, degrading an unknown name to a safe
+     * fallback so Flux never throws while rendering.
+     */
+    public function menuIcon(): string
+    {
+        return NavigationIcon::safe($this->icon, 'folder');
+    }
+
+    /**
+     * Provenance status used by the admin UI (see NavigationItem::status()).
+     */
+    public function status(): string
+    {
+        if ($this->source === NavigationSource::Root) {
+            return 'root';
+        }
+
+        return $this->overridden ? 'overridden' : 'auto';
     }
 }

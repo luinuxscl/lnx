@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\NavigationItemType;
+use App\Enums\NavigationSource;
 use App\Models\NavigationGroup;
 use App\Models\NavigationItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -30,7 +31,17 @@ class NavigationItemFactory extends Factory
             'icon' => 'home',
             'position' => 0,
             'enabled' => true,
+            'source' => NavigationSource::Root,
+            'overridden' => false,
         ];
+    }
+
+    public function catalog(): static
+    {
+        return $this->state(fn (): array => [
+            'source' => NavigationSource::Catalog,
+            'overridden' => false,
+        ]);
     }
 
     public function link(string $url, string $labelEs, string $labelEn): static

@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Enums\NavigationItemType;
+use App\Enums\NavigationSource;
 use App\Support\Navigation\NavigationCache;
+use App\Support\Navigation\NavigationIcon;
 use Database\Factories\NavigationItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,10 +26,12 @@ use Illuminate\Support\Facades\Route;
  * @property string|null $icon
  * @property int $position
  * @property bool $enabled
+ * @property NavigationSource $source
+ * @property bool $overridden
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['navigation_group_id', 'type', 'route_name', 'url', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled'])]
+#[Fillable(['navigation_group_id', 'type', 'route_name', 'url', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled', 'source', 'overridden'])]
 class NavigationItem extends Model
 {
     /** @use HasFactory<NavigationItemFactory> */
@@ -35,7 +39,13 @@ class NavigationItem extends Model
 
     protected function casts(): array
     {
-        return ['type' => NavigationItemType::class, 'enabled' => 'boolean', 'position' => 'integer'];
+        return [
+            'type' => NavigationItemType::class,
+            'enabled' => 'boolean',
+            'position' => 'integer',
+            'source' => NavigationSource::class,
+            'overridden' => 'boolean',
+        ];
     }
 
     protected static function booted(): void
@@ -86,14 +96,20 @@ class NavigationItem extends Model
     }
 
     /**
-     * The icon shown in the admin list: the route tag icon wins, then the
-     * stored icon.
+     * Icon shown in the admin list. A route tag icon wins over the stored one;
+     * an unknown name degrades to a type-appropriate fallback so Flux never
+     * throws while rendering.
      */
     public function menuIcon(): ?string
     {
         $tag = $this->routeTag();
+        $icon = $tag['icon'] ?? $this->icon;
+        $icon = is_string($icon) ? $icon : null;
 
-        return $tag['icon'] ?? $this->icon;
+        return NavigationIcon::safeOrNull(
+            $icon,
+            $this->type === NavigationItemType::Route ? 'link' : 'arrow-top-right-on-square',
+        );
     }
 
     public function destination(): ?string
@@ -102,9 +118,23 @@ class NavigationItem extends Model
     }
 
     /**
+     * Provenance status used by the admin UI: an item auto-published from a
+     * package that root has not touched (`auto`), one root has edited
+     * (`overridden`) or one root authored from scratch (`root`).
+     */
+    public function status(): string
+    {
+        if ($this->source === NavigationSource::Root) {
+            return 'root';
+        }
+
+        return $this->overridden ? 'overridden' : 'auto';
+    }
+
+    /**
      * @return array<string, mixed>
      */
-    private function routeTag(): array
+    public function routeTag(): array
     {
         if ($this->type !== NavigationItemType::Route || $this->route_name === null) {
             return [];

@@ -41,7 +41,12 @@ class SearchUsersTool extends ReadOnlyTool
         $page = (int) ($data['page'] ?? 1);
         $perPage = (int) ($data['per_page'] ?? config('mcp_server.pagination.per_page'));
 
-        $users = app(SearchUsers::class)->handle((string) ($data['query'] ?? ''), $status, $perPage, $page);
+        $users = app(SearchUsers::class)->handle(
+            search: (string) ($data['query'] ?? ''),
+            status: $status,
+            perPage: $perPage,
+            page: $page,
+        );
 
         $this->auditContext = ['status' => $status, 'page' => $page, 'per_page' => $perPage];
         $this->auditResultCount = $users->count();
