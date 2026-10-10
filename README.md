@@ -269,20 +269,42 @@ La aplicación estandariza el formateo de números en toda la interfaz utilizand
   - `NumberFormat::fileSize($bytes, int $precision = 1)` — formatea tamaños de archivos (ej. `1,5 MB` o `1.024,0 KB`).
 - **Regla en vistas**: Al presentar contadores, métricas, tablas, uso de IA o montos numéricos en Blade y Livewire, utiliza `Number::format()` o `App\Support\NumberFormat` para mantener la consistencia en todos los idiomas.
 
-## Autorización (roles)
+## Autorización (roles y permisos de módulos)
 
-La app usa **spatie/laravel-permission** y trabaja **por roles, no por permisos granulares**. Roles por defecto (`App\Enums\Role`):
+La base de la autorización son los **roles** con **spatie/laravel-permission**. Roles por defecto (`App\Enums\Role`):
 
 - **`root`** — superusuario. Se configura con `Gate::before` en `AppServiceProvider`: omite todas las comprobaciones de gates y policies.
 - **`admin`** — rol administrativo, sin bypass global.
+
+Desde la **Etapa 10 (contrato de módulo)**, un paquete instalado puede además **declarar permisos granulares propios** dentro de ese mismo sistema, sin tocar el kit. Ver [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.1.
 
 ### Detalles
 
 - El trait `HasRoles` está aplicado en `App\Models\User` (`$user->assignRole(Role::Root->value)`, `$user->hasRole(...)`).
 - Los alias de middleware `role`, `permission` y `role_or_permission` están registrados en `bootstrap/app.php` (p. ej. `->middleware('role:admin')`).
-- `RolePermissionSeeder` crea los roles de forma idempotente y, si `ROOT_USER_EMAIL` y `ROOT_USER_PASSWORD` están definidos, siembra el usuario root inicial. Se ejecuta desde `DatabaseSeeder`.
+- `RolePermissionSeeder` crea los roles de forma idempotente, sincroniza los permisos declarados por los paquetes (ver «Permisos de módulos»), y si `ROOT_USER_EMAIL` y `ROOT_USER_PASSWORD` están definidos, siembra el usuario root inicial. Se ejecuta desde `DatabaseSeeder`.
 - Variables de entorno del usuario root (ver `config/authorization.php`): `ROOT_USER_NAME`, `ROOT_USER_EMAIL`, `ROOT_USER_PASSWORD`.
 - El registro público (Fortify) **no** asigna ningún rol por defecto.
+
+### Permisos de módulos (paquetes)
+
+Un paquete registra sus permisos en el `boot()` de su provider con `App\Support\Permissions\PermissionRegistry`:
+
+```php
+use App\Support\Permissions\PermissionRegistry;
+
+public function boot(): void
+{
+    app(PermissionRegistry::class)->register('luz', [
+        'luz.view_patient',
+        'luz.manage_patient',
+    ]);
+}
+```
+
+- Los nombres **deben** llevar el prefijo del paquete (`luz.`); registrar uno sin prefijo (o vacío) lanza `InvalidArgumentException`.
+- `php artisan permissions:sync` materializa los permisos declarados de forma idempotente con `findOrCreate` y los concede al rol `admin`. `root` los omite vía `Gate::before`. `RolePermissionSeeder` ejecuta el mismo sync, así que `php artisan migrate --seed` deja los permisos listos.
+- Nada se concede por estar el paquete en `vendor/`: la declaración es explícita y reejecutar la sincronización no duplica permisos ni concesiones.
 
 ### Credenciales root de desarrollo y alerta de seguridad
 

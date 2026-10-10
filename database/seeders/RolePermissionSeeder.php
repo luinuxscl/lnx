@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\SyncPermissions;
 use App\Enums\Role as RoleEnum;
 use App\Models\User;
 use App\Support\DevRootCredentials;
@@ -23,6 +24,8 @@ class RolePermissionSeeder extends Seeder
         foreach (RoleEnum::cases() as $role) {
             Role::findOrCreate($role->value);
         }
+
+        app(SyncPermissions::class)->handle();
 
         $this->seedRootUser();
     }
