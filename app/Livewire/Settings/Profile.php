@@ -147,11 +147,6 @@ class Profile extends Component
     public function render(): View
     {
         return view('livewire.settings.profile')
-            ->layout('layouts.app', [
-                'breadcrumbs' => [
-                    ['label' => __('Settings'), 'href' => route('profile.edit')],
-                    ['label' => __('Profile')],
-                ],
-            ]);
+            ->layout('layouts.app');
     }
 }

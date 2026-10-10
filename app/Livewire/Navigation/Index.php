@@ -357,12 +357,7 @@ class Index extends Component
             'audiences' => NavigationAudience::cases(),
             'routeOptions' => $this->routeOptions(),
             'available' => app(NavigationSync::class)->availableFor($menu),
-        ])->layout('layouts.app', [
-            'breadcrumbs' => [
-                ['label' => __('Administration')],
-                ['label' => __('Navigation')],
-            ],
-        ]);
+        ])->layout('layouts.app');
     }
 
     /**

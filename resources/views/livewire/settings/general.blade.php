@@ -1,6 +1,9 @@
 <section class="w-full">
-    <flux:heading level="1">{{ __('General settings') }}</flux:heading>
-    <flux:text class="mt-1">{{ __('Manage the site identity, branding and advanced options.') }}</flux:text>
+    <x-lnx-ui::page-header
+        :title="__('General settings')"
+        :subtitle="__('Manage the site identity, branding and advanced options.')"
+        icon="cog-6-tooth"
+    />
 
     <form wire:submit="save" class="mt-6 w-full max-w-2xl space-y-8">
         <div class="space-y-6">

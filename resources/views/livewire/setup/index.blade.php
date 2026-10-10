@@ -1,6 +1,10 @@
 <section class="w-full">
-    <flux:heading level="1">{{ __('Setup checklist') }}</flux:heading>
-    <flux:text class="mt-1">{{ __('Verify that the essential site configuration is in place.') }}</flux:text>
+    <x-lnx-ui::page-header
+        :title="__('Setup checklist')"
+        :subtitle="__('Verify that the essential site configuration is in place.')"
+        icon="clipboard-document-check"
+        color="emerald"
+    />
 
     @php
         $identity = $steps['identity'];

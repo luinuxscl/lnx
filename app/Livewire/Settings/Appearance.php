@@ -144,12 +144,7 @@ class Appearance extends Component
             'themes' => AppearanceSupport::THEMES,
             'timezones' => AppearanceSupport::timezones(),
         ])
-            ->layout('layouts.app', [
-                'breadcrumbs' => [
-                    ['label' => __('Settings'), 'href' => route('profile.edit')],
-                    ['label' => __('Appearance')],
-                ],
-            ]);
+            ->layout('layouts.app');
     }
 
     /**

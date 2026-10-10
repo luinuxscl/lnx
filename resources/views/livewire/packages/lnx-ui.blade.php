@@ -1,6 +1,10 @@
 <section class="w-full">
-    <flux:heading level="1">lnx-ui</flux:heading>
-    <flux:text class="mt-1">{{ __('Check the installed version of the shared component package and update it when a newer one is available.') }}</flux:text>
+    <x-lnx-ui::page-header
+        title="lnx-ui"
+        :subtitle="__('Check the installed version of the shared component package and update it when a newer one is available.')"
+        icon="cube"
+        :breadcrumbs="[['label' => __('Packages')]]"
+    />
 
     @php
         $badge = match (true) {

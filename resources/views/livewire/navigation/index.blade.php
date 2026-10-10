@@ -7,16 +7,18 @@
 @endphp
 
 <section class="w-full space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="space-y-1">
-            <flux:heading level="1">{{ __('Navigation') }}</flux:heading>
-            <flux:text>{{ __('Configure the sidebar for each audience. Package routes are offered by their labels; root decides what is shown and in what order.') }}</flux:text>
-        </div>
-
-        <flux:button variant="primary" icon="plus" wire:click="openGroupCreator">
-            {{ __('Add group') }}
-        </flux:button>
-    </div>
+    <x-lnx-ui::page-header
+        :title="__('Navigation')"
+        :subtitle="__('Configure the sidebar for each audience. Package routes are offered by their labels; root decides what is shown and in what order.')"
+        icon="bars-3"
+        color="violet"
+    >
+        <x-slot:actions>
+            <flux:button variant="primary" icon="plus" wire:click="openGroupCreator">
+                {{ __('Add group') }}
+            </flux:button>
+        </x-slot:actions>
+    </x-lnx-ui::page-header>
 
     <div class="max-w-xs">
         <flux:select wire:model.live="audience" :label="__('Audience')">

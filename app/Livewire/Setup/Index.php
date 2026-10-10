@@ -114,10 +114,6 @@ class Index extends Component
     {
         $this->authorizeRoot();
 
-        return view('livewire.setup.index')->layout('layouts.app', [
-            'breadcrumbs' => [
-                ['label' => __('Setup checklist')],
-            ],
-        ]);
+        return view('livewire.setup.index')->layout('layouts.app');
     }
 }

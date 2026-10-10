@@ -1,6 +1,11 @@
 <section class="w-full">
-    <flux:heading level="1">{{ __('Invite user') }}</flux:heading>
-    <flux:text class="mt-1">{{ __('The recipient will choose their name and password.') }}</flux:text>
+    <x-lnx-ui::page-header
+        :title="__('Invite user')"
+        :subtitle="__('The recipient will choose their name and password.')"
+        icon="user-plus"
+        color="blue"
+        :breadcrumbs="[['label' => __('Users'), 'href' => route('admin.users.index')]]"
+    />
 
     <form wire:submit="save" class="mt-6 w-full max-w-lg space-y-6">
         <flux:input wire:model="email" :label="__('Email')" type="email" required autofocus autocomplete="email" />

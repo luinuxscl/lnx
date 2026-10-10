@@ -1,8 +1,14 @@
 <section class="w-full">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <flux:heading level="1">{{ __('Invitations') }}</flux:heading>
-        <flux:button variant="primary" :href="route('admin.users.create')" wire:navigate>{{ __('Invite user') }}</flux:button>
-    </div>
+    <x-lnx-ui::page-header
+        :title="__('Invitations')"
+        icon="envelope"
+        color="blue"
+        :breadcrumbs="[['label' => __('Users'), 'href' => route('admin.users.index')]]"
+    >
+        <x-slot:actions>
+            <flux:button variant="primary" :href="route('admin.users.create')" wire:navigate>{{ __('Invite user') }}</flux:button>
+        </x-slot:actions>
+    </x-lnx-ui::page-header>
 
     @error('invitation') <flux:callout variant="danger" class="mt-4">{{ $message }}</flux:callout> @enderror
 

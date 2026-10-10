@@ -7,7 +7,7 @@ Esta referencia registra decisiones reutilizables al aprobar componentes de la b
 | Uso | Base existente | Ejemplo |
 | --- | --- | --- |
 | Fuente de interfaz | `--font-sans` usa Instrument Sans y fuentes de sistema como respaldo. | `resources/css/app.css` |
-| Título de página | `flux:heading` con `level="1"`; el texto visible se traduce. | `resources/views/livewire/dashboard.blade.php` |
+| Título de página | `x-lnx-ui::page-header`; rinde un único `flux:heading` con `level="1"`, el texto visible se traduce. No crear `<h1>` a mano. | `x-lnx-ui::page-header` |
 | Título de sección | `flux:heading` con `level="2"`. | `resources/views/livewire/dashboard.blade.php` |
 | Título dentro de tarjeta | `flux:heading` con `level="3"`. | `resources/views/livewire/dashboard.blade.php` |
 | Título de panel de métricas | `flux:heading` con `level="2"` y `size="lg"`, para distinguirlo del valor de cada métrica sin dominar la tarjeta. | `x-lnx-ui::statistics-panel` |
@@ -28,6 +28,7 @@ Esta referencia registra decisiones reutilizables al aprobar componentes de la b
 | Tarjetas-enlace a un área | `x-tool-card` envuelve un `flux:card` completo en un `<a>` de bloque; el contenedor asigna `col-span-12 sm:col-span-6 xl:col-span-4` (tres por fila) o `xl:col-span-3` (cuatro por fila). | `x-lnx-ui::tool-card` |
 | Tarjetas de métrica (con gráfico o KPI) | El padre asigna `col-span-12 md:col-span-6 xl:col-span-3` para una, dos o cuatro por fila; el pie con el valor usa `mt-auto` para alinearse al fondo de la tarjeta. | `x-lnx-ui::chart-card`, `x-lnx-ui::metric-card` |
 | Cabecera de tarjeta con etiqueta y badges | Fila con `flex-wrap`: la etiqueta no se trunca y los badges usan `ms-auto` para alinearse a la derecha o bajar a una segunda línea cuando no caben. | `x-lnx-ui::resource-card` |
+| Cabecera de página | El título va en `x-lnx-ui::page-header` como primer bloque del contenido. Breadcrumbs (solo ancestros), subtítulo, badge de estado (slot `meta`) y acciones (slot `actions`) son opcionales. | `x-lnx-ui::page-header` |
 | Pie de tarjeta con metadatos | Separador `border-t` con `mt-auto` para anclar el pie al fondo de la tarjeta; etiquetas a la izquierda (`tags`) y metadatos y acciones a la derecha (`meta`, `actions`). | `x-lnx-ui::resource-card` |
 
 ## Superficie, color e interacción

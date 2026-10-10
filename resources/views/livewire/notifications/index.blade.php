@@ -1,14 +1,16 @@
 <section class="w-full space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <flux:heading level="1">{{ __('Notifications') }}</flux:heading>
-            <flux:text class="mt-1">{{ __('Your account notifications are saved here.') }}</flux:text>
-        </div>
-
+    <x-lnx-ui::page-header
+        :title="__('Notifications')"
+        :subtitle="__('Your account notifications are saved here.')"
+        icon="bell"
+        color="amber"
+    >
         @if ($unreadCount > 0)
-            <flux:button wire:click="markAllAsRead" variant="ghost">{{ __('Mark all as read') }}</flux:button>
+            <x-slot:actions>
+                <flux:button wire:click="markAllAsRead" variant="ghost">{{ __('Mark all as read') }}</flux:button>
+            </x-slot:actions>
         @endif
-    </div>
+    </x-lnx-ui::page-header>
 
     <div class="space-y-3">
         @forelse ($notifications as $notification)

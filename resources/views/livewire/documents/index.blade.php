@@ -1,10 +1,10 @@
 <div class="flex flex-col gap-6 p-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <flux:heading size="xl" level="1">{{ __('Document extraction') }}</flux:heading>
-            <flux:subheading>{{ __('Upload invoices or documents to automatically extract structured data using AI with human review.') }}</flux:subheading>
-        </div>
-    </div>
+    <x-lnx-ui::page-header
+        :title="__('Document extraction')"
+        :subtitle="__('Upload invoices or documents to automatically extract structured data using AI with human review.')"
+        icon="document-text"
+        color="cyan"
+    />
 
     @if (session('status'))
         <flux:badge color="lime" size="lg" class="w-full justify-start p-4">
