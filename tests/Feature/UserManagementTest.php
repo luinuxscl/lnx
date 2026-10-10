@@ -208,3 +208,161 @@ it('shows the users menu entry only to root and admins', function () {
         ->assertOk()
         ->assertSee('Usuarios');
 });
+
+it('sorts the user list by name in both directions', function () {
+    $admin = User::factory()->create(['name' => 'Zed Admin']);
+    $admin->assignRole(Role::Admin->value);
+
+    User::factory()->create(['name' => 'Alice Anderson']);
+    User::factory()->create(['name' => 'Bob Brown']);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('sortBy', 'name')
+        ->set('sortDirection', 'asc')
+        ->assertSeeInOrder(['Alice Anderson', 'Bob Brown']);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('sortBy', 'name')
+        ->set('sortDirection', 'desc')
+        ->assertSeeInOrder(['Zed Admin', 'Bob Brown']);
+});
+
+it('sorts the user list by registration date', function () {
+    $admin = User::factory()->create(['name' => 'Admin Lead', 'created_at' => now()->subDays(10)]);
+    $admin->assignRole(Role::Admin->value);
+
+    User::factory()->create(['name' => 'Older User', 'created_at' => now()->subDays(5)]);
+    User::factory()->create(['name' => 'Newer User', 'created_at' => now()]);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('sortBy', 'registered')
+        ->set('sortDirection', 'asc')
+        ->assertSeeInOrder(['Admin Lead', 'Older User', 'Newer User']);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('sortBy', 'registered')
+        ->set('sortDirection', 'desc')
+        ->assertSeeInOrder(['Newer User', 'Older User']);
+});
+
+it('ignores an unknown sort column', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('sortBy', 'password')
+        ->assertSet('sortBy', 'name');
+});
+
+it('normalizes the page size to an allowed value', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('perPage', 999)
+        ->assertSet('perPage', 10);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('perPage', 25)
+        ->assertSet('perPage', 25);
+});
+
+it('filters the user list by email verification', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    User::factory()->create(['name' => 'Verified One']);
+    User::factory()->unverified()->create(['name' => 'Unverified One']);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('verification', 'verified')
+        ->assertSee('Verified One')
+        ->assertDontSee('Unverified One');
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('verification', 'unverified')
+        ->assertSee('Unverified One')
+        ->assertDontSee('Verified One');
+});
+
+it('suspends multiple users in bulk skipping root and the current account', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    $root = User::factory()->create();
+    $root->assignRole(Role::Root->value);
+
+    $first = User::factory()->create();
+    $second = User::factory()->create();
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('selected', [$first->id, $second->id, $root->id, $admin->id])
+        ->call('confirmBulkAction', 'suspend')
+        ->assertSet('showBulkModal', true)
+        ->call('applyBulkAction')
+        ->assertSet('selected', []);
+
+    expect($first->refresh()->isSuspended())->toBeTrue()
+        ->and($second->refresh()->isSuspended())->toBeTrue()
+        ->and($root->refresh()->isSuspended())->toBeFalse()
+        ->and($admin->refresh()->isSuspended())->toBeFalse();
+});
+
+it('deletes multiple users in bulk skipping root and the current account', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    $root = User::factory()->create();
+    $root->assignRole(Role::Root->value);
+
+    $first = User::factory()->create();
+    $second = User::factory()->create();
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('selected', [$first->id, $second->id, $root->id, $admin->id])
+        ->call('confirmBulkAction', 'delete')
+        ->call('applyBulkAction');
+
+    expect(User::find($first->id))->toBeNull()
+        ->and(User::find($second->id))->toBeNull()
+        ->and(User::find($root->id))->not->toBeNull()
+        ->and(User::find($admin->id))->not->toBeNull();
+});
+
+it('exports the filtered user list as csv', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    User::factory()->create(['name' => 'Exported Person', 'email' => 'exported@example.com']);
+    User::factory()->create(['name' => 'Hidden Person']);
+
+    $response = $this->actingAs($admin)->get(route('admin.users.export', ['q' => 'Exported']));
+
+    $response->assertOk();
+
+    expect($response->streamedContent())
+        ->toContain('Exported Person')
+        ->toContain('exported@example.com')
+        ->not->toContain('Hidden Person');
+});
+
+it('forbids users without an admin role from exporting', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->get(route('admin.users.export'))->assertForbidden();
+});
+
+it('redirects guests from the export route to login', function () {
+    $this->get(route('admin.users.export'))->assertRedirect(route('login'));
+});
