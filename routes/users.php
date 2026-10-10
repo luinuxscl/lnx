@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Role;
+use App\Http\Controllers\UsersExportController;
 use App\Livewire\Users\Create;
 use App\Livewire\Users\Edit;
 use App\Livewire\Users\Index;
@@ -21,5 +22,6 @@ Route::middleware([
     ]);
     Route::livewire('create', Create::class)->name('create');
     Route::livewire('invitations', Invitations::class)->name('invitations');
+    Route::get('export', UsersExportController::class)->name('export');
     Route::livewire('{user}/edit', Edit::class)->name('edit');
 });
