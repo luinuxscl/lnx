@@ -28,8 +28,13 @@ class NavigationServiceProvider extends ServiceProvider
      * `config('navigation.autopublish')`. An explicit `auto => false` always
      * wins over the global switch. `order` and `group_order` fall back to route
      * registration order when omitted.
+     *
+     * The macro is registered in `register()` (not `boot()`) on purpose: a
+     * module's service provider loads its own routes during boot and its
+     * provider boots **before** the app's providers, so the macro must already
+     * exist for a package to declare `->menu([...])` on its routes.
      */
-    public function boot(): void
+    public function register(): void
     {
         Route::macro('menu', function (array $config): Route {
             /** @var Route $this */
