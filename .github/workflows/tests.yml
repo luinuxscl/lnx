@@ -32,10 +32,15 @@ jobs:
           node-version: '22'
 
       - name: Configure lnx-ui deploy key
-        if: ${{ secrets.LNX_UI_DEPLOY_KEY != '' }}
+        env:
+          LNX_UI_DEPLOY_KEY: ${{ secrets.LNX_UI_DEPLOY_KEY }}
         run: |
+          if [ -z "$LNX_UI_DEPLOY_KEY" ]; then
+            echo "LNX_UI_DEPLOY_KEY not set; skipping deploy key configuration."
+            exit 0
+          fi
           mkdir -p ~/.ssh
-          echo "${{ secrets.LNX_UI_DEPLOY_KEY }}" > ~/.ssh/lnx_ui
+          printf '%s\n' "$LNX_UI_DEPLOY_KEY" > ~/.ssh/lnx_ui
           chmod 600 ~/.ssh/lnx_ui
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           echo "GIT_SSH_COMMAND=ssh -i ~/.ssh/lnx_ui -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
