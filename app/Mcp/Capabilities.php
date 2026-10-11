@@ -2,6 +2,7 @@
 
 namespace App\Mcp;
 
+use App\Mcp\Tools\WriteTool;
 use App\Models\AdministrativeActivity;
 use App\Models\Setting;
 use App\Models\User;
@@ -47,9 +48,41 @@ class Capabilities
     public static function availableTo(User $user): array
     {
         return array_values(array_filter(
-            self::all(),
+            [...self::all(), ...self::writeCapabilities($user)],
             fn (array $capability): bool => self::allows($user, $capability['name']),
         ));
+    }
+
+    /**
+     * The write capabilities declared by packages that this user may invoke.
+     *
+     * Write tools are never part of the static read catalog: they surface only
+     * when the deployment enables writes and the identity holds the declared
+     * permission.
+     *
+     * @return array<int, array{name: string, description: string, requirements: string}>
+     */
+    private static function writeCapabilities(User $user): array
+    {
+        $capabilities = [];
+
+        foreach (app(McpToolRegistry::class)->all() as $class) {
+            $tool = app($class);
+
+            if (! $tool instanceof WriteTool || ! $tool->allows($user)) {
+                continue;
+            }
+
+            $declaration = $tool::declaration();
+
+            $capabilities[] = [
+                'name' => $tool->name(),
+                'description' => $tool->description(),
+                'requirements' => $declaration->permission ?? 'authenticated',
+            ];
+        }
+
+        return $capabilities;
     }
 
     private static function allows(User $user, string $name): bool

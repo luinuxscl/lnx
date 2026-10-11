@@ -385,13 +385,13 @@ El estado de cada paso se recalcula al cargar la página desde el estado real de
 
 ## Servidor MCP (lectura)
 
-lnx expone un servidor [Laravel MCP](https://laravel.com/docs/mcp) de **solo lectura** para que agentes externos consulten la aplicación con operaciones estables y autorizadas. No traslada herramientas de consola, base de datos ni acceso a archivos: no expone ejecución de PHP/SQL/shell ni lectura genérica de ficheros. El piloto cubre cuatro capacidades y no permite escrituras.
+lnx expone un servidor [Laravel MCP](https://laravel.com/docs/mcp) **de solo lectura por defecto** para que agentes externos consulten la aplicación con operaciones estables y autorizadas. No traslada herramientas de consola, base de datos ni acceso a archivos: no expone ejecución de PHP/SQL/shell ni lectura genérica de ficheros. El servidor cubre cuatro capacidades de lectura y, además, permite que un paquete declare operaciones de **escritura** acotadas y auditables (ver [CONTRATO-MODULO.md](CONTRATO-MODULO.md) §4): con `MCP_SERVER_ALLOW_WRITES=false` (por defecto) no se registra ninguna escritura.
 
 ### Habilitación y transporte
 
 - El servidor viene **desactivado**: `MCP_SERVER_ENABLED=false`. Mientras esté apagado, la ruta responde `404` y ninguna credencial sirve.
 - Al activarlo se sirve un transporte **web** en `POST /{MCP_SERVER_PATH}` (por defecto `/mcp`). Las rutas MCP no usan el grupo `web`: no hay sesión ni CSRF, solo el token.
-- Variables (ver `config/mcp_server.php`): `MCP_SERVER_ENABLED`, `MCP_SERVER_PATH`, `MCP_SERVER_PER_PAGE`, `MCP_SERVER_MAX_PER_PAGE`, `MCP_SERVER_RATE_LIMIT`, `MCP_SERVER_AUDIT_RETENTION_DAYS`, `MCP_SERVER_TOKEN_EXPIRES_DAYS`.
+- Variables (ver `config/mcp_server.php`): `MCP_SERVER_ENABLED`, `MCP_SERVER_PATH`, `MCP_SERVER_PER_PAGE`, `MCP_SERVER_MAX_PER_PAGE`, `MCP_SERVER_RATE_LIMIT`, `MCP_SERVER_AUDIT_RETENTION_DAYS`, `MCP_SERVER_TOKEN_EXPIRES_DAYS`. La escritura declarable añade `MCP_SERVER_ALLOW_WRITES` (por defecto `false`), `MCP_SERVER_WRITE_RATE_LIMIT` y `MCP_SERVER_AUDIT_DIFF`.
 - Se registra además `routes/ai.php`, cargado automáticamente por el paquete `laravel/mcp`.
 
 ### Autenticación y credenciales
@@ -415,17 +415,30 @@ Las reglas vigentes (policies) se reutilizan en servidor en el descubrimiento y 
 | `search-users` | `root`/`admin` | Búsqueda de usuarios por nombre/correo y estado, con paginación (sin contraseñas, 2FA ni tokens). |
 | `get-administrative-activity` | `root` | Historial administrativo con filtros y paginación. |
 
+Además, un paquete puede declarar herramientas de **escritura** (ver [CONTRATO-MODULO.md](CONTRATO-MODULO.md) §4). No son parte de la lista fija: se registran con `App\Mcp\McpToolRegistry`, solo aparecen cuando `MCP_SERVER_ALLOW_WRITES=true` y la identidad tiene el permiso declarado en `#[WritesData]`, y con el interruptor apagado no se registran ni se anuncian.
+
 ### Auditoría y retención
 
-Cada invocación registra en `mcp_tool_invocations` actor (con copia de nombre/correo), herramienta, fecha, resultado (`success`/`denied`/`invalid`/`unauthenticated`) y un `correlation_id` (también devuelto en la cabecera `X-Correlation-Id`). Se guarda solo contexto estructural no sensible (paginación, estado, fechas); **nunca** el texto libre de búsqueda ni el contenido de la respuesta. La retención se controla con `MCP_SERVER_AUDIT_RETENTION_DAYS` y la purga `php artisan mcp:prune-invocations`, programada a diario.
+Cada invocación registra en `mcp_tool_invocations` actor (con copia de nombre/correo), herramienta, fecha, resultado (`success`/`denied`/`invalid`/`unauthenticated`/`duplicate`) y un `correlation_id` (también devuelto en la cabecera `X-Correlation-Id`). Se guarda solo contexto estructural no sensible (paginación, estado, fechas); **nunca** el texto libre de búsqueda ni el contenido de la respuesta. La retención se controla con `MCP_SERVER_AUDIT_RETENTION_DAYS` y la purga `php artisan mcp:prune-invocations`, programada a diario.
+
+Cada **escritura** exitosa registra además en `mcp_write_operations` el actor, el recurso y la operación, el identificador del registro, la clave de idempotencia y el **diff** (campo, valor anterior y valor nuevo). El diff vive en la base de datos (nunca en logs) y puede apagarse con `MCP_SERVER_AUDIT_DIFF=false`; se purga con la misma retención. Firmas como la repetición de una escritura, la falta de la clave de idempotencia o el exceso de frecuencia no alteran el dato y quedan auditadas.
 
 ### Añadir una herramienta
+
+**De lectura:**
 
 1. Crea la clase en `app/Mcp/Tools` extendiendo `App\Mcp\Tools\ReadOnlyTool` (ya aplica `#[IsReadOnly]`).
 2. Define `authorize(User $user)` reutilizando una policy (`$user->can('viewAny', Modelo::class)`), `perform(Request $request)` con `Response::structured(...)`, y `shouldRegister(Request $request)` con la misma comprobación para el descubrimiento.
 3. Añade `schema()`/`outputSchema()`, `#[Name('...')]` y `#[Description('...')]`, y valida argumentos con `$request->validate(...)`.
-4. Regístrala en `App\Mcp\Servers\LnxServer::$tools` y descríbela en `App\Mcp\Capabilities` si debe aparecer en el descubrimiento.
+4. Regístrala en `App\Mcp\Servers\LnxServer::$tools` (las del kit) o en `App\Mcp\McpToolRegistry` (las de un paquete), y descríbela en `App\Mcp\Capabilities` si debe aparecer en el descubrimiento.
 5. Reutiliza acciones/policies existentes para no duplicar ni debilitar validaciones, y añade tests de acceso permitido/denegado, contratos y auditoría.
+
+**De escritura** (solo si un paquete la necesita; ver [CONTRATO-MODULO.md](CONTRATO-MODULO.md) §4):
+
+1. Extiende `App\Mcp\Tools\WriteTool` (ya aplica `#[IsDestructive]`) y declara `#[WritesData(resource: '...', operation: 'create'|'update'|'archive', permission: '...', idempotent: true|false)]`. Sin la declaración, la herramienta falla (al ejecutar y en `php artisan mcp:verify-writes`).
+2. En `perform()` **delega siempre en una acción de dominio**; nunca escribas directo contra el modelo. Reproduce el cambio en `$this->auditDiff` (`['campo' => ['old' => ..., 'new' => ...]]`) y, si aplica, `$this->auditResourceId`.
+3. Cuando sea idempotente, la herramienta exige `idempotency_key`; repetir la llamada con la misma clave devuelve el resultado guardado sin volver a escribir.
+4. Regístrala en `App\Mcp\McpToolRegistry` desde el provider del paquete; solo se expone con `MCP_SERVER_ALLOW_WRITES=true` y el permiso declarado.
 
 Las descripciones y mensajes de las herramientas van en inglés (consumidos por el agente); la UI y los mensajes de error de la aplicación siguen siendo bilingües.
 
@@ -717,7 +730,7 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 
 Las reglas versionadas en `.ai/rules` expresan decisiones de lnx; las skills enseñan procedimientos; los comandos anteriores verifican el checkout y Boost es el servidor MCP disponible en la instalación de referencia. `boost.json`, `AGENTS.md`, `CLAUDE.md` y las copias de skills bajo carpetas de clientes son generados y están ignorados por Git. El núcleo del kit incluye los patrones de autorización, idioma, layout y tema; cada proyecto derivado decide su nombre, dominio, marca, contenido, credenciales, despliegue y cualquier regla local adicional, que escribe en `.ai/rules/local.md` sin tocar los archivos mantenidos por el kit.
 
-Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`), configuración global (`app/Livewire/Settings/`), checklist de puesta en marcha (`app/Livewire/Setup/`), servidor MCP de lectura (`app/Mcp/`) y base de IA con OpenRouter (`app/Ai/`, `/admin/ai`, `/admin/ai/usage`, asistente de texto `app/Livewire/Ai/TextAssistant.php`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
+Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`), configuración global (`app/Livewire/Settings/`), checklist de puesta en marcha (`app/Livewire/Setup/`), servidor MCP de lectura con escritura declarable (`app/Mcp/`) y base de IA con OpenRouter (`app/Ai/`, `/admin/ai`, `/admin/ai/usage`, asistente de texto `app/Livewire/Ai/TextAssistant.php`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
 
 La instrucción explícita del usuario prevalece. Después se aplican las reglas del proyecto derivado para sus decisiones, las reglas de lnx para el núcleo que sigue usando y, finalmente, las recomendaciones de Boost y skills. Si dos instrucciones del mismo nivel chocan, detén solo la decisión afectada y pide una aclaración concreta; no escribas una regla nueva por inferencia. Las reglas permanentes se registran únicamente a petición explícita mediante `record-rule`.
 
@@ -839,7 +852,7 @@ La skill `.ai/skills/brand-logos/SKILL.md` describe la búsqueda, la elección d
 
 ```
 app/Livewire/Settings/            Componentes de settings (incl. General de root)
-app/Mcp/                          Servidor MCP de lectura, herramientas y capacidades
+app/Mcp/                          Servidor MCP (lectura y escritura declarable), herramientas y capacidades
 app/Ai/                           Base de IA (config, gateway, cuota, registro de consumo, agentes)
 app/Ai/Agents/TextAssistantAgent.php  Agente del asistente de texto
 app/Ai/TextAssistant.php          Asistente de texto (validación, prompt y resultado seguro)
