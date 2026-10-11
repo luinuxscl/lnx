@@ -58,16 +58,37 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Write operations
+    |--------------------------------------------------------------------------
+    |
+    | The server is read-only by default. Writing is an explicit, deployment
+    | level decision: while disabled no write tool is registered or announced,
+    | even if a package declares it. When enabled, writes are rate limited
+    | separately from reads.
+    |
+    */
+
+    'writes' => [
+        'enabled' => (bool) env('MCP_SERVER_ALLOW_WRITES', false),
+        'rate_limit_per_minute' => (int) env('MCP_SERVER_WRITE_RATE_LIMIT', 30),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Audit retention
     |--------------------------------------------------------------------------
     |
-    | Number of days tool invocations are retained. Older rows are removed by
-    | the mcp:prune-invocations command, which is scheduled daily.
+    | Number of days tool invocations and write operations are retained. Older
+    | rows are removed by the mcp:prune-invocations and mcp:prune-writes
+    | commands, which are scheduled daily. The diff of a write is the exact
+    | change applied (field, before, after); it stays in the database and is
+    | never written to application logs. It can be turned off per deployment.
     |
     */
 
     'audit' => [
         'retention_days' => (int) env('MCP_SERVER_AUDIT_RETENTION_DAYS', 90),
+        'diff' => (bool) env('MCP_SERVER_AUDIT_DIFF', true),
     ],
 
     /*

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\McpToolInvocation;
+use App\Models\McpWriteOperation;
 use Illuminate\Console\Command;
 
 class PruneMcpInvocations extends Command
@@ -19,7 +20,7 @@ class PruneMcpInvocations extends Command
      *
      * @var string
      */
-    protected $description = 'Delete MCP tool invocations older than the configured retention period';
+    protected $description = 'Delete MCP tool invocations and write operations older than the configured retention period';
 
     /**
      * Execute the console command.
@@ -34,11 +35,18 @@ class PruneMcpInvocations extends Command
             return self::SUCCESS;
         }
 
+        $cutoff = now()->subDays($days);
+
         $deleted = McpToolInvocation::query()
-            ->where('recorded_at', '<', now()->subDays($days))
+            ->where('recorded_at', '<', $cutoff)
+            ->delete();
+
+        $writes = McpWriteOperation::query()
+            ->where('recorded_at', '<', $cutoff)
             ->delete();
 
         $this->info("Deleted {$deleted} MCP tool invocation(s) older than {$days} day(s).");
+        $this->info("Deleted {$writes} MCP write operation(s) older than {$days} day(s).");
 
         return self::SUCCESS;
     }
