@@ -25,6 +25,9 @@
                         @if ($messageLink = $this->messageLink($notification))
                             <flux:button size="sm" :href="$messageLink" wire:navigate>{{ __('View message') }}</flux:button>
                         @endif
+                        @if ($moduleLink = $this->moduleLink($notification))
+                            <flux:button size="sm" :href="$moduleLink" wire:navigate>{{ __('View') }}</flux:button>
+                        @endif
                         <flux:text class="text-xs"><time datetime="{{ $notification->created_at->toIso8601String() }}">{{ $notification->created_at->copy()->timezone($timezone)->format('Y-m-d H:i') }}</time> · {{ $timezone }}</flux:text>
                     </div>
 

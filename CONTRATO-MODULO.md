@@ -30,7 +30,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | 1 | **Permisos propios**: el paquete registra y siembra sus permisos (idempotente); `admin` los recibe por defecto | ✅ Implementado (§3.1) |
 | 2 | **Acceso por registro**: relacionar un usuario con los registros que puede ver | En diseño |
 | 3 | **Aplicaciones de IA**: el paquete declara sus aplicaciones, con cuota y consumo propios | ✅ Implementado (§3.2) |
-| 4 | **Notificaciones propias**: tipos del módulo dentro del centro existente | En diseño |
+| 4 | **Notificaciones propias**: tipos del módulo dentro del centro existente | ✅ Implementado (§3.4) |
 | 5 | **Página de paquete genérica**: generalizar `LnxUiPackage` + `/admin/packages` a un registro de paquetes | En diseño |
 | 6 | **Escritura por MCP declarable** | ✅ Implementado (§4) |
 | 7 | **Skills del módulo vía Boost** | ✅ Documentado (§3.3) |
@@ -88,6 +88,30 @@ Un paquete entrega sus skills a los agentes poniéndolas en `resources/boost/ski
 - **Distribución**: `php artisan boost:update` copia cada skill del paquete a `.ai/skills/<skill>/` (ruta canónica) y la enlaza a los agentes configurados en `boost.json`. `php artisan boost:list-skills` lista las skills disponibles mostrando el paquete de origen.
 - **Precedencia**: una skill **local** en `.ai/skills/` con el mismo nombre gana sobre la del paquete. lnx mantiene copias versionadas y sincronizadas de las skills load-bearing de sus paquetes —por ejemplo `lnx-ui-release`, cuya fuente canónica es la skill de Boost del paquete `lnx-ui`— con una nota de fuente canónica en la cabecera.
 - **Ejemplos verificables** en este checkout: `luinuxscl/lnx-ui` → `lnx-ui-release`, `spatie/laravel-permission` → `laravel-permission-development`, `livewire/blaze` → `blaze-optimize`.
+
+### 3.4 Notificaciones propias del módulo (implementado)
+
+Un paquete declara sus tipos de notificación en el `boot()` de su provider; el centro de notificaciones existente los muestra, enlaza y marca como leídos sin tocar el kit.
+
+```php
+use App\Support\Notifications\NotificationTypeRegistry;
+
+public function boot(): void
+{
+    app(NotificationTypeRegistry::class)->register('luz', [
+        LuzDocumentReady::class => [
+            'message'    => fn (DatabaseNotification $n): string => __('Document :name is ready.', ['name' => $n->data['name']]),
+            'url'        => fn (DatabaseNotification $n): string => route('luz.documents.show', $n->data['document_id']),
+            'permission' => 'luz.view_document',
+        ],
+    ]);
+}
+```
+
+- El tipo se registra por la **clase** de la notificación que el paquete envía (cualquier subclase de `Illuminate\Notifications\Notification`); nada se renderiza por estar el paquete en `vendor/`.
+- `message` (obligatorio) construye el texto a partir de los datos; `url` (opcional) es el destino del enlace; `permission` (opcional) exige que la identidad pueda ver el enlace.
+- Un tipo **no declarado** conserva el respaldo genérico y su contenido guardado nunca se renderiza: declarar es lo que habilita mostrar y navegar.
+- Marcar como leída funciona de forma genérica por identificador, sin código del paquete.
 
 ## 4. Escritura por MCP (implementado)
 

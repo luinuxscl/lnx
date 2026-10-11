@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "kit_version": "1.16.0",
+  "kit_version": "1.17.0",
   "source": "https://github.com/luinuxscl/lnx",
-  "updated_at": "2026-10-11T00:50:54Z",
+  "updated_at": "2026-10-11T00:58:40Z",
   "stack_compatibility": {
     "php": ">=8.5",
     "laravel": "^13.0",
@@ -60,7 +60,7 @@
     ".ai/skills/update-agent-kit/SKILL.md": "123e7b8004e4f07c26f404361ab99e95d9fcdc561aace46f9b734258bb053308",
     "scripts/check-agent-context.py": "0eb22d53a722a578bc910f535e0a6e27e6fdca63c4b67092bbf6ba32e9e29bbd",
     "scripts/update-agent-kit.py": "3c9c7d1cc5edab1d929103620b19103d68965caea2588d60018d7916bab1d295",
-    ".ai/CHANGELOG.md": "47e67cbfd0ebc925a14b9dd14d2976f3306519a4a3c2396e8ee7cb92214ba9c0",
+    ".ai/CHANGELOG.md": "29967d6992a723b9bc471eada922520244396a96c06f51d802040d24111706ee",
     ".ai/skills/create-ui-component/SKILL.md": "b438c036d08c21755840b88ba8001c194b320b19a0158c5c486a267e9501f1ee",
     ".ai/skills/brand-logos/SKILL.md": "f6b0394bc9c363e40e60a588446a158cbad2840b1490a3c6ab55c8fb00f1fc19",
     ".ai/skills/lnx-ui-release/SKILL.md": "6eef35af2f929912176f72155005e8839fad5670d43517f55f62c98813d45ea5",
