@@ -60,7 +60,7 @@ Está **abierta la Etapa 10** ([#39 Contrato de módulo](https://github.com/luin
 
 ## Estado actual
 
-GitHub registra las etapas **1 a 9 cerradas** (incluida la modernización visual y de UI/UX: [#27](https://github.com/luinuxscl/lnx/issues/27) y [#35](https://github.com/luinuxscl/lnx/issues/35)) y la **Etapa 10 abierta** ([#39](https://github.com/luinuxscl/lnx/issues/39) Contrato de módulo), que es el trabajo activo. El contrato se valida con Luz y, al cerrarlo, queda como estándar del kit.
+GitHub registra las etapas **1 a 9 cerradas** (incluida la modernización visual y de UI/UX: [#27](https://github.com/luinuxscl/lnx/issues/27) y [#35](https://github.com/luinuxscl/lnx/issues/35)) y la **Etapa 10 abierta** ([#39](https://github.com/luinuxscl/lnx/issues/39) Contrato de módulo), que es el trabajo activo. El contrato tiene **6 de 7 puntos implementados** (1 permisos, 3 aplicaciones de IA, 4 notificaciones, 5 página de paquetes, 6 escritura por MCP y 7 skills) y el punto 2 (acceso por registro) sigue **en diseño**; #39 permanece abierto. El contrato se valida con Luz y, al cerrar el punto 2, queda como estándar del kit. La skill `implement-feature` incluye [`references/packages.md`](.ai/skills/implement-feature/references/packages.md) con el contrato vigente.
 
 ## Mantenimiento
 
