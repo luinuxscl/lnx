@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.16.0] - 2026-10-10
+
+### Documentado
+- **Contrato de módulo — skills del módulo vía Boost (Etapa 10, #39):** documentado el patrón por el que un paquete entrega sus skills en `resources/boost/skills/<skill>/SKILL.md`. Boost descubre las dependencias directas, las distribuye a `.ai/skills/` y las lista en `php artisan boost:list-skills`; una copia local en `.ai/skills/` tiene precedencia. Sin cambios de comportamiento (punto 7 del contrato). Detallado en `CONTRATO-MODULO.md` §3.3 y `README.md`.
+
 ## [1.15.0] - 2026-10-10
 
 ### Añadido
