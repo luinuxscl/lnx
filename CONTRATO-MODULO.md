@@ -1,6 +1,6 @@
 # Contrato de módulo
 
-> **Estado:** en implementación · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)) · **Última revisión:** 2026-10-10
+> **Estado:** en implementación (6 de 7 puntos) · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)) · **Última revisión:** 2026-10-11
 > Define **qué puede declarar un módulo (paquete Composer) en lnx** y **bajo qué reglas**. El contrato se deriva del módulo real que lo valida: **Luz** (`luinuxscl/luz`). Nada entra aquí que Luz no use.
 
 ---
@@ -220,7 +220,7 @@ class UploadDocumentTool extends WriteTool
 
 ## 5. Cómo se valida
 
-Cada punto del contrato se valida con **Luz**, el primer módulo. Un punto que Luz no use no entra. Al cerrar la etapa: `CONTRATO-MODULO.md`, el ROADMAP y el CHANGELOG del kit quedan actualizados, y `references/packages.md` de la skill del kit refleja el contrato vigente.
+Cada punto del contrato se valida con **Luz**, el primer módulo. Un punto que Luz no use no entra. Al cerrar la etapa: `CONTRATO-MODULO.md`, el ROADMAP y el CHANGELOG del kit quedan actualizados, y [`references/packages.md`](.ai/skills/implement-feature/references/packages.md) de la skill del kit refleja el contrato vigente. La referencia ya existe y resume las capacidades declarables; se actualiza con cada punto que se cierre.
 
 ## 6. Versionado
 

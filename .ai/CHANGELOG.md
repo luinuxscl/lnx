@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.19.0] - 2026-10-11
+
+### Documentado
+- **Contrato de módulo — cierre documental parcial (Etapa 10, #39):** se añade la referencia `.ai/skills/implement-feature/references/packages.md` con el contrato vigente (permisos, aplicaciones de IA, notificaciones, página de paquetes, escritura por MCP y skills), enlazada desde la skill `implement-feature` y desde `CONTRATO-MODULO.md` §5. Se marcan 6 de 7 puntos implementados; el punto 2 (acceso por registro) sigue en diseño y #39 permanece abierto.
+
 ## [1.18.0] - 2026-10-10
 
 ### Añadido
