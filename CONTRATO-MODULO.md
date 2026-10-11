@@ -28,7 +28,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | # | Punto | Estado |
 | --- | --- | --- |
 | 1 | **Permisos propios**: el paquete registra y siembra sus permisos (idempotente); `admin` los recibe por defecto | ✅ Implementado (§3.1) |
-| 2 | **Acceso por registro**: relacionar un usuario con los registros que puede ver | En diseño |
+| 2 | **Acceso por registro**: relacionar un usuario con los registros que puede ver | 🔷 En diseño (§3.6) |
 | 3 | **Aplicaciones de IA**: el paquete declara sus aplicaciones, con cuota y consumo propios | ✅ Implementado (§3.2) |
 | 4 | **Notificaciones propias**: tipos del módulo dentro del centro existente | ✅ Implementado (§3.4) |
 | 5 | **Página de paquete genérica**: generalizar `LnxUiPackage` + `/admin/packages` a un registro de paquetes | ✅ Implementado (§3.5) |
@@ -138,6 +138,61 @@ public function boot(): void
 - **Validación.** El nombre y el repositorio deben tener la forma `vendor/package`, la etiqueta no puede estar vacía y una `url` debe ser `http(s)`. Un descuido es un error detectable (`InvalidArgumentException`), no una fila rota.
 - **Resolvedor compartido.** Tanto el registro como la página de `lnx-ui` usan `App\Support\Packages\PackageVersion`, que resuelve la versión instalada (`Composer\InstalledVersions`) y la última disponible por nombre de paquete, con caché por paquete. El token y el TTL viven en `config/packages.php` (`PACKAGES_GITHUB_TOKEN`/`GITHUB_TOKEN`, `PACKAGES_UPDATE_CHECK_TTL`).
 - **Alcance.** Registrar aquí es solo para que un módulo sea visible en la superficie de paquetes del admin; no concede permisos, cuotas ni escritura. Esos se declaran en sus propios registros (§3.1, §3.2, §4).
+
+### 3.6 Acceso por registro (en diseño)
+
+> **Borrador para revisión.** Pendiente de validar con Luz antes de implementar. No escribir código de este punto sin cerrar las decisiones abiertas.
+
+Un paquete **relaciona a un usuario con los registros que puede ver** y el kit le da un mecanismo uniforme para guardar esa relación, **filtrar las consultas por ella** y hacerla valer en las superficies compartidas (MCP y admin). El dominio decide **quién ve qué**; el kit solo estandariza **la forma**.
+
+**Contrato (lo que el kit garantiza)**
+
+1. **Modelo accesible.** Un modelo que se filtra por identidad implementa `App\Support\RecordAccess\AccessControlled` y expone `scopeAccessibleTo(Builder $query, User $user): Builder`. El filtro se aplica **en la consulta** (authorization-first), nunca en memoria. Un registro hijo hereda el acceso de su padre uniendo contra el scope del padre.
+2. **Registro explícito.** El provider declara sus modelos accesibles con `App\Support\RecordAccess\RecordAccessRegistry`; registrar una clase que no implemente `AccessControlled` es un error detectable (`InvalidArgumentException`):
+   ```php
+   app(RecordAccessRegistry::class)->register('luz', [Patient::class]);
+   ```
+3. **Autorización por registro.** Las policies del paquete comprueban la pertenencia del usuario al registro (ver, editar). Las superficies compartidas (**MCP, admin**) filtran siempre con `accessibleTo($user)` y revalidan el permiso por operación; ninguna devuelve registros sin pasar por el scope.
+4. **Pertenencia genérica (opcional).** El kit ofrece una tabla polimórfica `record_access` y el trait `App\Support\RecordAccess\GrantsRecordAccess` para relacionar usuarios con **cualquier** registro, con `abilities` (p. ej. `view`/`manage`) y `expires_at` opcionales. Es una comodidad, no una obligación: un paquete puede definir su propia relación si necesita algo más rico y aun así cumplir el contrato.
+
+**Ejemplo (Luz, multi-paciente)**
+
+```php
+class Patient extends Model implements AccessControlled
+{
+    use GrantsRecordAccess;
+
+    public function scopeAccessibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->hasRole(Role::Root)) {
+            return $query; // root omite el filtro; admin NO lo omite por defecto
+        }
+
+        return $query->where(fn (Builder $q) => $q
+            ->where('owner_id', $user->id)
+            ->orWhereHas('accessGrants', fn (Builder $g) => $g
+                ->where('user_id', $user->id)
+                ->where(fn (Builder $e) => $e->whereNull('expires_at')->orWhere('expires_at', '>', now()))));
+    }
+}
+```
+
+- **Hijos** (documentos, prescripciones, exámenes, horas): su `accessibleTo` une contra `patients` con el scope del padre, de modo que heredan el acceso sin duplicar la lista.
+- **MVP:** Luis es `root` y ve todos los pacientes; la relación ya existe y no limita. **Fase 2:** la familia recibe `grants` por paciente y los médicos accesos temporales (`expires_at`), sin rediseño.
+
+**Qué NO hace el kit**
+
+- No define la relación de dominio ni el significado clínico; no concede acceso por instalación.
+- No sustituye las policies: **complementa** el filtrado en consulta con la comprobación por operación.
+- No permite filtrar en memoria ni devolver colecciones sin aplicar `accessibleTo`.
+
+**Decisiones abiertas (resolver con Luz antes de implementar)**
+
+1. **Alcance de `admin`**: ¿ve todos los registros o solo los suyos/por grant? (propuesta: no bypass; solo `root`).
+2. **Granularidad de `abilities`**: ¿basta `view`/`manage` o se necesita por campo? (propuesta: `view`/`manage`).
+3. **Accesos temporales**: ¿van en el grant (`expires_at`) o solo como enlaces de compartición con token? (propuesta: grant con `expires_at` para personas; los enlaces públicos son otra pieza, Fase 2).
+4. **Herencia**: ¿el kit ofrece un helper de "unir contra el padre" o queda como convención documentada? (propuesta: convención documentada).
+5. **Verificación**: ¿un comando `record-access:verify` (como `mcp:verify-writes`) o solo pruebas del contrato? (propuesta: pruebas del contrato; comando si Luz lo pide).
 
 ## 4. Escritura por MCP (implementado)
 
