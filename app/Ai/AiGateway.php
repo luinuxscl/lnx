@@ -7,7 +7,9 @@ use App\Ai\Exceptions\AiQuotaExceededException;
 use App\Ai\Exceptions\ModelNotAllowedException;
 use App\Ai\Exceptions\UnsupportedCapabilityException;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Files\File;
 use Laravel\Ai\Responses\AgentResponse;
 use Laravel\Ai\Responses\StreamableAgentResponse;
 use Throwable;
@@ -81,6 +83,7 @@ class AiGateway
      * Run a prompt through an agent, validated, quota-controlled and recorded.
      *
      * @param  list<string>  $capabilities
+     * @param  array<int, File|UploadedFile>  $attachments
      *
      * @throws AiQuotaExceededException when a local limit is reached before the call
      */
@@ -93,6 +96,7 @@ class AiGateway
         ?string $application = null,
         ?int $reservedTokens = null,
         ?string $correlationId = null,
+        array $attachments = [],
     ): AgentResponse {
         $resolved = $this->resolveModel($model, $capabilities);
 
@@ -116,6 +120,7 @@ class AiGateway
         try {
             $response = $agent->prompt(
                 $prompt,
+                $attachments,
                 provider: $this->config->provider(),
                 model: $resolved,
                 timeout: $timeout,
@@ -151,6 +156,7 @@ class AiGateway
      * Run a prompt through an agent as a streamable response, validated, quota-controlled and recorded.
      *
      * @param  list<string>  $capabilities
+     * @param  array<int, File|UploadedFile>  $attachments
      *
      * @throws AiQuotaExceededException when a local limit is reached before the call
      */
@@ -163,6 +169,7 @@ class AiGateway
         ?string $application = null,
         ?int $reservedTokens = null,
         ?string $correlationId = null,
+        array $attachments = [],
     ): StreamableAgentResponse {
         $capabilities = array_values(array_unique(array_merge(['streaming'], $capabilities)));
         $resolved = $this->resolveModel($model, $capabilities);
@@ -187,6 +194,7 @@ class AiGateway
         try {
             $streamable = $agent->stream(
                 $prompt,
+                $attachments,
                 provider: $this->config->provider(),
                 model: $resolved,
                 timeout: $timeout,

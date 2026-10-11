@@ -4,6 +4,7 @@ namespace App\Support\RecordAccess;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Contract for a model whose rows are filtered by identity.
@@ -20,8 +21,8 @@ interface AccessControlled
     /**
      * Scope the query to the records the user is allowed to see.
      *
-     * @param  Builder<static>  $query
-     * @return Builder<static>
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
      */
     public function scopeAccessibleTo(Builder $query, User $user): Builder;
 }

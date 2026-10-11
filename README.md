@@ -488,7 +488,7 @@ lnx integra el [Laravel AI SDK](https://laravel.com/framework/docs/13.x/ai-sdk) 
 - La integración viene **desactivada**: `AI_ENABLED=false`. Mientras esté apagada ninguna función llama al proveedor y no se requiere credencial.
 - Variables (ver `config/lnx_ai.php`): `AI_ENABLED`, `AI_PROVIDER` (por defecto `openrouter`), `AI_MODEL`, `AI_TIMEOUT`, `AI_MAX_OUTPUT_TOKENS` y el bloque `AI_CONNECTION_TEST_*`.
 - La credencial se lee de `OPENROUTER_API_KEY` (config del SDK, `config/ai.php`). Nunca se muestra ni se envía al navegador; la UI solo indica si está configurada.
-- `AI_MODEL` debe estar además en la allowlist: `allowed_models` de `config/lnx_ai.php` o `AI_ALLOWED_MODELS` (JSON). Es una lista explícita de modelos con sus **capacidades** (`tools`, `structured`, `streaming`, `context`). No se fija ningún modelo comercial en el código: el despliegue declara los que usa.
+- `AI_MODEL` debe estar además en la allowlist: `allowed_models` de `config/lnx_ai.php` o `AI_ALLOWED_MODELS` (JSON). Es una lista explícita de modelos con sus **capacidades** (`tools`, `structured`, `streaming`, `context`, `vision`). `vision` declara que el modelo acepta adjuntos de imagen/archivo. No se fija ningún modelo comercial en el código: el despliegue declara los que usa.
 - No hay failover automático: `App\Ai\AiGateway` pasa siempre proveedor y modelo explícitos, así que el SDK nunca cambia de proveedor o modelo por su cuenta.
 
 ### Activación en una instalación nueva
@@ -520,6 +520,8 @@ lnx integra el [Laravel AI SDK](https://laravel.com/framework/docs/13.x/ai-sdk) 
 ### Extender en un proyecto derivado
 
 Reutiliza `App\Ai\LnxAgent` como base de tus agentes (hereda proveedor, modelo, límite de salida y timeout de la configuración) y pasa siempre por `App\Ai\AiGateway`: aplica la validación y, desde #13, el **control de cuota y el registro de consumo**. Declara tu función como una `application` (por ejemplo `text_assistant`) para que tenga sus propios límites y aparezca en el panel. Añade tu modelo a `allowed_models` y cubre la acción nueva con pruebas de respuestas simuladas.
+
+Para enviar imágenes o archivos, pasa los adjuntos a `AiGateway::prompt()` (o `stream()`) con el parámetro `$attachments` (objetos de `Laravel\Ai\Files`, p. ej. `Image::fromStorage(...)` o `Document::fromStorage(...)`) y exige la capacidad `vision` (`capabilities: ['vision']`). El gateway rechaza la petición si el modelo no la declara, antes de llamar al proveedor.
 
 ## Cuotas y consumo de IA
 
