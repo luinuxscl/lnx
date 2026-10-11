@@ -1,6 +1,6 @@
 # Contrato de módulo
 
-> **Estado:** en diseño · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)) · **Última revisión:** 2026-10-10
+> **Estado:** en implementación · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)) · **Última revisión:** 2026-10-10
 > Define **qué puede declarar un módulo (paquete Composer) en lnx** y **bajo qué reglas**. El contrato se deriva del módulo real que lo valida: **Luz** (`luinuxscl/luz`). Nada entra aquí que Luz no use.
 
 ---
@@ -33,7 +33,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | 4 | **Notificaciones propias**: tipos del módulo dentro del centro existente | En diseño |
 | 5 | **Página de paquete genérica**: generalizar `LnxUiPackage` + `/admin/packages` a un registro de paquetes | En diseño |
 | 6 | **Escritura por MCP declarable** | ✅ Implementado (§4) |
-| 7 | **Skills del módulo vía Boost** | ✅ ya soportado; falta documentarlo |
+| 7 | **Skills del módulo vía Boost** | ✅ Documentado (§3.3) |
 
 ### 3.1 Permisos propios (implementado)
 
@@ -79,6 +79,15 @@ public function boot(): void
 - Un despliegue puede **sobrescribir** la cuota declarada desde `config/lnx_ai.php` (`limits.applications`); la configuración tiene precedencia sobre el paquete.
 - Si el paquete declara la aplicación sin cuota, se usa la cuota `default` del despliegue (nunca queda sin límite por omisión).
 - Las aplicaciones declaradas aparecen junto a las del kit en el panel de uso/estado de IA (`/admin/ai`), para que su cuota sea visible y auditable.
+
+### 3.3 Skills del módulo vía Boost (documentado)
+
+Un paquete entrega sus skills a los agentes poniéndolas en `resources/boost/skills/<skill>/SKILL.md`, con el frontmatter estándar (`name` en kebab-case y `description`). Boost las descubre y las distribuye; no hay que registrarlas a mano en la app.
+
+- **Descubrimiento**: Boost mira las dependencias **directas** del proyecto (`composer require <owner>/<paquete>`) y lee su carpeta `resources/boost/skills`. Las dependencias transitivas se excluyen: un paquete no puede inyectar skills por venir arrastrado.
+- **Distribución**: `php artisan boost:update` copia cada skill del paquete a `.ai/skills/<skill>/` (ruta canónica) y la enlaza a los agentes configurados en `boost.json`. `php artisan boost:list-skills` lista las skills disponibles mostrando el paquete de origen.
+- **Precedencia**: una skill **local** en `.ai/skills/` con el mismo nombre gana sobre la del paquete. lnx mantiene copias versionadas y sincronizadas de las skills load-bearing de sus paquetes —por ejemplo `lnx-ui-release`, cuya fuente canónica es la skill de Boost del paquete `lnx-ui`— con una nota de fuente canónica en la cabecera.
+- **Ejemplos verificables** en este checkout: `luinuxscl/lnx-ui` → `lnx-ui-release`, `spatie/laravel-permission` → `laravel-permission-development`, `livewire/blaze` → `blaze-optimize`.
 
 ## 4. Escritura por MCP (implementado)
 
