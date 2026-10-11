@@ -4,10 +4,12 @@ namespace App\Livewire\Notifications;
 
 use App\Enums\Role;
 use App\Models\SupportTicket;
+use App\Models\User;
 use App\Notifications\NewInternalMessage;
 use App\Notifications\RoleChanged;
 use App\Notifications\SupportTicketUpdated;
 use App\Support\Appearance;
+use App\Support\Notifications\NotificationTypeRegistry;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
@@ -36,6 +38,12 @@ class Index extends Component
 
     public function message(DatabaseNotification $notification): string
     {
+        $declared = app(NotificationTypeRegistry::class)->message($notification);
+
+        if ($declared !== null) {
+            return $declared;
+        }
+
         if ($notification->type === SupportTicketUpdated::class) {
             return match ($notification->data['action'] ?? '') {
                 'created' => __('A new support request was created.'),
@@ -87,6 +95,17 @@ class Index extends Component
         }
 
         return $query->exists() ? route('support.show', $notification->data['ticket_id']) : null;
+    }
+
+    public function moduleLink(DatabaseNotification $notification): ?string
+    {
+        $user = auth()->user();
+
+        if (! $user instanceof User) {
+            return null;
+        }
+
+        return app(NotificationTypeRegistry::class)->url($notification, $user);
     }
 
     private function roleLabel(mixed $value): string

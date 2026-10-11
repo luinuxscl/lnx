@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.17.0] - 2026-10-10
+
+### Añadido
+- **Contrato de módulo — notificaciones del módulo (Etapa 10, #39):** un paquete declara sus propios tipos de notificación con `App\Support\Notifications\NotificationTypeRegistry` (mensaje obligatorio; enlace y permiso opcionales) y el centro de notificaciones existente los muestra, enlaza y marca como leídos sin tocar el kit. Un tipo no declarado conserva el respaldo genérico y su contenido guardado nunca se renderiza. Documentado en `CONTRATO-MODULO.md` §3.4 y `README.md`.
+
 ## [1.16.0] - 2026-10-10
 
 ### Documentado
