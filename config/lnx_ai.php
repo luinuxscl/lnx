@@ -48,8 +48,9 @@ return [
     |
     | Server-side allowlist. A model outside this list is rejected before any
     | provider call. Capabilities are declared explicitly because not every
-    | model supports tools, structured output or streaming. `context` is the
-    | maximum input size in tokens. Add the models a deployment actually uses.
+    | model supports tools, structured output, streaming or images. `context`
+    | is the maximum input size in tokens and `vision` declares that the model
+    | accepts image/file attachments. Add the models a deployment uses.
     |
     | Example:
     | 'vendor/model-id' => [
@@ -57,6 +58,7 @@ return [
     |     'structured' => false,
     |     'streaming' => true,
     |     'context' => 128000,
+    |     'vision' => true,
     | ],
     |
     */

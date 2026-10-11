@@ -19,7 +19,7 @@ class AiConfig
      *
      * @var list<string>
      */
-    public const CAPABILITIES = ['tools', 'structured', 'streaming', 'context'];
+    public const CAPABILITIES = ['tools', 'structured', 'streaming', 'context', 'vision'];
 
     /**
      * Application key used when a feature does not declare one.
