@@ -15,27 +15,32 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.5'
           tools: composer:v2
           coverage: none
 
       - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
 
       - name: Configure lnx-ui deploy key
-        if: ${{ secrets.LNX_UI_DEPLOY_KEY != '' }}
+        env:
+          LNX_UI_DEPLOY_KEY: ${{ secrets.LNX_UI_DEPLOY_KEY }}
         run: |
+          if [ -z "$LNX_UI_DEPLOY_KEY" ]; then
+            echo "LNX_UI_DEPLOY_KEY not set; skipping deploy key configuration."
+            exit 0
+          fi
           mkdir -p ~/.ssh
-          echo "${{ secrets.LNX_UI_DEPLOY_KEY }}" > ~/.ssh/lnx_ui
+          printf '%s\n' "$LNX_UI_DEPLOY_KEY" > ~/.ssh/lnx_ui
           chmod 600 ~/.ssh/lnx_ui
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           echo "GIT_SSH_COMMAND=ssh -i ~/.ssh/lnx_ui -o IdentitiesOnly=yes" >> "$GITHUB_ENV"

@@ -4,10 +4,10 @@ namespace App\Models;
 
 use App\Support\RecordAccess\GrantsRecordAccess;
 use App\Support\RecordAccess\RecordAccessAbility;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Support\Carbon;
 
 /**
  * A user's grant over a single record.
@@ -23,7 +23,7 @@ use Illuminate\Support\Carbon;
  * @property string $record_type
  * @property int $record_id
  * @property list<string>|null $abilities
- * @property Carbon|null $expires_at
+ * @property CarbonInterface|null $expires_at
  */
 class RecordAccess extends Model
 {
