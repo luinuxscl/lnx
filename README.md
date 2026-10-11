@@ -306,6 +306,37 @@ public function boot(): void
 - `php artisan permissions:sync` materializa los permisos declarados de forma idempotente con `findOrCreate` y los concede al rol `admin`. `root` los omite vía `Gate::before`. `RolePermissionSeeder` ejecuta el mismo sync, así que `php artisan migrate --seed` deja los permisos listos.
 - Nada se concede por estar el paquete en `vendor/`: la declaración es explícita y reejecutar la sincronización no duplica permisos ni concesiones.
 
+### Acceso por registro (paquetes)
+
+Un paquete define **qué registros puede ver cada usuario** con un contrato uniforme (ver [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.6). El modelo accesible implementa `App\Support\RecordAccess\AccessControlled` y expone `scopeAccessibleTo(Builder $query, User $user): Builder`; el filtro se aplica **en la consulta**, nunca en memoria:
+
+```php
+use App\Support\RecordAccess\AccessControlled;
+use App\Support\RecordAccess\GrantsRecordAccess;
+
+class Patient extends Model implements AccessControlled
+{
+    use GrantsRecordAccess;
+
+    public function scopeAccessibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->hasRole(Role::Root)) {
+            return $query; // root omite el filtro; admin no lo omite por defecto
+        }
+
+        return $query->where(fn (Builder $q) => $q
+            ->where('owner_id', $user->id)
+            ->orWhereHas('accessGrants', fn (Builder $g) => $g
+                ->where('user_id', $user->id)
+                ->where(fn (Builder $e) => $e->whereNull('expires_at')->orWhere('expires_at', '>', now()))));
+    }
+}
+```
+
+- El provider declara sus modelos con `app(RecordAccessRegistry::class)->register('luz', [Patient::class])`; registrar una clase que no sea un modelo Eloquent que implemente `AccessControlled` lanza `InvalidArgumentException`.
+- El kit ofrece la tabla polimórfica `record_access` y el trait `GrantsRecordAccess` (relación `accessGrants()`, `grantAccessTo($user, $ability, $expiresAt)` y `hasRecordAccess($user, $ability)`) para relacionar usuarios con cualquier registro, con `abilities` (`view`/`manage`) y `expires_at` opcionales.
+- Las superficies compartidas (MCP, admin) filtran con `Modelo::accessibleTo($user)` y revalidan el permiso por operación; ninguna devuelve registros sin pasar por el scope.
+
 ### Credenciales root de desarrollo y alerta de seguridad
 
 Para desarrollo, `.env.example` trae un root listo para usar (**Luis Sepulveda / luinuxscl@gmail.com / password**) para que `php artisan migrate --seed` deje la app operativa al instante. Esas credenciales **nunca** deben llegar a producción, y por eso existen tres capas de defensa:
