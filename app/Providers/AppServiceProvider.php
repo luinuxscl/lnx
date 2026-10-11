@@ -8,6 +8,7 @@ use App\Events\SupportPublicReplyAdded;
 use App\Events\SupportTicketCreated;
 use App\Events\SupportTicketStatusChanged;
 use App\Listeners\SyncSupportTicketToMessaging;
+use App\Mcp\McpToolRegistry;
 use App\Models\InternalConversation;
 use App\Models\User;
 use App\Support\DevRootCredentials;
@@ -30,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(AiApplicationRegistry::class);
+        $this->app->singleton(McpToolRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
     }
 

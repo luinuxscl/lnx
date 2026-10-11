@@ -14,7 +14,7 @@ Este procedimiento define el estándar de desarrollo para añadir o modificar he
 ## Cuándo NO usar
 - Para integrar clientes o consumidores MCP externos dentro de la lógica del sistema.
 - Para editar la configuración de plugins o servidores MCP locales del entorno del desarrollador o del agente.
-- Para intentar exponer operaciones de escritura, borrado o modificación (el servidor MCP de lnx es exclusivamente de solo lectura).
+- Para exponer una operación de **escritura**: esta skill cubre solo lectura. Una escritura declarable usa `App\Mcp\Tools\WriteTool` con `#[WritesData]` y el estándar de [CONTRATO-MODULO.md](../../../CONTRATO-MODULO.md) §4 (la escritura se habilita por despliegue con `MCP_SERVER_ALLOW_WRITES`).
 
 ## Requisitos y entradas
 1. **Contrato de la herramienta**: Nombre en kebab-case (`#[Name]`), descripción clara en inglés (`#[Description]`), argumentos requeridos y esquema de salida.
@@ -30,7 +30,7 @@ Este procedimiento define el estándar de desarrollo para añadir o modificar he
 - Suite de pruebas Pest cubriendo respuestas autorizadas, fallos de autenticación (401) y denegación de acceso (403).
 
 ## Límites de autorización y seguridad
-- El servidor MCP es de **solo lectura**: nunca exponer herramientas que realicen `insert`, `update`, `delete` o alteren el estado del sistema.
+- El servidor MCP es de **solo lectura por defecto**: esta skill no cubre escrituras. Una escritura declarable se implementa con `WriteTool` + `#[WritesData]` (ver [CONTRATO-MODULO.md](../../../CONTRATO-MODULO.md) §4); `ReadOnlyTool` nunca debe escribir.
 - No exponer comandos de terminal, consultas SQL arbitrarias ni accesos genéricos al sistema de archivos.
 - No omitir `authorize()` ni `shouldRegister()`: una herramienta sin autorización viola las políticas de seguridad del proyecto.
 - Nunca incluir secretos, tokens Bearer de producción ni datos sensibles no autorizados en los esquemas de respuesta.

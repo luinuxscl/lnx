@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.15.0] - 2026-10-10
+
+### Añadido
+- **Contrato de módulo — escritura por MCP declarable (Etapa 10, #39):** el servidor MCP sigue siendo de solo lectura por defecto, pero un paquete puede declarar herramientas de escritura extendiendo `App\Mcp\Tools\WriteTool` y anotándolas con `#[WritesData(resource, operation, permission, idempotent)]`. El kit provee el interruptor de despliegue `MCP_SERVER_ALLOW_WRITES` (apagado por defecto), límite de frecuencia propio (`MCP_SERVER_WRITE_RATE_LIMIT`), idempotencia por `idempotency_key` y auditoría con diff en `mcp_write_operations` (`MCP_SERVER_AUDIT_DIFF`). Las herramientas se registran con `App\Mcp\McpToolRegistry` y `LnxServer` deja de mantener su lista fija. Una herramienta que escribe sin declararse falla en `php artisan mcp:verify-writes`. Documentado en `CONTRATO-MODULO.md` §4, `README.md` y la skill `expose-mcp-operation`.
+
 ## [1.14.0] - 2026-10-10
 
 ### Añadido

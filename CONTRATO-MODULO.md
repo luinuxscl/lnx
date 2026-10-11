@@ -32,7 +32,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | 3 | **Aplicaciones de IA**: el paquete declara sus aplicaciones, con cuota y consumo propios | ✅ Implementado (§3.2) |
 | 4 | **Notificaciones propias**: tipos del módulo dentro del centro existente | En diseño |
 | 5 | **Página de paquete genérica**: generalizar `LnxUiPackage` + `/admin/packages` a un registro de paquetes | En diseño |
-| 6 | **Escritura por MCP declarable** | **Estándar definido (§4)** |
+| 6 | **Escritura por MCP declarable** | ✅ Implementado (§4) |
 | 7 | **Skills del módulo vía Boost** | ✅ ya soportado; falta documentarlo |
 
 ### 3.1 Permisos propios (implementado)
@@ -80,7 +80,7 @@ public function boot(): void
 - Si el paquete declara la aplicación sin cuota, se usa la cuota `default` del despliegue (nunca queda sin límite por omisión).
 - Las aplicaciones declaradas aparecen junto a las del kit en el panel de uso/estado de IA (`/admin/ai`), para que su cuota sea visible y auditable.
 
-## 4. Estándar de escritura por MCP
+## 4. Escritura por MCP (implementado)
 
 ### 4.1 Principios
 
@@ -92,11 +92,11 @@ El servidor MCP de lnx es **de solo lectura por defecto**. Un módulo puede decl
 4. **Permisos por operación.** Un token de lectura no puede invocar una herramienta de escritura, aunque la conozca (depende del punto 1 del contrato).
 5. **Seguro por diseño, no por confianza.** Las reglas protegen aunque el agente se equivoque o alucine.
 
-### 4.2 Cómo declararía un paquete una escritura (API propuesta)
+### 4.2 Cómo declara un paquete una escritura
 
 ```php
-use Lnx\Mcp\Attributes\WritesData;
-use Lnx\Mcp\Tools\WriteTool;
+use App\Mcp\Attributes\WritesData;
+use App\Mcp\Tools\WriteTool;
 
 #[WritesData(
     resource:   'document',
@@ -120,8 +120,8 @@ class UploadDocumentTool extends WriteTool
 ```
 
 - **`WriteTool`** es la base hermana de `ReadOnlyTool` (esa ya hace autorizar → ejecutar → auditar en un `handle()` final). `WriteTool` agrega idempotencia y auditoría con diff.
-- **Registro**: el provider del paquete registra sus herramientas en el servidor MCP del kit. `LnxServer` deja de tener la lista fija.
-- **Clasificación obligatoria**: una herramienta que escribe **debe** declararlo. No declararlo es un error detectable, no un descuido silencioso.
+- **Registro**: el provider del paquete registra sus herramientas en `App\Mcp\McpToolRegistry` (`app(McpToolRegistry::class)->register('luz', [UploadDocumentTool::class])`); `LnxServer` las fusiona en `createContext()` y ya no mantiene una lista fija de ellas.
+- **Clasificación obligatoria**: una herramienta que escribe **debe** declarar `#[WritesData]`. No declararlo es un error detectable (`InvalidArgumentException` al ejecutar y en el comando `mcp:verify-writes`), no un descuido silencioso.
 
 ### 4.3 Requisitos que el kit provee (no cada módulo)
 
@@ -133,7 +133,7 @@ class UploadDocumentTool extends WriteTool
 | **Límite de frecuencia** | Reutiliza el límite por token existente, con un valor propio para escrituras. |
 | **Revocación individual** | Los tokens son por agente y revocables, como los actuales. |
 
-**Nota sobre el diff y datos sensibles.** En un dominio clínico el diff contiene valores de salud. Se guardan en la misma base que el dato (no salen del servidor), con la retención que defina el operador, y **nunca** en logs de aplicación. Definir la retención del diff es una decisión abierta con el operador.
+**Nota sobre el diff y datos sensibles.** En un dominio clínico el diff contiene valores de salud. Se guardan en la misma base que el dato (no salen del servidor), con la retención que defina el operador (`MCP_SERVER_AUDIT_RETENTION_DAYS`, purgado por `mcp:prune-invocations`), y **nunca** en logs de aplicación. El detalle puede apagarse con `MCP_SERVER_AUDIT_DIFF=false`.
 
 ### 4.4 Prohibiciones del estándar
 
