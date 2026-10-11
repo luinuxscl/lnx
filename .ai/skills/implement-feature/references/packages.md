@@ -12,13 +12,13 @@ Resumen operativo del **contrato de módulo** de lnx para agentes. Un **módulo*
 | Aplicaciones de IA | `App\Ai\AiApplicationRegistry` | `register('luz', ['luz.extraction' => ['window' => 'hour', 'requests' => 20, 'tokens' => 100000]])` | §3.2 |
 | Skills para agentes | `resources/boost/skills/<skill>/SKILL.md` | Boost las descubre en las dependencias directas y las distribuye a `.ai/skills/` | §3.3 |
 | Notificaciones propias | `App\Support\Notifications\NotificationTypeRegistry` | `register('luz', [LuzDocumentReady::class => ['message' => …, 'url' => …, 'permission' => '…']])` | §3.4 |
+| Acceso por registro | `App\Support\RecordAccess\RecordAccessRegistry` + interfaz `AccessControlled` | `register('luz', [Patient::class])`; el modelo expone `scopeAccessibleTo($query, $user)` y se filtra con `Patient::accessibleTo($user)` | §3.6 |
 | Página de paquetes | `App\Support\Packages\PackageRegistry` | `register('luz', ['name' => 'luinuxscl/luz', 'label' => 'Luz', …])`; aparece en `/admin/packages` | §3.5 |
 | Escritura por MCP | `App\Mcp\McpToolRegistry` + `#[WritesData]` sobre `WriteTool` | `register('luz', [UploadDocumentTool::class])`; solo se expone con `MCP_SERVER_ALLOW_WRITES=true` y el permiso declarado | §4 |
 
 ## Estado del contrato
 
-- **Implementado:** 1 permisos, 3 aplicaciones de IA, 4 notificaciones, 5 página de paquetes, 6 escritura por MCP, 7 skills.
-- **En diseño:** 2 acceso por registro (relacionar un usuario con los registros que puede ver).
+- **Implementado:** 1 permisos, 2 acceso por registro, 3 aplicaciones de IA, 4 notificaciones, 5 página de paquetes, 6 escritura por MCP, 7 skills.
 
 ## Configuración compartida
 
