@@ -47,7 +47,7 @@ it('shows the installed package version and the design gallery for a root user',
 
 it('reports an available update from the GitHub API', function () {
     Cache::flush();
-    config(['lnx_ui.token' => 'test-token']);
+    config(['packages.token' => 'test-token']);
     Http::fake(['api.github.com/*' => Http::response([['name' => 'v9.9.9']], 200)]);
 
     $user = User::factory()->create();
@@ -64,7 +64,7 @@ it('reports an available update from the GitHub API', function () {
 
 it('warns when the update check lacks a GitHub token', function () {
     Cache::flush();
-    config(['lnx_ui.token' => null]);
+    config(['packages.token' => null]);
     Http::fake();
 
     $user = User::factory()->create();

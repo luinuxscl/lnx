@@ -31,7 +31,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | 2 | **Acceso por registro**: relacionar un usuario con los registros que puede ver | En diseño |
 | 3 | **Aplicaciones de IA**: el paquete declara sus aplicaciones, con cuota y consumo propios | ✅ Implementado (§3.2) |
 | 4 | **Notificaciones propias**: tipos del módulo dentro del centro existente | ✅ Implementado (§3.4) |
-| 5 | **Página de paquete genérica**: generalizar `LnxUiPackage` + `/admin/packages` a un registro de paquetes | En diseño |
+| 5 | **Página de paquete genérica**: generalizar `LnxUiPackage` + `/admin/packages` a un registro de paquetes | ✅ Implementado (§3.5) |
 | 6 | **Escritura por MCP declarable** | ✅ Implementado (§4) |
 | 7 | **Skills del módulo vía Boost** | ✅ Documentado (§3.3) |
 
@@ -112,6 +112,32 @@ public function boot(): void
 - `message` (obligatorio) construye el texto a partir de los datos; `url` (opcional) es el destino del enlace; `permission` (opcional) exige que la identidad pueda ver el enlace.
 - Un tipo **no declarado** conserva el respaldo genérico y su contenido guardado nunca se renderiza: declarar es lo que habilita mostrar y navegar.
 - Marcar como leída funciona de forma genérica por identificador, sin código del paquete.
+
+### 3.5 Página de paquete genérica (implementado)
+
+Un paquete declara su identidad en el `boot()` de su provider; el kit lo lista en la página genérica de paquetes (`/admin/packages`, solo `root`) con su versión instalada, la última disponible y el comando de actualización. `lnx-ui` no forma parte de este registro: al ser el paquete de componentes del propio kit —con su galería de diseño— conserva su página dedicada (`/admin/packages/lnx-ui`), servida por el mismo resolvedor de versiones.
+
+```php
+use App\Support\Packages\PackageRegistry;
+
+public function boot(): void
+{
+    app(PackageRegistry::class)->register('luz', [
+        'name'        => 'luinuxscl/luz', // obligatorio, `vendor/package`
+        'label'       => 'Luz',           // obligatorio, texto o clave de traducción
+        'description' => 'Historial médico familiar.', // opcional
+        'repository'  => 'luinuxscl/luz', // opcional; por defecto, el nombre
+        'url'         => 'https://…',     // opcional, enlace externo (http/s)
+        'update_command' => 'composer update luinuxscl/luz', // opcional; por defecto se deriva
+    ]);
+}
+```
+
+- **Declaración explícita.** Nada aparece por estar el paquete en `vendor/`: declara el propio provider. Registrar dos veces el mismo nombre es idempotente (gana la última declaración).
+- **Datos que muestra.** La página lee la versión instalada de Composer y consulta la última etiqueta de versión en la API de GitHub; si la última es mayor, marca **Actualización disponible** y ofrece el comando para copiar. Sin token de GitHub solo muestra la versión instalada (el estado queda `missing_token`).
+- **Validación.** El nombre y el repositorio deben tener la forma `vendor/package`, la etiqueta no puede estar vacía y una `url` debe ser `http(s)`. Un descuido es un error detectable (`InvalidArgumentException`), no una fila rota.
+- **Resolvedor compartido.** Tanto el registro como la página de `lnx-ui` usan `App\Support\Packages\PackageVersion`, que resuelve la versión instalada (`Composer\InstalledVersions`) y la última disponible por nombre de paquete, con caché por paquete. El token y el TTL viven en `config/packages.php` (`PACKAGES_GITHUB_TOKEN`/`GITHUB_TOKEN`, `PACKAGES_UPDATE_CHECK_TTL`).
+- **Alcance.** Registrar aquí es solo para que un módulo sea visible en la superficie de paquetes del admin; no concede permisos, cuotas ni escritura. Esos se declaran en sus propios registros (§3.1, §3.2, §4).
 
 ## 4. Escritura por MCP (implementado)
 

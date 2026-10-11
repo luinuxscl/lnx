@@ -18,6 +18,7 @@ use App\Livewire\Knowledge\Show;
 use App\Livewire\Messages\Index as MessagesIndex;
 use App\Livewire\Navigation\Index as NavigationIndex;
 use App\Livewire\Notifications\Index as NotificationsIndex;
+use App\Livewire\Packages\Index as PackagesIndex;
 use App\Livewire\Packages\LnxUi;
 use App\Livewire\Setup\Index as SetupIndex;
 use App\Livewire\Support\Index as SupportIndex;
@@ -114,6 +115,18 @@ Route::livewire('admin/ai', AiStatus::class)
         'icon' => 'sparkles',
         'group' => 'Administration',
         'group_icon' => 'cog-6-tooth',
+        'audiences' => ['root'],
+        'roles' => ['root'],
+    ]);
+
+Route::livewire('admin/packages', PackagesIndex::class)
+    ->middleware(['auth', 'role:'.Role::Root->value])
+    ->name('admin.packages.index')
+    ->menu([
+        'label' => 'Installed packages',
+        'icon' => 'cube',
+        'group' => 'Packages',
+        'group_icon' => 'cube',
         'audiences' => ['root'],
         'roles' => ['root'],
     ]);
