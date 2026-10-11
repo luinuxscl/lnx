@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.19.1] - 2026-10-11
+
+### Corregido
+- **Macro de menú disponible para los paquetes (contrato de módulo, §2):** la macro de ruta `->menu([...])` se registra ahora en `register()` de `App\Providers\NavigationServiceProvider`, no en `boot()`. Los providers de los paquetes arrancan **antes** que los de la app, así que un módulo no podía declarar `->menu()` en sus rutas (fallaba con `Method Illuminate\Routing\Route::menu does not exist`). Descubierto al construir el primer módulo, **Luz** (`luinuxscl/luz`), que valida el contrato. Sin cambios de API: el kit sigue declarando sus propias rutas igual que antes.
+
 ## [1.19.0] - 2026-10-11
 
 ### Documentado
