@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.14.0] - 2026-10-10
+
+### Añadido
+- **Contrato de módulo — aplicaciones de IA por paquete (Etapa 10, #39):** un paquete declara sus aplicaciones de IA, cada una con su cuota, en el `boot()` de su provider con `App\Ai\AiApplicationRegistry::register()`. `AiConfig` resuelve la cuota declarada (con precedencia de `config/lnx_ai.php` y respaldo en `limits.default`) y `AiQuota` limita y registra el consumo bajo esa aplicación. El nombre debe ir prefijado con el paquete (`luz.extraction`); registrar uno sin prefijo es un error detectable. Las aplicaciones declaradas aparecen en el panel `/admin/ai`. Documentado en `CONTRATO-MODULO.md` §3.2 y en `README.md`.
+
 ## [1.13.0] - 2026-10-10
 
 ### Añadido

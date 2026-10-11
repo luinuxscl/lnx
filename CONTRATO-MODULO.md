@@ -29,7 +29,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | --- | --- | --- |
 | 1 | **Permisos propios**: el paquete registra y siembra sus permisos (idempotente); `admin` los recibe por defecto | ✅ Implementado (§3.1) |
 | 2 | **Acceso por registro**: relacionar un usuario con los registros que puede ver | En diseño |
-| 3 | **Aplicaciones de IA**: el paquete declara sus aplicaciones, con cuota y consumo propios | En diseño |
+| 3 | **Aplicaciones de IA**: el paquete declara sus aplicaciones, con cuota y consumo propios | ✅ Implementado (§3.2) |
 | 4 | **Notificaciones propias**: tipos del módulo dentro del centro existente | En diseño |
 | 5 | **Página de paquete genérica**: generalizar `LnxUiPackage` + `/admin/packages` a un registro de paquetes | En diseño |
 | 6 | **Escritura por MCP declarable** | **Estándar definido (§4)** |
@@ -56,6 +56,29 @@ public function boot(): void
 - `RolePermissionSeeder` ejecuta el mismo sync, de modo que `php artisan migrate --seed` deja los permisos listos en una instalación nueva.
 - Reejecutar la sincronización no duplica permisos ni concesiones.
 - Nada se concede por estar el paquete en `vendor/`: la declaración es explícita. Un token o usuario sin la concesión no pasa `$user->can('luz.view_patient')`.
+
+### 3.2 Aplicaciones de IA del módulo (implementado)
+
+Un paquete declara sus aplicaciones de IA, cada una con su cuota, en el `boot()` de su provider. La app las usa con el `AiGateway` y el consumo se registra y se limita bajo esa aplicación, sin editar `config/lnx_ai.php`.
+
+```php
+use App\Ai\AiApplicationRegistry;
+
+public function boot(): void
+{
+    app(AiApplicationRegistry::class)->register('luz', [
+        'luz.extraction' => ['window' => 'hour', 'requests' => 20, 'tokens' => 100000],
+        'luz.search'     => ['window' => 'hour', 'requests' => 60, 'tokens' => 150000],
+        'luz.analysis'   => ['window' => 'day',  'requests' => 50, 'tokens' => 200000],
+    ]);
+}
+```
+
+- Los nombres **deben** llevar el prefijo del paquete (`luz.`); registrar uno sin prefijo (o vacío) es un error detectable (`InvalidArgumentException`).
+- La cuota declarada se aplica de forma independiente a la cuota por usuario: consumir con `application: 'luz.extraction'` descuenta del contador y del registro de esa aplicación, y agota su límite antes que el global.
+- Un despliegue puede **sobrescribir** la cuota declarada desde `config/lnx_ai.php` (`limits.applications`); la configuración tiene precedencia sobre el paquete.
+- Si el paquete declara la aplicación sin cuota, se usa la cuota `default` del despliegue (nunca queda sin límite por omisión).
+- Las aplicaciones declaradas aparecen junto a las del kit en el panel de uso/estado de IA (`/admin/ai`), para que su cuota sea visible y auditable.
 
 ## 4. Estándar de escritura por MCP
 

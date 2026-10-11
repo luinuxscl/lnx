@@ -489,6 +489,22 @@ Reutiliza `App\Ai\LnxAgent` como base de tus agentes (hereda proveedor, modelo, 
 - La prueba de conexión (#12) es la aplicación `connection_test` y tiene sus propios límites; además conserva su límite de frecuencia por minuto.
 - El asistente de texto (#14) es la aplicación `text_assistant` y tiene sus propios límites.
 
+### Aplicaciones declaradas por paquetes
+
+Un paquete instalado puede declarar sus propias aplicaciones de IA, con su cuota, sin editar `config/lnx_ai.php`:
+
+```php
+use App\Ai\AiApplicationRegistry;
+
+app(AiApplicationRegistry::class)->register('luz', [
+    'luz.extraction' => ['window' => 'hour', 'requests' => 20, 'tokens' => 100000],
+]);
+```
+
+- El nombre **debe** ir prefijado con el paquete (`luz.`); uno sin prefijo es un error detectable (`InvalidArgumentException`).
+- Consumir con `application: 'luz.extraction'` descuenta del contador y del registro de esa aplicación y aplica su cuota, independiente de la del usuario.
+- La cuota del despliegue (`config/lnx_ai.php` → `limits.applications`) tiene precedencia sobre la declarada por el paquete; sin cuota declarada se usa `limits.default` (nunca queda sin límite por omisión). Las aplicaciones declaradas aparecen en `/admin/ai` junto a las del kit. Detalles en [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.2.
+
 ### Reserva atómica y reconciliación
 
 Antes de llamar al proveedor, `App\Ai\AiQuota` reserva **una solicitud y el máximo de tokens de salida** en la tabla `ai_quota_counters` dentro de una transacción con la fila bloqueada, de modo que peticiones concurrentes no pueden superar un límite en el borde de la ventana. Al responder el proveedor:
