@@ -34,6 +34,9 @@ Este procedimiento guía la implementación de un feature o historia de usuario 
 - No incluir secretos, llaves personales, rutas locales absolutas ni nombres de clientes específicos en el código versionado.
 - No conceder autorización para publicar en producción, enviar correos masivos o modificar datos reales no solicitados.
 
+## Referencias
+- [Paquetes y módulos](references/packages.md): qué puede declarar un paquete instalado en lnx (permisos, aplicaciones de IA, notificaciones, página de paquetes, escritura por MCP y skills). Resumen operativo de [`CONTRATO-MODULO.md`](file:///home/luinux/Code/lnx/CONTRATO-MODULO.md).
+
 ---
 
 ## Procedimiento paso a paso

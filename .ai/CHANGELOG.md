@@ -2,6 +2,16 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.19.0] - 2026-10-11
+
+### Documentado
+- **Contrato de módulo — cierre documental parcial (Etapa 10, #39):** se añade la referencia `.ai/skills/implement-feature/references/packages.md` con el contrato vigente (permisos, aplicaciones de IA, notificaciones, página de paquetes, escritura por MCP y skills), enlazada desde la skill `implement-feature` y desde `CONTRATO-MODULO.md` §5. Se marcan 6 de 7 puntos implementados; el punto 2 (acceso por registro) sigue en diseño y #39 permanece abierto.
+
+## [1.18.0] - 2026-10-10
+
+### Añadido
+- **Contrato de módulo — página de paquete genérica (Etapa 10, #39):** un paquete declara su identidad en el `boot()` de su provider con `App\Support\Packages\PackageRegistry` (`name` y `label` obligatorios; `description`, `repository`, `url` y `update_command` opcionales) y aparece en la página genérica `/admin/packages` (Livewire `App\Livewire\Packages\Index`, rol `root`; grupo `Packages` → ítem `Installed packages`) con su versión instalada, la última disponible y el comando de actualización. El resolvedor `App\Support\Packages\PackageVersion` generaliza el antiguo `App\Support\LnxUiPackage` (versión instalada desde Composer, última etiqueta desde GitHub, caché por paquete) y su configuración pasa a `config/packages.php` (`PACKAGES_GITHUB_TOKEN`/`GITHUB_TOKEN`, `PACKAGES_UPDATE_CHECK_TTL`). `lnx-ui` sale del registro general y conserva su página dedicada (`/admin/packages/lnx-ui`) con la galería. Documentado en `CONTRATO-MODULO.md` §3.5 y `README.md`.
+
 ## [1.17.0] - 2026-10-10
 
 ### Añadido

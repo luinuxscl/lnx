@@ -87,6 +87,7 @@ class NavigationSeeder extends Seeder
                 ['route_name' => 'admin.navigation.index'],
             ]],
             ['label_key' => 'Packages', 'icon' => 'cube', 'items' => [
+                ['route_name' => 'admin.packages.index'],
                 ['route_name' => 'admin.packages.lnx-ui'],
             ]],
             ['label_key' => 'AI Tools', 'icon' => 'sparkles', 'items' => [

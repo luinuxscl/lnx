@@ -1,6 +1,6 @@
 # Contrato de módulo
 
-> **Estado:** en implementación · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)) · **Última revisión:** 2026-10-10
+> **Estado:** implementado (7 de 7 puntos) · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)) · **Última revisión:** 2026-10-11
 > Define **qué puede declarar un módulo (paquete Composer) en lnx** y **bajo qué reglas**. El contrato se deriva del módulo real que lo valida: **Luz** (`luinuxscl/luz`). Nada entra aquí que Luz no use.
 
 ---
@@ -28,10 +28,10 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | # | Punto | Estado |
 | --- | --- | --- |
 | 1 | **Permisos propios**: el paquete registra y siembra sus permisos (idempotente); `admin` los recibe por defecto | ✅ Implementado (§3.1) |
-| 2 | **Acceso por registro**: relacionar un usuario con los registros que puede ver | En diseño |
+| 2 | **Acceso por registro**: relacionar un usuario con los registros que puede ver | ✅ Implementado (§3.6) |
 | 3 | **Aplicaciones de IA**: el paquete declara sus aplicaciones, con cuota y consumo propios | ✅ Implementado (§3.2) |
 | 4 | **Notificaciones propias**: tipos del módulo dentro del centro existente | ✅ Implementado (§3.4) |
-| 5 | **Página de paquete genérica**: generalizar `LnxUiPackage` + `/admin/packages` a un registro de paquetes | En diseño |
+| 5 | **Página de paquete genérica**: generalizar `LnxUiPackage` + `/admin/packages` a un registro de paquetes | ✅ Implementado (§3.5) |
 | 6 | **Escritura por MCP declarable** | ✅ Implementado (§4) |
 | 7 | **Skills del módulo vía Boost** | ✅ Documentado (§3.3) |
 
@@ -112,6 +112,90 @@ public function boot(): void
 - `message` (obligatorio) construye el texto a partir de los datos; `url` (opcional) es el destino del enlace; `permission` (opcional) exige que la identidad pueda ver el enlace.
 - Un tipo **no declarado** conserva el respaldo genérico y su contenido guardado nunca se renderiza: declarar es lo que habilita mostrar y navegar.
 - Marcar como leída funciona de forma genérica por identificador, sin código del paquete.
+
+### 3.5 Página de paquete genérica (implementado)
+
+Un paquete declara su identidad en el `boot()` de su provider; el kit lo lista en la página genérica de paquetes (`/admin/packages`, solo `root`) con su versión instalada, la última disponible y el comando de actualización. `lnx-ui` no forma parte de este registro: al ser el paquete de componentes del propio kit —con su galería de diseño— conserva su página dedicada (`/admin/packages/lnx-ui`), servida por el mismo resolvedor de versiones.
+
+```php
+use App\Support\Packages\PackageRegistry;
+
+public function boot(): void
+{
+    app(PackageRegistry::class)->register('luz', [
+        'name'        => 'luinuxscl/luz', // obligatorio, `vendor/package`
+        'label'       => 'Luz',           // obligatorio, texto o clave de traducción
+        'description' => 'Historial médico familiar.', // opcional
+        'repository'  => 'luinuxscl/luz', // opcional; por defecto, el nombre
+        'url'         => 'https://…',     // opcional, enlace externo (http/s)
+        'update_command' => 'composer update luinuxscl/luz', // opcional; por defecto se deriva
+    ]);
+}
+```
+
+- **Declaración explícita.** Nada aparece por estar el paquete en `vendor/`: declara el propio provider. Registrar dos veces el mismo nombre es idempotente (gana la última declaración).
+- **Datos que muestra.** La página lee la versión instalada de Composer y consulta la última etiqueta de versión en la API de GitHub; si la última es mayor, marca **Actualización disponible** y ofrece el comando para copiar. Sin token de GitHub solo muestra la versión instalada (el estado queda `missing_token`).
+- **Validación.** El nombre y el repositorio deben tener la forma `vendor/package`, la etiqueta no puede estar vacía y una `url` debe ser `http(s)`. Un descuido es un error detectable (`InvalidArgumentException`), no una fila rota.
+- **Resolvedor compartido.** Tanto el registro como la página de `lnx-ui` usan `App\Support\Packages\PackageVersion`, que resuelve la versión instalada (`Composer\InstalledVersions`) y la última disponible por nombre de paquete, con caché por paquete. El token y el TTL viven en `config/packages.php` (`PACKAGES_GITHUB_TOKEN`/`GITHUB_TOKEN`, `PACKAGES_UPDATE_CHECK_TTL`).
+- **Alcance.** Registrar aquí es solo para que un módulo sea visible en la superficie de paquetes del admin; no concede permisos, cuotas ni escritura. Esos se declaran en sus propios registros (§3.1, §3.2, §4).
+
+### 3.6 Acceso por registro (implementado)
+
+Un paquete **relaciona a un usuario con los registros que puede ver** y el kit le da un mecanismo uniforme para guardar esa relación, **filtrar las consultas por ella** y hacerla valer en las superficies compartidas (MCP y admin). El dominio decide **quién ve qué**; el kit solo estandariza **la forma**.
+
+**Contrato (lo que el kit garantiza)**
+
+1. **Modelo accesible.** Un modelo que se filtra por identidad implementa `App\Support\RecordAccess\AccessControlled` y expone `scopeAccessibleTo(Builder $query, User $user): Builder`. El filtro se aplica **en la consulta** (authorization-first), nunca en memoria: las superficies comparten `Modelo::accessibleTo($user)`. Un registro hijo hereda el acceso de su padre uniendo contra el scope del padre.
+2. **Registro explícito.** El provider declara sus modelos accesibles con `App\Support\RecordAccess\RecordAccessRegistry`; registrar una clase que no sea un modelo Eloquent que implemente `AccessControlled` es un error detectable (`InvalidArgumentException`):
+   ```php
+   use App\Support\RecordAccess\RecordAccessRegistry;
+
+   public function boot(): void
+   {
+       app(RecordAccessRegistry::class)->register('luz', [Patient::class]);
+   }
+   ```
+3. **Autorización por registro.** Las policies del paquete comprueban la pertenencia del usuario al registro (ver, editar). Las superficies compartidas (**MCP, admin**) filtran siempre con `accessibleTo($user)` y revalidan el permiso por operación; ninguna devuelve registros sin pasar por el scope.
+4. **Pertenencia genérica (opcional).** El kit ofrece la tabla polimórfica `record_access`, el modelo `App\Models\RecordAccess` y el trait `App\Support\RecordAccess\GrantsRecordAccess` para relacionar usuarios con **cualquier** registro. La relación es `accessGrants()`, con dos ayudantes: `grantAccessTo(User $user, RecordAccessAbility $ability = View, ?CarbonInterface $expiresAt = null)` (fusiona abilities y no duplica la fila) y `hasRecordAccess(User $user, RecordAccessAbility $ability = View)`. Es una comodidad, no una obligación: un paquete puede definir su propia relación si necesita algo más rico y aun así cumplir el contrato.
+
+**Ejemplo (Luz, multi-paciente)**
+
+```php
+class Patient extends Model implements AccessControlled
+{
+    use GrantsRecordAccess;
+
+    public function scopeAccessibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->hasRole(Role::Root)) {
+            return $query; // root omite el filtro; admin NO lo omite por defecto
+        }
+
+        return $query->where(fn (Builder $q) => $q
+            ->where('owner_id', $user->id)
+            ->orWhereHas('accessGrants', fn (Builder $g) => $g
+                ->where('user_id', $user->id)
+                ->where(fn (Builder $e) => $e->whereNull('expires_at')->orWhere('expires_at', '>', now()))));
+    }
+}
+```
+
+- **Hijos** (documentos, prescripciones, exámenes, horas): su `accessibleTo` une contra `patients` con el scope del padre, de modo que heredan el acceso sin duplicar la lista.
+- **MVP:** Luis es `root` y ve todos los pacientes; la relación ya existe y no limita. **Fase 2:** la familia recibe `grants` por paciente y los médicos accesos temporales (`expires_at`), sin rediseño.
+
+**Decisiones adoptadas (2026-10-11)**
+
+1. **Alcance de `admin`:** sin bypass; solo `root` omite el filtro (consistente con las policies).
+2. **Granularidad de `abilities`:** `view`/`manage` (`App\Support\RecordAccess\RecordAccessAbility`); un grant sin abilities almacenadas cubre ambas.
+3. **Accesos temporales:** en el grant (`expires_at`); un grant vencido se ignora tanto en el scope como en `hasRecordAccess`. Los enlaces públicos con token son otra pieza (Fase 2).
+4. **Herencia:** convención documentada (unir contra el scope del padre), sin helper del kit.
+5. **Verificación:** pruebas Pest del contrato (`tests/Feature/RecordAccessTest.php`).
+
+**Qué NO hace el kit**
+
+- No define la relación de dominio ni el significado clínico; no concede acceso por instalación.
+- No sustituye las policies: **complementa** el filtrado en consulta con la comprobación por operación.
+- No permite filtrar en memoria ni devolver colecciones sin aplicar `accessibleTo`.
 
 ## 4. Escritura por MCP (implementado)
 
@@ -194,7 +278,7 @@ class UploadDocumentTool extends WriteTool
 
 ## 5. Cómo se valida
 
-Cada punto del contrato se valida con **Luz**, el primer módulo. Un punto que Luz no use no entra. Al cerrar la etapa: `CONTRATO-MODULO.md`, el ROADMAP y el CHANGELOG del kit quedan actualizados, y `references/packages.md` de la skill del kit refleja el contrato vigente.
+Cada punto del contrato se valida con **Luz**, el primer módulo. Un punto que Luz no use no entra. Al cerrar la etapa: `CONTRATO-MODULO.md`, el ROADMAP y el CHANGELOG del kit quedan actualizados, y [`references/packages.md`](.ai/skills/implement-feature/references/packages.md) de la skill del kit refleja el contrato vigente. La referencia ya existe y resume las capacidades declarables; se actualiza con cada punto que se cierre.
 
 ## 6. Versionado
 

@@ -3,7 +3,7 @@
 namespace App\Livewire\Packages;
 
 use App\Enums\Role;
-use App\Support\LnxUiPackage;
+use App\Support\Packages\PackageVersion;
 use Flux\Flux;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
@@ -22,18 +22,20 @@ class LnxUi extends Component
 
     public bool $updateAvailable = false;
 
-    public function mount(LnxUiPackage $package): void
+    public function mount(): void
     {
         $this->authorizeRoot();
 
+        $package = $this->version();
         $this->installedVersion = $package->installedVersion();
         $this->applyState($package->state(), $package);
     }
 
-    public function checkForUpdates(LnxUiPackage $package): void
+    public function checkForUpdates(): void
     {
         $this->authorizeRoot();
 
+        $package = $this->version();
         $state = $package->refresh();
         $this->applyState($state, $package);
 
@@ -49,16 +51,25 @@ class LnxUi extends Component
         $this->authorizeRoot();
 
         return view('livewire.packages.lnx-ui', [
-            'packageName' => app(LnxUiPackage::class)->name(),
-            'updateCommand' => app(LnxUiPackage::class)->updateCommand(),
+            'packageName' => $this->version()->name(),
+            'updateCommand' => $this->version()->updateCommand(),
             'galleryEnabled' => (bool) config('app.design_gallery_enabled'),
         ])->layout('layouts.app');
     }
 
     /**
+     * The lnx-ui package is not part of the generic registry: it keeps its own
+     * page with the design gallery, fed by the shared version resolver.
+     */
+    private function version(): PackageVersion
+    {
+        return new PackageVersion((string) config('lnx_ui.repository', 'luinuxscl/lnx-ui'));
+    }
+
+    /**
      * @param  array{version: ?string, error: ?string, checked_at: ?string}  $state
      */
-    private function applyState(array $state, LnxUiPackage $package): void
+    private function applyState(array $state, PackageVersion $package): void
     {
         $this->latestVersion = $state['version'];
         $this->checkError = $state['error'];

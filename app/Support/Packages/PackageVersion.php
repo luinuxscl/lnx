@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Support\Packages;
 
 use Composer\InstalledVersions;
 use Illuminate\Support\Facades\Cache;
@@ -8,17 +8,32 @@ use Illuminate\Support\Facades\Http;
 use Throwable;
 
 /**
- * Resolves the installed and latest available versions of the shared UI
- * package (x-lnx-ui::), reading the installed version from Composer and the
- * latest tag from the GitHub API.
+ * Resolves the installed and the latest available version of a Composer
+ * package, reading the installed version from Composer and the latest tag from
+ * the GitHub API. It generalizes the previous single-package resolver so any
+ * registered package (or, for `lnx-ui`, its own page) can report its versions.
  */
-class LnxUiPackage
+class PackageVersion
 {
-    private const CACHE_KEY = 'lnx-ui:latest-version';
+    public function __construct(
+        private readonly string $name,
+        private readonly ?string $repository = null,
+    ) {}
 
+    /**
+     * The Composer name of the package.
+     */
     public function name(): string
     {
-        return (string) config('lnx_ui.repository', 'luinuxscl/lnx-ui');
+        return $this->name;
+    }
+
+    /**
+     * The GitHub repository (owner/name) used to look up tags.
+     */
+    public function repository(): string
+    {
+        return $this->repository ?? $this->name;
     }
 
     /**
@@ -26,6 +41,10 @@ class LnxUiPackage
      */
     public function installedVersion(): string
     {
+        if (! InstalledVersions::isInstalled($this->name())) {
+            return __('Unknown');
+        }
+
         $version = InstalledVersions::getPrettyVersion($this->name());
 
         return $version !== null ? ltrim($version, 'vV') : __('Unknown');
@@ -39,7 +58,7 @@ class LnxUiPackage
      */
     public function state(): array
     {
-        return Cache::get(self::CACHE_KEY, $this->emptyState());
+        return Cache::get($this->cacheKey(), $this->emptyState());
     }
 
     /**
@@ -51,7 +70,7 @@ class LnxUiPackage
     {
         $state = $this->fetchLatestVersion();
 
-        Cache::put(self::CACHE_KEY, $state, now()->addSeconds((int) config('lnx_ui.check_ttl', 3600)));
+        Cache::put($this->cacheKey(), $state, now()->addSeconds((int) config('packages.check_ttl', 3600)));
 
         return $state;
     }
@@ -76,20 +95,25 @@ class LnxUiPackage
         return 'composer update '.$this->name();
     }
 
+    private function cacheKey(): string
+    {
+        return 'packages:latest-version:'.$this->name();
+    }
+
     /**
      * @return array{version: ?string, error: ?string, checked_at: ?string}
      */
     private function fetchLatestVersion(): array
     {
-        if (blank(config('lnx_ui.token'))) {
+        if (blank(config('packages.token'))) {
             return $this->errorState('missing_token');
         }
 
         try {
-            $response = Http::withToken((string) config('lnx_ui.token'))
+            $response = Http::withToken((string) config('packages.token'))
                 ->accept('application/vnd.github+json')
                 ->timeout(10)
-                ->get("https://api.github.com/repos/{$this->name()}/tags", ['per_page' => 100]);
+                ->get("https://api.github.com/repos/{$this->repository()}/tags", ['per_page' => 100]);
         } catch (Throwable) {
             return $this->errorState('request_failed');
         }

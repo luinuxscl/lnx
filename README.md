@@ -306,6 +306,37 @@ public function boot(): void
 - `php artisan permissions:sync` materializa los permisos declarados de forma idempotente con `findOrCreate` y los concede al rol `admin`. `root` los omite vía `Gate::before`. `RolePermissionSeeder` ejecuta el mismo sync, así que `php artisan migrate --seed` deja los permisos listos.
 - Nada se concede por estar el paquete en `vendor/`: la declaración es explícita y reejecutar la sincronización no duplica permisos ni concesiones.
 
+### Acceso por registro (paquetes)
+
+Un paquete define **qué registros puede ver cada usuario** con un contrato uniforme (ver [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.6). El modelo accesible implementa `App\Support\RecordAccess\AccessControlled` y expone `scopeAccessibleTo(Builder $query, User $user): Builder`; el filtro se aplica **en la consulta**, nunca en memoria:
+
+```php
+use App\Support\RecordAccess\AccessControlled;
+use App\Support\RecordAccess\GrantsRecordAccess;
+
+class Patient extends Model implements AccessControlled
+{
+    use GrantsRecordAccess;
+
+    public function scopeAccessibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->hasRole(Role::Root)) {
+            return $query; // root omite el filtro; admin no lo omite por defecto
+        }
+
+        return $query->where(fn (Builder $q) => $q
+            ->where('owner_id', $user->id)
+            ->orWhereHas('accessGrants', fn (Builder $g) => $g
+                ->where('user_id', $user->id)
+                ->where(fn (Builder $e) => $e->whereNull('expires_at')->orWhere('expires_at', '>', now()))));
+    }
+}
+```
+
+- El provider declara sus modelos con `app(RecordAccessRegistry::class)->register('luz', [Patient::class])`; registrar una clase que no sea un modelo Eloquent que implemente `AccessControlled` lanza `InvalidArgumentException`.
+- El kit ofrece la tabla polimórfica `record_access` y el trait `GrantsRecordAccess` (relación `accessGrants()`, `grantAccessTo($user, $ability, $expiresAt)` y `hasRecordAccess($user, $ability)`) para relacionar usuarios con cualquier registro, con `abilities` (`view`/`manage`) y `expires_at` opcionales.
+- Las superficies compartidas (MCP, admin) filtran con `Modelo::accessibleTo($user)` y revalidan el permiso por operación; ninguna devuelve registros sin pasar por el scope.
+
 ### Credenciales root de desarrollo y alerta de seguridad
 
 Para desarrollo, `.env.example` trae un root listo para usar (**Luis Sepulveda / luinuxscl@gmail.com / password**) para que `php artisan migrate --seed` deje la app operativa al instante. Esas credenciales **nunca** deben llegar a producción, y por eso existen tres capas de defensa:
@@ -746,7 +777,9 @@ La referencia de tokens es `resources/css/app.css`: Instrument Sans, escala de e
 | Diálogos y acciones | Modal de suspensión en `resources/views/livewire/users/index.blade.php` |
 | Carga y error | La galería en `/admin/packages/lnx-ui` (`resources/views/livewire/packages/lnx-ui.blade.php`) y `resources/views/livewire/users/invitations.blade.php` |
 
-La página `/admin/packages/lnx-ui` (rol `root`, disponible en todos los entornos; grupo `Packages` → ítem `UI/UX components` del sidebar) muestra la versión instalada y la última disponible del paquete `luinuxscl/lnx-ui`, permite buscar actualizaciones contra la API de GitHub y ofrece el comando de actualización; debajo incluye la galería de diseño. El token se configura con `GITHUB_TOKEN` (o `LNX_UI_GITHUB_TOKEN`); sin él solo se muestra la versión instalada. `DESIGN_GALLERY_ENABLED=false` oculta solo la galería, no la tarjeta de versión. La galería muestra estados de carga, vacío, error, validación y acciones con componentes Flux existentes. Para revisar una pantalla, comparar móvil estrecho y escritorio, temas claro/oscuro, los seis acentos, navegación por teclado y foco visible; anotar capturas y correcciones en el PR. El selector de acento en `resources/views/livewire/settings/appearance.blade.php` es el primer caso aplicado: sus botones muestran un contorno de foco explícito. Las **páginas de lista** comparten un patrón único: una fila de KPIs clicables (`x-lnx-ui::stat-card` con `href` y `active`, que actúan como filtros rápidos) sobre una tarjeta `x-lnx-ui::data-table` que reúne filtros, búsqueda, acciones, tabla y estado vacío. Si cambia un patrón, actualizar implementación, ejemplo de galería y esta guía en el mismo cambio. La skill `.ai/skills/design-screen/SKILL.md` indica el recorrido de revisión sin duplicar estas decisiones.
+La página **Paquetes** (`/admin/packages`, rol `root`; grupo `Packages` → ítem `Installed packages` del sidebar) es el registro genérico de módulos: lista cada paquete registrado con su versión instalada, la última disponible y el comando de actualización, y ofrece un botón **Buscar actualizaciones**. Un paquete aparece ahí al declararse en el `boot()` de su provider con `App\Support\Packages\PackageRegistry` (`name` y `label` obligatorios; `description`, `repository`, `url` y `update_command` opcionales); la versión instalada se lee de Composer y la última se consulta a la API de GitHub. Sin token solo se muestra la versión instalada. `lnx-ui` queda fuera de ese registro general y conserva su página dedicada. Detalles en [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.5.
+
+La página `/admin/packages/lnx-ui` (rol `root`, disponible en todos los entornos; grupo `Packages` → ítem `UI/UX components` del sidebar) muestra la versión instalada y la última disponible del paquete `luinuxscl/lnx-ui`, permite buscar actualizaciones contra la API de GitHub y ofrece el comando de actualización; debajo incluye la galería de diseño. El token se configura con `GITHUB_TOKEN` (`PACKAGES_GITHUB_TOKEN` o `LNX_UI_GITHUB_TOKEN` con precedencia); sin él solo se muestra la versión instalada. `DESIGN_GALLERY_ENABLED=false` oculta solo la galería, no la tarjeta de versión. La galería muestra estados de carga, vacío, error, validación y acciones con componentes Flux existentes. Para revisar una pantalla, comparar móvil estrecho y escritorio, temas claro/oscuro, los seis acentos, navegación por teclado y foco visible; anotar capturas y correcciones en el PR. El selector de acento en `resources/views/livewire/settings/appearance.blade.php` es el primer caso aplicado: sus botones muestran un contorno de foco explícito. Las **páginas de lista** comparten un patrón único: una fila de KPIs clicables (`x-lnx-ui::stat-card` con `href` y `active`, que actúan como filtros rápidos) sobre una tarjeta `x-lnx-ui::data-table` que reúne filtros, búsqueda, acciones, tabla y estado vacío. Si cambia un patrón, actualizar implementación, ejemplo de galería y esta guía en el mismo cambio. La skill `.ai/skills/design-screen/SKILL.md` indica el recorrido de revisión sin duplicar estas decisiones.
 
 Para publicar cambios del paquete, la skill `.ai/skills/lnx-ui-release/SKILL.md` (cuya fuente canónica es el paquete `lnx-ui`) describe el flujo: editar en el checkout de desarrollo del paquete, verificar, commitear en `develop`, mergear a `main`, crear el tag SemVer anotado, subir todo a `origin` y, preguntando la lista, actualizar con `composer update luinuxscl/lnx-ui` las instancias de lnx que lo requieren.
 
