@@ -12,6 +12,8 @@ use Laravel\Ai\Enums\Lab;
  */
 class AiConfig
 {
+    public function __construct(private readonly AiApplicationRegistry $applications) {}
+
     /**
      * Capabilities a feature can require from a model.
      *
@@ -187,6 +189,9 @@ class AiConfig
     /**
      * The quota for a feature, falling back to the default limit.
      *
+     * An application declared by a package contributes its quota unless a
+     * deployment overrides it in `config/lnx_ai.php`.
+     *
      * @return array{window: string, requests: int, tokens: int}
      */
     public function applicationLimit(?string $application): array
@@ -196,7 +201,8 @@ class AiConfig
         $limits = config('lnx_ai.limits.applications', []);
         $limits = is_array($limits) ? $limits : [];
 
-        $limit = $limits[$application] ?? config('lnx_ai.limits.default', []);
+        $limit = $limits[$application]
+            ?? ($this->applications->quota($application) ?: config('lnx_ai.limits.default', []));
 
         return $this->normalizeLimit($limit);
     }
@@ -392,14 +398,21 @@ class AiConfig
     /**
      * Every configured application limit, keyed by application name.
      *
+     * Includes the applications declared by packages; a deployment entry in
+     * `config/lnx_ai.php` overrides a declared quota.
+     *
      * @return array<string, array{window: string, requests: int, tokens: int}>
      */
     public function applicationLimits(): array
     {
+        $normalized = [];
+
+        foreach ($this->applications->all() as $application => $quota) {
+            $normalized[$application] = $this->normalizeLimit($quota ?: config('lnx_ai.limits.default', []));
+        }
+
         $limits = config('lnx_ai.limits.applications', []);
         $limits = is_array($limits) ? $limits : [];
-
-        $normalized = [];
 
         foreach ($limits as $application => $limit) {
             if (is_string($application) && $application !== '') {
