@@ -1,7 +1,11 @@
 <section class="w-full space-y-6">
     <x-lnx-ui::page-header
         :title="__('Welcome, :name', ['name' => $name])"
-        :subtitle="$isRoot ? __('Your tools are here.') : __('Your account and site shortcuts are here.')"
+        :subtitle="$isRoot
+            ? __('Your tools are here.')
+            : ($userCounts !== null
+                ? __('Review the accounts and act on what needs attention.')
+                : __('Your account and site shortcuts are here.'))"
     />
 
     @if ($isRoot)
@@ -96,53 +100,165 @@
         </section>
     @else
         @if ($userCounts !== null)
-            <section aria-labelledby="dashboard-users-heading" class="space-y-4">
-                <flux:heading id="dashboard-users-heading" level="2">{{ __('Users') }}</flux:heading>
-                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <flux:card class="space-y-2">
-                        <x-lnx-ui::stat :label="__('Total users')" :value="\Illuminate\Support\Number::format($userCounts->total)" icon="users" color="blue" />
-                        <flux:button size="sm" :href="route('admin.users.index')" wire:navigate>{{ __('View users') }}</flux:button>
-                    </flux:card>
-                    <flux:card class="space-y-2">
-                        <x-lnx-ui::stat :label="__('Active users')" :value="\Illuminate\Support\Number::format($userCounts->active)" icon="users" color="emerald" />
-                        <flux:button size="sm" :href="route('admin.users.index', ['status' => 'active'])" wire:navigate>{{ __('View active users') }}</flux:button>
-                    </flux:card>
-                    <flux:card class="space-y-2">
-                        <x-lnx-ui::stat :label="__('Suspended users')" :value="\Illuminate\Support\Number::format($userCounts->suspended)" icon="users" color="rose" />
-                        <flux:button size="sm" :href="route('admin.users.index', ['status' => 'suspended'])" wire:navigate>{{ __('View suspended users') }}</flux:button>
-                    </flux:card>
-                    @if ($pendingInvitations !== null)
-                        <flux:card class="space-y-2">
-                            <x-lnx-ui::stat :label="__('Pending invitations')" :value="\Illuminate\Support\Number::format($pendingInvitations)" icon="clock" color="amber" />
-                            @if ($pendingInvitations === 0)
-                                <flux:text>{{ __('No invitations are awaiting acceptance.') }}</flux:text>
-                            @endif
-                            <div class="flex flex-wrap gap-2">
-                                <flux:button size="sm" :href="route('admin.users.invitations')" wire:navigate>{{ __('View invitations') }}</flux:button>
-                                @if ($canCreateInvitations)
-                                    <flux:button size="sm" variant="primary" :href="route('admin.users.create')" wire:navigate>{{ __('Invite user') }}</flux:button>
-                                @endif
-                            </div>
-                        </flux:card>
-                    @endif
+            <x-lnx-ui::statistics-panel :title="__('Users')">
+                @if ($pendingInvitations === 0)
+                    <x-slot:description>{{ __('No invitations are awaiting acceptance.') }}</x-slot:description>
+                @endif
+                @if ($canCreateInvitations)
+                    <x-slot:actions>
+                        <flux:button size="sm" variant="primary" icon="user-plus" :href="route('admin.users.create')" wire:navigate>
+                            {{ __('Invite user') }}
+                        </flux:button>
+                    </x-slot:actions>
+                @endif
+
+                <x-lnx-ui::stat-card
+                    class="col-span-12 sm:col-span-6 xl:col-span-3"
+                    :label="__('Total users')"
+                    :value="\Illuminate\Support\Number::format($userCounts['total'])"
+                    icon="users"
+                    color="blue"
+                    :href="route('admin.users.index')"
+                />
+                <x-lnx-ui::stat-card
+                    class="col-span-12 sm:col-span-6 xl:col-span-3"
+                    :label="__('Active users')"
+                    :value="\Illuminate\Support\Number::format($userCounts['active'])"
+                    icon="check-circle"
+                    color="emerald"
+                    :href="route('admin.users.index', ['status' => 'active'])"
+                />
+                <x-lnx-ui::stat-card
+                    class="col-span-12 sm:col-span-6 xl:col-span-3"
+                    :label="__('Suspended users')"
+                    :value="\Illuminate\Support\Number::format($userCounts['suspended'])"
+                    icon="user-minus"
+                    color="rose"
+                    :href="route('admin.users.index', ['status' => 'suspended'])"
+                />
+                <x-lnx-ui::stat-card
+                    class="col-span-12 sm:col-span-6 xl:col-span-3"
+                    :label="__('Unverified users')"
+                    :value="\Illuminate\Support\Number::format($userCounts['unverified'])"
+                    icon="exclamation-triangle"
+                    color="amber"
+                    :href="route('admin.users.index', ['verified' => 'unverified'])"
+                />
+                <x-lnx-ui::stat-card
+                    class="col-span-12 sm:col-span-6 xl:col-span-3"
+                    :label="__('Administrators')"
+                    :value="\Illuminate\Support\Number::format($userCounts['admins'])"
+                    icon="shield-check"
+                    color="violet"
+                    :href="route('admin.users.index', ['role' => 'admin'])"
+                />
+                <x-lnx-ui::stat-card
+                    class="col-span-12 sm:col-span-6 xl:col-span-3"
+                    :label="__('Signups (7 days)')"
+                    :value="\Illuminate\Support\Number::format($userCounts['recent'])"
+                    icon="user-plus"
+                    color="cyan"
+                    :href="route('admin.users.index', ['sort' => 'registered', 'dir' => 'desc'])"
+                />
+                @if ($pendingInvitations !== null)
+                    <x-lnx-ui::stat-card
+                        class="col-span-12 sm:col-span-6 xl:col-span-3"
+                        :label="__('Pending invitations')"
+                        :value="\Illuminate\Support\Number::format($pendingInvitations)"
+                        icon="clock"
+                        color="amber"
+                        :href="route('admin.users.invitations')"
+                    />
+                @endif
+            </x-lnx-ui::statistics-panel>
+
+            <section aria-labelledby="dashboard-shortcuts-heading" class="space-y-4">
+                <flux:heading id="dashboard-shortcuts-heading" level="2">{{ __('Shortcuts') }}</flux:heading>
+
+                <div class="grid grid-cols-12 gap-4">
+                    <x-lnx-ui::tool-card
+                        class="col-span-12 sm:col-span-6"
+                        :title="__('Users')"
+                        :description="__('Manage accounts, roles, and invitations.')"
+                        icon="users"
+                        color="blue"
+                        :href="route('admin.users.index')"
+                    />
+                    <x-lnx-ui::tool-card
+                        class="col-span-12 sm:col-span-6"
+                        :title="__('Support')"
+                        :description="__('Review your own support requests.')"
+                        icon="inbox"
+                        color="rose"
+                        :href="route('support.index')"
+                    />
+                </div>
+            </section>
+
+            <section aria-labelledby="dashboard-account-heading" class="space-y-4">
+                <flux:heading id="dashboard-account-heading" level="2">{{ __('Your account') }}</flux:heading>
+
+                <div class="grid grid-cols-12 gap-4">
+                    <x-lnx-ui::tool-card
+                        class="col-span-12 sm:col-span-6"
+                        :title="__('Profile')"
+                        :description="__('Update your personal information.')"
+                        icon="user-circle"
+                        color="violet"
+                        :href="route('profile.edit')"
+                    />
+                    <x-lnx-ui::tool-card
+                        class="col-span-12 sm:col-span-6"
+                        :title="__('Security')"
+                        :description="__('Manage your sign-in security.')"
+                        icon="lock-closed"
+                        color="emerald"
+                        :href="route('security.edit')"
+                    />
+                </div>
+            </section>
+        @else
+            <x-lnx-ui::statistics-panel :title="__('Notifications')">
+                <x-lnx-ui::stat-card
+                    class="col-span-12 sm:col-span-6 xl:col-span-4"
+                    :label="__('Unread notifications')"
+                    :value="\Illuminate\Support\Number::format($unreadNotifications)"
+                    icon="bell-alert"
+                    color="amber"
+                    :href="route('notifications.index')"
+                />
+            </x-lnx-ui::statistics-panel>
+
+            <section aria-labelledby="dashboard-account-heading" class="space-y-4">
+                <flux:heading id="dashboard-account-heading" level="2">{{ __('Your account') }}</flux:heading>
+
+                <div class="grid grid-cols-12 gap-4">
+                    <x-lnx-ui::tool-card
+                        class="col-span-12 sm:col-span-6 xl:col-span-4"
+                        :title="__('Profile')"
+                        :description="__('Update your personal information.')"
+                        icon="user-circle"
+                        color="violet"
+                        :href="route('profile.edit')"
+                    />
+                    <x-lnx-ui::tool-card
+                        class="col-span-12 sm:col-span-6 xl:col-span-4"
+                        :title="__('Security')"
+                        :description="__('Manage your sign-in security.')"
+                        icon="lock-closed"
+                        color="emerald"
+                        :href="route('security.edit')"
+                    />
+                    <x-lnx-ui::tool-card
+                        class="col-span-12 sm:col-span-6 xl:col-span-4"
+                        :title="__('Support')"
+                        :description="__('Review your own support requests.')"
+                        icon="inbox"
+                        color="rose"
+                        :href="route('support.index')"
+                    />
                 </div>
             </section>
         @endif
-
-        <section aria-labelledby="dashboard-account-heading" class="space-y-4">
-            <flux:heading id="dashboard-account-heading" level="2">{{ __('Your account') }}</flux:heading>
-            <div class="grid gap-4 sm:grid-cols-2">
-                <flux:card class="space-y-3">
-                    <flux:heading level="3">{{ __('Profile') }}</flux:heading>
-                    <flux:text>{{ __('Update your personal information.') }}</flux:text>
-                    <flux:button :href="route('profile.edit')" wire:navigate>{{ __('Open profile') }}</flux:button>
-                </flux:card>
-                <flux:card class="space-y-3">
-                    <flux:heading level="3">{{ __('Security') }}</flux:heading>
-                    <flux:text>{{ __('Manage your sign-in security.') }}</flux:text>
-                    <flux:button :href="route('security.edit')" wire:navigate>{{ __('Open security') }}</flux:button>
-                </flux:card>
-            </div>
-        </section>
     @endif
 </section>
