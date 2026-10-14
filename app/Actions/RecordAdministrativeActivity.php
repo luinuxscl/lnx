@@ -16,7 +16,7 @@ class RecordAdministrativeActivity
     private const FIELDS = [
         'user' => ['name', 'email', 'role', 'suspended_at', 'avatar_path'],
         'invitation' => ['email', 'role', 'locale', 'expires_at', 'sent_at', 'send_failed_at', 'accepted_at', 'revoked_at'],
-        'setting' => ['site_title', 'site_tagline', 'meta_description', 'admin_email', 'footer_text', 'analytics_id', 'maintenance_mode', 'registration_mode', 'maintenance_message', 'logo_path', 'logo_dark_path', 'favicon_path', 'apple_touch_icon_path'],
+        'setting' => ['site_title', 'site_tagline', 'meta_description', 'admin_email', 'footer_text', 'analytics_id', 'maintenance_mode', 'registration_mode', 'home_enabled', 'maintenance_message', 'logo_path', 'logo_dark_path', 'favicon_path', 'apple_touch_icon_path'],
         'navigation_group' => ['audience', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled'],
         'navigation_item' => ['audience', 'type', 'route_name', 'url', 'label_key', 'label_es', 'label_en', 'icon', 'position'],
     ];

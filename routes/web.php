@@ -3,6 +3,7 @@
 use App\Enums\Role;
 use App\Http\Controllers\AcceptInvitationController;
 use App\Http\Controllers\DocumentDownloadController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\SupportAttachmentController;
 use App\Livewire\Activity\Index as ActivityIndex;
@@ -25,7 +26,7 @@ use App\Livewire\Support\Index as SupportIndex;
 use App\Livewire\Support\Show as SupportShow;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+Route::get('/', HomeController::class)->name('home');
 
 Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');
 
