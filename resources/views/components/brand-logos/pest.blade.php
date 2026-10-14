@@ -1,0 +1,5 @@
+<svg {{ $attributes }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-hidden="true">
+<g transform="translate(20.5 40.1) scale(1.9625)">
+        <path fill="#f43f5e" fill-rule="evenodd" clip-rule="evenodd" d="M36.844 61.111 51.014 0H240l-32.594 140.556H81.417L62.995 220H0L32.593 79.445h125.989l4.252-18.334z"/>
+    </g>
+</svg>

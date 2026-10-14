@@ -30,6 +30,7 @@ class SettingFactory extends Factory
             'analytics_id' => null,
             'maintenance_mode' => false,
             'registration_mode' => 'open',
+            'home_enabled' => true,
             'maintenance_message' => null,
         ];
     }

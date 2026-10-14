@@ -130,6 +130,12 @@
             </flux:select>
 
             <flux:switch
+                wire:model.live="home_enabled"
+                :label="__('Home page')"
+                :description="__('Show a public landing page at the home route. When disabled, visitors are sent to the sign-in page and signed-in users to the dashboard.')"
+            />
+
+            <flux:switch
                 wire:model.live="maintenance_mode"
                 :label="__('Maintenance mode')"
                 :description="__('Temporarily block access to the application. Root users can still sign in.')"
