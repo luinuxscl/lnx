@@ -5,6 +5,7 @@ use App\Livewire\Dashboard;
 use App\Models\User;
 use App\Models\UserInvitation;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -26,19 +27,29 @@ test('guests are redirected to the login page', function () {
     $this->get(route('dashboard'))->assertRedirect(route('login'));
 });
 
-test('ordinary users see only their personal shortcuts and an escaped name', function () {
+test('ordinary users see their account, notifications and support shortcuts without administrative data', function () {
     $user = User::factory()->create(['name' => '<script>alert(1)</script>']);
     dashboardUser(Role::Admin);
     UserInvitation::factory()->create(['invited_by' => $user->id]);
+    $user->notifications()->create([
+        'id' => (string) Str::uuid(),
+        'type' => 'App\\Notifications\\SupportTicketUpdated',
+        'data' => [],
+    ]);
 
     $response = $this->actingAs($user)->get(route('dashboard'));
 
     $response->assertOk()
         ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)
         ->assertDontSee('<script>alert(1)</script>', false)
+        ->assertSee('Notificaciones sin leer')
+        ->assertSee(route('notifications.index'))
         ->assertSee(route('profile.edit'))
         ->assertSee(route('security.edit'))
+        ->assertSee(route('support.index'))
         ->assertDontSee('Usuarios totales')
+        ->assertDontSee('Usuarios sin verificar')
+        ->assertDontSee('Administradores')
         ->assertDontSee('Invitaciones pendientes')
         ->assertDontSee('Herramientas de la app')
         ->assertDontSee('de 5 verificadas')
@@ -46,42 +57,60 @@ test('ordinary users see only their personal shortcuts and an escaped name', fun
         ->assertDontSee(route('admin.setup.index'));
 
     $component = Livewire::actingAs($user)->test(Dashboard::class);
-    expect($component->html())->not->toContain('Usuarios totales', 'Invitaciones pendientes', 'Herramientas de la app');
+    expect($component->viewData('userCounts'))->toBeNull()
+        ->and($component->viewData('pendingInvitations'))->toBeNull()
+        ->and($component->viewData('unreadNotifications'))->toBe(1);
     expect(json_encode($component->effects))->not->toContain('userCounts', 'pendingInvitations');
 });
 
-test('admin sees all account counts and only actionable pending invitations', function () {
+test('admin sees actionable user metrics linked to filtered lists', function () {
+    $baseTotal = User::count();
+    $baseActive = User::whereNull('suspended_at')->count();
+    $baseSuspended = User::whereNotNull('suspended_at')->count();
+    $baseUnverified = User::whereNull('email_verified_at')->count();
+    $baseRecent = User::where('created_at', '>=', now()->subDays(7))->count();
+    $baseAdmins = User::role(Role::Admin->value)->count();
+
     $admin = dashboardUser(Role::Admin);
-    $active = dashboardUser();
+    dashboardUser();
     $suspended = dashboardUser();
     $suspended->forceFill(['suspended_at' => now()])->save();
-    $root = dashboardUser(Role::Root);
+    $unverified = dashboardUser();
+    $unverified->forceFill(['email_verified_at' => null])->save();
+    dashboardUser(Role::Root);
+    dashboardUser(Role::Admin);
     UserInvitation::factory()->create(['invited_by' => $admin->id]);
-    UserInvitation::factory()->create(['invited_by' => $admin->id, 'send_failed_at' => now()]);
-    UserInvitation::factory()->create(['invited_by' => $admin->id, 'accepted_at' => now()]);
-    UserInvitation::factory()->create(['invited_by' => $admin->id, 'revoked_at' => now()]);
-    UserInvitation::factory()->create(['invited_by' => $admin->id, 'expires_at' => now()->subMinute()]);
 
     $response = $this->actingAs($admin)->get(route('dashboard'));
 
     $response->assertSee('Usuarios totales')
         ->assertSee('Usuarios activos')
         ->assertSee('Usuarios suspendidos')
+        ->assertSee('Usuarios sin verificar')
+        ->assertSee('Administradores')
+        ->assertSee('Altas (7 días)')
         ->assertSee('Invitaciones pendientes')
         ->assertSee(route('admin.users.index', ['status' => 'active']))
         ->assertSee(route('admin.users.index', ['status' => 'suspended']))
+        ->assertSee(route('admin.users.index', ['verified' => 'unverified']))
+        ->assertSee(route('admin.users.index', ['role' => 'admin']))
         ->assertSee(route('admin.users.invitations'))
         ->assertSee(route('admin.users.create'))
+        ->assertSee(route('support.index'))
         ->assertDontSee('Herramientas de la app')
         ->assertDontSee('de 5 verificadas')
         ->assertDontSee(route('admin.setup.index'))
         ->assertDontSee(route('admin.settings.edit'));
 
     $component = Livewire::actingAs($admin)->test(Dashboard::class);
-    expect((int) $component->viewData('userCounts')->total)->toBe(5)
-        ->and((int) $component->viewData('userCounts')->active)->toBe(4)
-        ->and((int) $component->viewData('userCounts')->suspended)->toBe(1)
-        ->and($component->viewData('pendingInvitations'))->toBe(2);
+    $counts = $component->viewData('userCounts');
+    expect($counts['total'])->toBe($baseTotal + 6)
+        ->and($counts['active'])->toBe($baseActive + 5)
+        ->and($counts['suspended'])->toBe($baseSuspended + 1)
+        ->and($counts['unverified'])->toBe($baseUnverified + 1)
+        ->and($counts['admins'])->toBe($baseAdmins + 2)
+        ->and($counts['recent'])->toBe($baseRecent + 6)
+        ->and($component->viewData('pendingInvitations'))->toBe(1);
 });
 
 test('admin sees a truthful empty invitation state', function () {
@@ -89,6 +118,16 @@ test('admin sees a truthful empty invitation state', function () {
 
     $this->actingAs($admin)->get(route('dashboard'))
         ->assertSee('No hay invitaciones pendientes de aceptación.');
+});
+
+test('admin does not see root-exclusive tool cards', function () {
+    $admin = dashboardUser(Role::Admin);
+
+    $this->actingAs($admin)->get(route('dashboard'))
+        ->assertOk()
+        ->assertDontSee('Herramientas de la app')
+        ->assertDontSee('Audita los cambios administrativos en toda la aplicación.')
+        ->assertSee('Usuarios totales');
 });
 
 test('root sees administration and app tool cards instead of metric summaries', function () {
@@ -119,16 +158,6 @@ test('root sees administration and app tool cards instead of metric summaries', 
     expect($component->viewData('isRoot'))->toBeTrue()
         ->and($component->viewData('userCounts'))->toBeNull()
         ->and(json_encode($component->effects))->not->toContain('userCounts', 'pendingInvitations');
-});
-
-test('admin does not see root-exclusive tool cards', function () {
-    $admin = dashboardUser(Role::Admin);
-
-    $this->actingAs($admin)->get(route('dashboard'))
-        ->assertOk()
-        ->assertDontSee('Herramientas de la app')
-        ->assertDontSee('Audita los cambios administrativos en toda la aplicación.')
-        ->assertSee('Usuarios totales');
 });
 
 test('removing the root role between Livewire requests hides the root tool cards', function () {
