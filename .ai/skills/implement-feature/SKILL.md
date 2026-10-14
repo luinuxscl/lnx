@@ -35,7 +35,7 @@ Este procedimiento guía la implementación de un feature o historia de usuario 
 - No conceder autorización para publicar en producción, enviar correos masivos o modificar datos reales no solicitados.
 
 ## Referencias
-- [Paquetes y módulos](references/packages.md): qué puede declarar un paquete instalado en lnx (permisos, aplicaciones de IA, notificaciones, página de paquetes, escritura por MCP y skills). Resumen operativo de [`CONTRATO-MODULO.md`](file:///home/luinux/Code/lnx/CONTRATO-MODULO.md).
+- [Paquetes y módulos](references/packages.md): qué puede declarar un paquete instalado en lnx (permisos, aplicaciones de IA, notificaciones, identidad, página de paquetes, escritura por MCP y skills). Resumen operativo de [`CONTRATO-MODULO.md`](file:///home/luinux/Code/lnx/CONTRATO-MODULO.md).
 
 ---
 

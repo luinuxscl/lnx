@@ -5,9 +5,11 @@ namespace App\Livewire\Settings;
 use App\Actions\RecordAdministrativeActivity;
 use App\Enums\AdministrativeAction;
 use App\Models\Setting;
+use App\Support\Appearance;
 use Flux\Flux;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -28,6 +30,10 @@ class General extends Component
     public string $admin_email = '';
 
     public string $footer_text = '';
+
+    public string $locale = '';
+
+    public string $timezone = '';
 
     public string $analytics_id = '';
 
@@ -59,6 +65,8 @@ class General extends Component
         $this->meta_description = $settings->meta_description ?? '';
         $this->admin_email = $settings->admin_email ?? '';
         $this->footer_text = $settings->footer() ?? '';
+        $this->locale = $settings->siteLocale();
+        $this->timezone = $settings->siteTimezone();
         $this->analytics_id = $settings->analytics_id ?? '';
         $this->maintenance_mode = (bool) $settings->maintenance_mode;
         $this->registration_mode = $settings->registration_mode ?? 'open';
@@ -80,6 +88,8 @@ class General extends Component
             'meta_description' => $validated['meta_description'] ?: null,
             'admin_email' => $validated['admin_email'] ?: null,
             'footer_text' => $validated['footer_text'] ?: null,
+            'locale' => $validated['locale'] ?: null,
+            'timezone' => $validated['timezone'] ?: null,
             'analytics_id' => $validated['analytics_id'] ?: null,
             'maintenance_mode' => $validated['maintenance_mode'],
             'registration_mode' => $validated['registration_mode'],
@@ -177,6 +187,8 @@ class General extends Component
             'meta_description' => ['nullable', 'string', 'max:255'],
             'admin_email' => ['nullable', 'email', 'max:255'],
             'footer_text' => ['nullable', 'string', 'max:255'],
+            'locale' => ['required', 'string', Rule::in(array_keys((array) config('app.available_locales')))],
+            'timezone' => ['required', 'string', 'timezone'],
             'analytics_id' => ['nullable', 'string', 'max:50'],
             'maintenance_mode' => ['boolean'],
             'registration_mode' => ['required', 'in:open,invitation_only'],
@@ -217,6 +229,7 @@ class General extends Component
     {
         return view('livewire.settings.general', [
             'settings' => Setting::current(),
+            'timezones' => Appearance::timezones(),
         ])->layout('layouts.app');
     }
 }

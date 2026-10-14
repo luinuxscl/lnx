@@ -14,11 +14,12 @@ Resumen operativo del **contrato de módulo** de lnx para agentes. Un **módulo*
 | Notificaciones propias | `App\Support\Notifications\NotificationTypeRegistry` | `register('luz', [LuzDocumentReady::class => ['message' => …, 'url' => …, 'permission' => '…']])` | §3.4 |
 | Acceso por registro | `App\Support\RecordAccess\RecordAccessRegistry` + interfaz `AccessControlled` | `register('luz', [Patient::class])`; el modelo expone `scopeAccessibleTo($query, $user)` y se filtra con `Patient::accessibleTo($user)` | §3.6 |
 | Página de paquetes | `App\Support\Packages\PackageRegistry` | `register('luz', ['name' => 'luinuxscl/luz', 'label' => 'Luz', …])`; aparece en `/admin/packages` | §3.5 |
+| Identidad por defecto | `App\Support\Settings\IdentitySeederRegistry` + `App\Actions\ApplyIdentityDefaults` | `register('luz', LuzIdentitySeeder::class, priority: 100)`; el seeder aplica `site_title`, `site_tagline`, `footer_text`, `meta_description`, logos/iconos, `locale` y `timezone`; precedencia root > paquete > kit, sin crear fila si no hay paquete | §3.7 |
 | Escritura por MCP | `App\Mcp\McpToolRegistry` + `#[WritesData]` sobre `WriteTool` | `register('luz', [UploadDocumentTool::class])`; solo se expone con `MCP_SERVER_ALLOW_WRITES=true` y el permiso declarado | §4 |
 
 ## Estado del contrato
 
-- **Implementado:** 1 permisos, 2 acceso por registro, 3 aplicaciones de IA, 4 notificaciones, 5 página de paquetes, 6 escritura por MCP, 7 skills.
+- **Implementado:** 1 permisos, 2 acceso por registro, 3 aplicaciones de IA, 4 notificaciones, 5 página de paquetes, 6 escritura por MCP, 7 skills, 8 identidad por defecto.
 
 ## Configuración compartida
 

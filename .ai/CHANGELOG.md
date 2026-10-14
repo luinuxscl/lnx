@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.21.0] - 2026-10-14
+
+### Añadido
+- **Contrato de módulo — identidad por defecto con precedencia de paquetes (Etapa 11, #53):** un paquete de personalización aporta los defaults de su marca (título, lema, footer, meta descripción, logos/iconos, idioma y zona horaria) declarando su seeder en el `boot()` de su provider con `App\Support\Settings\IdentitySeederRegistry::register(source, seeder, priority)`. El kit registra un **seeder base de identidad** con la prioridad más baja y ejecuta todos los seeders por prioridad descendente al sembrar (`migrate --seed`, `db:seed`, `lnx:reset`), de modo que la precedencia efectiva es **root > paquete > lnx**. Los valores se aplican con `App\Actions\ApplyIdentityDefaults`, que solo rellena campos vacíos y **no persiste** un valor igual al fallback del kit: sin paquete el resultado es idéntico al actual (no se crea fila `settings`). Las columnas `locale` y `timezone` se añaden a `settings` y se editan en Configuración general; `ApplySiteSettings` aplica el idioma y la zona horaria del sitio a la request. Registrar algo que no sea una clase `Seeder` (o con `source` vacío) lanza `InvalidArgumentException`. Documentado en `CONTRATO-MODULO.md` §3.7, `README.md` y la skill `implement-feature` (`references/packages.md`).
+
 ## [1.20.0] - 2026-10-13
 
 ### Añadido

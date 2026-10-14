@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\SeedIdentity;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -17,6 +18,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolePermissionSeeder::class);
         $this->call(NavigationSeeder::class);
+
+        app(SeedIdentity::class)->handle($this->command);
 
         if (! app()->isProduction()) {
             User::factory()->create([

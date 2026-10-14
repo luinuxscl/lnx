@@ -1,6 +1,6 @@
 # Contrato de módulo
 
-> **Estado:** implementado (7 de 7 puntos) · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)) · **Última revisión:** 2026-10-11
+> **Estado:** implementado (8 de 8 puntos) · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)) y **Etapa 11** ([#53](https://github.com/luinuxscl/lnx/issues/53)) · **Última revisión:** 2026-10-14
 > Define **qué puede declarar un módulo (paquete Composer) en lnx** y **bajo qué reglas**. El contrato se deriva del módulo real que lo valida: **Luz** (`luinuxscl/luz`). Nada entra aquí que Luz no use.
 
 ---
@@ -21,6 +21,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | Vistas sobrescribibles por la app | `loadViewsFrom` + `resources/views/vendor/<paquete>` | ✅ |
 | Clases Tailwind dentro de `vendor/` | `@source '../../vendor/<owner>/<paquete>/resources/views'` en `resources/css/app.css` | ✅ |
 | Menú del sidebar | Macro `->menu([...])` + `php artisan navigation:sync` (autopublicación y precedencia de root) | ✅ |
+| Identidad por defecto | `App\Support\Settings\IdentitySeederRegistry` en el `boot()` del provider, con prioridad sobre el kit | ✅ |
 | Skills para agentes | `resources/boost/skills/<skill>/SKILL.md`; Boost las distribuye | ✅ |
 
 ## 3. El contrato (puntos y estado)
@@ -34,6 +35,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | 5 | **Página de paquete genérica**: generalizar `LnxUiPackage` + `/admin/packages` a un registro de paquetes | ✅ Implementado (§3.5) |
 | 6 | **Escritura por MCP declarable** | ✅ Implementado (§4) |
 | 7 | **Skills del módulo vía Boost** | ✅ Documentado (§3.3) |
+| 8 | **Identidad por defecto**: el paquete aporta sus defaults de marca con prioridad sobre el kit | ✅ Implementado (§3.7) |
 
 ### 3.1 Permisos propios (implementado)
 
@@ -196,6 +198,50 @@ class Patient extends Model implements AccessControlled
 - No define la relación de dominio ni el significado clínico; no concede acceso por instalación.
 - No sustituye las policies: **complementa** el filtrado en consulta con la comprobación por operación.
 - No permite filtrar en memoria ni devolver colecciones sin aplicar `accessibleTo`.
+
+### 3.7 Identidad por defecto (implementado)
+
+Un paquete aporta los **defaults de identidad de su marca** (nombre, lema, footer, meta descripción, logos/iconos, idioma y zona horaria) declarando su propio seeder en el `boot()` de su provider. El kit los ejecuta al sembrar **en orden de prioridad** (`paquete > lnx`) y **solo rellena lo que aún no está definido**, por lo que **la configuración de root siempre gana** y nada se pisa.
+
+```php
+use App\Support\Settings\IdentitySeederRegistry;
+
+public function boot(): void
+{
+    app(IdentitySeederRegistry::class)->register('luz', LuzIdentitySeeder::class, priority: 100);
+}
+```
+
+`LuzIdentitySeeder` es un `Illuminate\Database\Seeder` cuyo `run()` aplica sus valores con `App\Actions\ApplyIdentityDefaults`:
+
+```php
+use App\Actions\ApplyIdentityDefaults;
+use Illuminate\Database\Seeder;
+
+class LuzIdentitySeeder extends Seeder
+{
+    public function run(): void
+    {
+        app(ApplyIdentityDefaults::class)->handle([
+            'site_title' => 'Luz',
+            'site_tagline' => 'Historial médico familiar',
+            'footer_text' => 'Hecho por Luz',
+            'locale' => 'es',
+            'timezone' => 'America/Santiago',
+            // 'logo_path' => 'branding/luz-logo.png', // el paquete publica el asset en el disco `public`
+        ]);
+    }
+}
+```
+
+- **Registro validado.** `register(source, seeder, priority)` exige un `source` no vacío y un `seeder` que extienda `Seeder`; cualquier otra cosa lanza `InvalidArgumentException`. Re-registrar un `source` reemplaza su seeder (idempotente).
+- **Precedencia.** Los seeders se ejecutan por `priority` descendente (empate: orden de registro). El kit registra su seeder base con la prioridad más baja (`IdentitySeederRegistry::KIT_PRIORITY`), así que a igualdad de campo gana el del paquete. Un valor ya guardado en la fila `settings` (root) **nunca** se sobrescribe.
+- **Campos declarables.** `site_title`, `site_tagline`, `footer_text`, `meta_description`, `logo_path`, `logo_dark_path`, `favicon_path`, `apple_touch_icon_path`, `locale` y `timezone`. Un campo desconocido es un error detectable; los valores vacíos o `null` se ignoran.
+- **Sin fila por defecto.** Un valor igual al fallback efectivo del kit (config o los `Setting::DEFAULT_*`) no se persiste, de modo que **sin paquete el resultado es idéntico al actual** (no se crea fila `settings`). Con paquete, se persisten solo los campos que este aporta.
+- **Idempotencia.** Ejecutarlo dos veces no cambia nada ni duplica valores.
+- **Ejecución.** `SeedIdentity` corre desde `DatabaseSeeder` (`migrate --seed`, `db:seed`) y desde `php artisan lnx:reset`, tras roles y navegación y antes de los datos demo.
+- **Assets.** El paquete es responsable de publicar sus logos/iconos en el disco `public` y pasar la ruta relativa; `Setting::logoUrl()` y compañía ya la resuelven.
+- **Idioma y zona horaria.** Se guardan en columnas propias de `settings` (`locale`, `timezone`), editables por root en **Configuración general**, y `ApplySiteSettings` las aplica a la request (el idioma del sitio es el fallback de `SetLocale`).
 
 ## 4. Escritura por MCP (implementado)
 

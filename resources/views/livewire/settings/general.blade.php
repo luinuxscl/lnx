@@ -19,6 +19,18 @@
             <flux:textarea wire:model="meta_description" :label="__('Meta description')" rows="2" />
 
             <flux:input wire:model="admin_email" :label="__('Administration email')" type="email" />
+
+            <flux:select wire:model="locale" :label="__('Language')">
+                @foreach (config('app.available_locales') as $code => $label)
+                    <flux:select.option value="{{ $code }}">{{ $label }}</flux:select.option>
+                @endforeach
+            </flux:select>
+
+            <flux:select wire:model="timezone" :label="__('Time zone')">
+                @foreach ($timezones as $timezone)
+                    <flux:select.option value="{{ $timezone }}">{{ $timezone }}</flux:select.option>
+                @endforeach
+            </flux:select>
         </div>
 
         <flux:separator />

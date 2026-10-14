@@ -24,14 +24,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
 
         $middleware->web(append: [
+            ApplySiteSettings::class,
             SetLocale::class,
             EnsureAccountAccess::class,
             EnsureOpenRegistration::class,
-            ApplySiteSettings::class,
             CheckMaintenanceMode::class,
         ]);
 
-        $middleware->appendToPriorityList(StartSession::class, SetLocale::class);
+        $middleware->appendToPriorityList(StartSession::class, ApplySiteSettings::class);
+        $middleware->appendToPriorityList(ApplySiteSettings::class, SetLocale::class);
         $middleware->appendToPriorityList(SetLocale::class, EnsureAccountAccess::class);
 
         $middleware->alias([
