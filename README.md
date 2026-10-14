@@ -737,7 +737,7 @@ lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`kn
 
 - `README.md` — este archivo, panorámica del proyecto.
 - `.ai/rules/` — reglas del kit (`index.md`, `general.md`, `views.md`); las reglas propias del proyecto derivado se escriben en `.ai/rules/local.md` (personalización local que el kit no sobrescribe).
-- `.ai/skills/` — skills propias versionadas (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`, `brand-logos`, `lnx-ui-release`); Boost las distribuye a los clientes configurados.
+- `.ai/skills/` — skills propias versionadas (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`, `brand-logos`, `lnx-ui-release`, `analyze-roadmap`); Boost las distribuye a los clientes configurados.
 - `.ai/kit-manifest.json` — manifiesto versionado del kit para agentes (versión, origen, compatibilidad y componentes mantenidos).
 - `.ai/CHANGELOG.md` — registro de cambios y notas de migración del kit de agentes.
 - `git-closeout` — skill global (fuera del repo) para cerrar el ciclo: documentación, commits, integración de ramas y push.
@@ -749,13 +749,14 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 | Necesidad | Fuente o comando |
 | --- | --- |
 | Prioridades y próximo trabajo | [ROADMAP.md](ROADMAP.md); actualizar cuando cambien el estado de las issues, sus dependencias, bloqueos o prioridades acordadas |
+| Análisis del roadmap | skill `.ai/skills/analyze-roadmap/SKILL.md`; contrasta el roadmap con el tracker real y el estado de Git, detecta desalineaciones y propone el próximo trabajo |
 | Contrato de módulo | [CONTRATO-MODULO.md](CONTRATO-MODULO.md); qué puede declarar un paquete y el estándar de escritura por MCP (Etapa 10) |
 | Versiones PHP instaladas | `composer show --direct` |
 | Dependencias JS | `package.json` y `npm ls --depth=0` |
 | Módulos, rutas y estructura | `app/`, `routes/`, `resources/`; `php artisan route:list --except-vendor` |
 | Reglas por ruta | `.ai/rules/index.md`, luego los archivos indicados |
 | Reglas locales del proyecto | `.ai/rules/local.md` (personalización local; el updater del kit no la sobrescribe) |
-| Skills propias | `.ai/skills/` (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`, `brand-logos`, `lnx-ui-release`); Boost las distribuye a los clientes configurados |
+| Skills propias | `.ai/skills/` (`implement-feature`, `expose-mcp-operation`, `verify-delivery`, `design-screen`, `create-ui-component`, `update-agent-kit`, `brand-logos`, `lnx-ui-release`, `analyze-roadmap`); Boost las distribuye a los clientes configurados |
 | Skills de paquetes instalados | `php artisan boost:list-skills --no-interaction`; un paquete las entrega en `resources/boost/skills/*/SKILL.md`, Boost las descubre en las dependencias directas y las distribuye a `.ai/skills/`; pueden variar por instalación |
 | Actualización del kit de agentes | `.ai/kit-manifest.json`; `python3 scripts/update-agent-kit.py --source-kit <ruta-lnx> --preview` (previsualizar) o `--apply` (aplicar) |
 | MCP | Laravel Boost (`php artisan boost:mcp`) cuando el cliente lo configure; el servidor de aplicación de lectura se documenta en **Servidor MCP (lectura)** y no presupone plugins personales |

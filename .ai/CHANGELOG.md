@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.20.0] - 2026-10-13
+
+### Añadido
+- **Skill `analyze-roadmap`** (`.ai/skills/analyze-roadmap/SKILL.md`): analiza `ROADMAP.md` frente al tracker real (GitHub Issues) y al estado de Git, detecta desalineaciones (etapas invertidas, issues huérfanas o mal referenciadas, próximo trabajo inválido, dependencias abiertas, enlaces rotos, deriva de fecha, incoherencias de Git) y produce un informe con severidad, evidencia y corrección sugerida, junto al próximo trabajo accionable. Solo actualiza el documento si se pide y nunca cierra ni reabre issues. Se registra en el manifiesto del kit, el README y el checklist de verificación (`scripts/check-agent-context.py`).
+
 ## [1.19.1] - 2026-10-11
 
 ### Corregido
