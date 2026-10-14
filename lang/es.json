@@ -931,5 +931,11 @@
     "Reactivate :count selected users?": "¿Reactivar :count usuarios seleccionados?",
     "This action cannot be undone. Root accounts and your own account are skipped.": "Esta acción no se puede deshacer. Las cuentas root y tu propia cuenta se omiten.",
     "Their access will be revoked immediately. Root accounts and your own account are skipped.": "Su acceso se revocará de inmediato. Las cuentas root y tu propia cuenta se omiten.",
-    "They can sign in again. Root accounts and your own account are skipped.": "Podrán iniciar sesión de nuevo. Las cuentas root y tu propia cuenta se omiten."
+    "They can sign in again. Root accounts and your own account are skipped.": "Podrán iniciar sesión de nuevo. Las cuentas root y tu propia cuenta se omiten.",
+    "Developer Mode": "Developer Mode",
+    "AI usage": "Uso de IA",
+    "Region": "Región",
+    "Main": "Principal",
+    "Bottom": "Inferior",
+    "Curated set for this role. Items can be reordered or hidden, but not autopublished.": "Conjunto curado para este rol. Los ítems pueden reordenarse u ocultarse, pero no se autopublican."
 }

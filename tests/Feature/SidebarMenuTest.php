@@ -23,59 +23,66 @@ it('hides the configuration menu from users without an admin role', function () 
         ->assertDontSee('Documentación');
 });
 
-it('shows documentation but not the repository to admin users', function () {
+it('shows the administration group but not the repository to admin users', function () {
     $user = User::factory()->create();
     $user->assignRole(Role::Admin->value);
 
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Documentación')
+        ->assertSee('Administración')
+        ->assertSee('Usuarios')
+        ->assertDontSee('Documentación')
         ->assertDontSee('Repositorio')
-        ->assertDontSee('Configuración');
+        ->assertDontSee('Configuración')
+        ->assertDontSee('Developer Mode');
 });
 
-it('prioritizes root tools and hides repository and documentation from root users', function () {
+it('prioritizes root tools inside developer mode and hides repository and documentation from root users', function () {
     $user = User::factory()->create();
     $user->assignRole(Role::Root->value);
 
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertOk()
+        ->assertSee('Developer Mode')
         ->assertSee('Soporte')
         ->assertSee(route('admin.settings.edit'))
         ->assertSee(route('admin.setup.index'))
         ->assertSee(route('admin.ai.index'))
-        ->assertSeeInOrder(['Dashboard', 'Administración'])
+        ->assertSeeInOrder(['Dashboard', 'Developer Mode'])
         ->assertDontSee('Repositorio')
         ->assertDontSee('https://github.com/luinuxscl/lnx')
         ->assertDontSee('Documentación');
 });
 
-it('groups AI tools and hides administration group from standard users', function () {
+it('keeps the kit ai tools out of the standard user sidebar', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('AI Tools')
-        ->assertSee('Chat')
-        ->assertSee('RAG')
-        ->assertSee('Document AI')
-        ->assertDontSee('Administración');
+        ->assertSee('Dashboard')
+        ->assertDontSee('AI Tools')
+        ->assertDontSee('Chat')
+        ->assertDontSee('RAG')
+        ->assertDontSee('Document AI')
+        ->assertDontSee('Administración')
+        ->assertDontSee('Developer Mode');
 });
 
-it('shows administration domain group to admin and root users', function () {
+it('shows the curated administration group to admin and developer mode to root', function () {
     $admin = User::factory()->create();
     $admin->assignRole(Role::Admin->value);
 
     $this->actingAs($admin)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('AI Tools')
         ->assertSee('Administración')
         ->assertSee('Usuarios')
-        ->assertDontSee('Soporte');
+        ->assertDontSee('Developer Mode')
+        ->assertDontSee('Chat')
+        ->assertDontSee(route('admin.settings.edit'));
 
     $root = User::factory()->create();
     $root->assignRole(Role::Root->value);
@@ -83,9 +90,9 @@ it('shows administration domain group to admin and root users', function () {
     $this->actingAs($root)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('AI Tools')
-        ->assertSee('Administración')
+        ->assertSee('Developer Mode')
         ->assertSee('Soporte')
+        ->assertSee('Chat')
         ->assertSee(route('admin.settings.edit'));
 });
 

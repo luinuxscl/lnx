@@ -1,8 +1,8 @@
 <?php
 
 use App\Enums\NavigationAudience;
+use App\Enums\NavigationRegion;
 use App\Enums\Role;
-use App\Models\NavigationGroup;
 use App\Models\NavigationItem;
 use App\Models\NavigationMenu;
 use App\Models\User;
@@ -42,16 +42,16 @@ it('seeds a menu for every audience', function () {
     expect(NavigationMenu::query()->firstOrCreate(['audience' => NavigationAudience::User])->wasRecentlyCreated)->toBeFalse();
 });
 
-it('does not overwrite an existing menu when seeded again', function () {
+it('does not overwrite the existing main menu when seeded again', function () {
     $root = NavigationMenu::query()->where('audience', NavigationAudience::Root)->firstOrFail();
-    NavigationGroup::query()->where('navigation_menu_id', $root->id)->delete();
+    $root->groups()->where('region', NavigationRegion::Main)->delete();
 
     $this->seed(NavigationSeeder::class);
 
-    expect($root->fresh()->groups()->count())->toBe(0);
+    expect($root->fresh()->groups()->where('region', NavigationRegion::Main)->count())->toBe(0);
 });
 
-it('resolves the root menu with administration, packages and ai tools', function () {
+it('resolves the root menu with developer mode and kit ai tools', function () {
     $groups = app(MenuResolver::class)->resolve(navUser(Role::Root));
     $labels = menuLabels($groups);
 
@@ -60,7 +60,7 @@ it('resolves the root menu with administration, packages and ai tools', function
     expect($labels)->toContain('Users');
     expect($labels)->toContain('UI/UX components');
     expect($labels)->toContain('Chat');
-    expect(collect($groups)->pluck('label')->all())->toContain('Administration');
+    expect(collect($groups)->pluck('label')->all())->toContain('Developer Mode');
 });
 
 it('hides root-only tools from admin and standard users', function () {
@@ -68,9 +68,11 @@ it('hides root-only tools from admin and standard users', function () {
     expect($adminLabels)->toContain('Users');
     expect($adminLabels)->not->toContain('Support');
     expect($adminLabels)->not->toContain('Settings');
+    expect($adminLabels)->not->toContain('Chat');
 
     $userLabels = menuLabels(app(MenuResolver::class)->resolve(navUser()));
-    expect($userLabels)->toContain('Chat');
+    expect($userLabels)->toContain('Dashboard');
+    expect($userLabels)->not->toContain('Chat');
     expect($userLabels)->not->toContain('Users');
     expect($userLabels)->not->toContain('Administration');
 });
@@ -111,7 +113,7 @@ it('falls back to route tags when no menu row exists', function () {
 
     expect($labels)->toContain('Dashboard');
     expect($labels)->toContain('Support');
-    expect($labels)->toContain('Chat');
+    expect($labels)->not->toContain('Chat');
 });
 
 it('invalidates the cached menu after a change', function () {

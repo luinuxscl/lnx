@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\NavigationAudience;
 use App\Enums\NavigationItemType;
+use App\Enums\NavigationRegion;
 use App\Enums\NavigationSource;
 use App\Models\NavigationGroup;
 use App\Models\NavigationItem;
@@ -15,10 +16,11 @@ use App\Support\Navigation\NavigationCatalog;
  * Reconciles the catalog (route tags) with the placements stored in the
  * database, per audience.
  *
- * It materializes autopublishable routes, follows the tag defaults for group,
- * order and icon, respects any root override and hides catalog items whose
- * route disappeared or lost its tag (root-authored items are never touched).
- * Running it twice is a no-op.
+ * It materializes autopublishable routes into the `main` region, follows the
+ * tag defaults for group, order and icon, respects any root override and hides
+ * catalog items whose route disappeared or lost its tag (root-authored items
+ * are never touched). The curated `bottom` region is never reconciled. Running
+ * it twice is a no-op.
  */
 class NavigationSync
 {
@@ -96,7 +98,7 @@ class NavigationSync
 
         $entry = $this->catalog->entryFor($menu->audience, $routeName);
 
-        if ($entry === null) {
+        if ($entry === null || $entry['region'] !== NavigationRegion::Main) {
             return null;
         }
 
@@ -121,7 +123,7 @@ class NavigationSync
 
         $attributes = ['overridden' => false, 'enabled' => true];
 
-        if ($entry !== null) {
+        if ($entry !== null && $entry['region'] === NavigationRegion::Main) {
             /** @var array<string, NavigationGroup> $groups */
             $groups = [];
             $group = $this->resolveGroup($item->group->menu, $entry, $groups);
@@ -156,24 +158,27 @@ class NavigationSync
     /**
      * Tagged routes for the audience that have no placement yet.
      *
-     * @return array<int, array{route_name: string, label_key: ?string, icon: ?string, group_key: ?string, group_icon: ?string, roles: array<int, string>|null, auto: bool, order: ?int, group_order: ?int, registration: int}>
+     * @return array<int, array{route_name: string, label_key: ?string, icon: ?string, group_key: ?string, group_icon: ?string, roles: array<int, string>|null, region: NavigationRegion, auto: bool, order: ?int, group_order: ?int, registration: int}>
      */
     public function availableFor(NavigationMenu $menu): array
     {
         $placed = NavigationItem::query()
-            ->whereHas('group', fn ($query) => $query->where('navigation_menu_id', $menu->id))
+            ->whereHas('group', fn ($query) => $query
+                ->where('navigation_menu_id', $menu->id)
+                ->where('region', NavigationRegion::Main))
             ->whereNotNull('route_name')
             ->pluck('route_name')
             ->all();
 
         return array_values(array_filter(
             $this->catalog->entriesFor($menu->audience),
-            fn (array $entry): bool => ! in_array($entry['route_name'], $placed, true),
+            fn (array $entry): bool => $entry['region'] === NavigationRegion::Main
+                && ! in_array($entry['route_name'], $placed, true),
         ));
     }
 
     /**
-     * @param  array{route_name: string, label_key: ?string, icon: ?string, group_key: ?string, group_icon: ?string, roles: array<int, string>|null, auto: bool, order: ?int, group_order: ?int, registration: int}  $entry
+     * @param  array{route_name: string, label_key: ?string, icon: ?string, group_key: ?string, group_icon: ?string, roles: array<int, string>|null, region: NavigationRegion, auto: bool, order: ?int, group_order: ?int, registration: int}  $entry
      * @param  array<string, NavigationGroup>  $groups
      */
     private function resolveGroup(NavigationMenu $menu, array $entry, array &$groups): NavigationGroup
@@ -184,7 +189,9 @@ class NavigationSync
             return $groups[$key];
         }
 
-        $query = $menu->groups()->where('source', NavigationSource::Catalog);
+        $query = $menu->groups()
+            ->where('source', NavigationSource::Catalog)
+            ->where('region', NavigationRegion::Main);
 
         $group = $entry['group_key'] === null
             ? (clone $query)->whereNull('label_key')->first()
@@ -192,6 +199,7 @@ class NavigationSync
 
         if ($group === null) {
             $group = $menu->groups()->create([
+                'region' => NavigationRegion::Main,
                 'label_key' => $entry['group_key'],
                 'label_es' => null,
                 'label_en' => null,
@@ -236,7 +244,7 @@ class NavigationSync
             return $entry['group_order'];
         }
 
-        return ((int) $menu->groups()->max('position')) + 1 + count($groups);
+        return ((int) $menu->groups()->where('region', NavigationRegion::Main)->max('position')) + 1 + count($groups);
     }
 
     /**
@@ -294,7 +302,9 @@ class NavigationSync
         $items = NavigationItem::query()
             ->where('source', NavigationSource::Catalog)
             ->where('type', NavigationItemType::Route)
-            ->whereHas('group', fn ($query) => $query->where('navigation_menu_id', $menu->id))
+            ->whereHas('group', fn ($query) => $query
+                ->where('navigation_menu_id', $menu->id)
+                ->where('region', NavigationRegion::Main))
             ->get();
 
         foreach ($items as $item) {
@@ -315,7 +325,9 @@ class NavigationSync
     {
         return NavigationItem::query()
             ->where('route_name', $routeName)
-            ->whereHas('group', fn ($query) => $query->where('navigation_menu_id', $menu->id))
+            ->whereHas('group', fn ($query) => $query
+                ->where('navigation_menu_id', $menu->id)
+                ->where('region', NavigationRegion::Main))
             ->first();
     }
 
