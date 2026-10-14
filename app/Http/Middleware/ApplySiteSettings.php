@@ -31,6 +31,12 @@ class ApplySiteSettings
             ]);
         }
 
+        $timezone = $settings->siteTimezone();
+        config([
+            'app.locale' => $settings->siteLocale(),
+            'app.timezone' => $timezone,
+        ]);
+
         View::share('site', $settings);
 
         return $next($request);

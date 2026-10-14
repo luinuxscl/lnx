@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $favicon_path
  * @property string|null $apple_touch_icon_path
  * @property string|null $footer_text
+ * @property string|null $locale
+ * @property string|null $timezone
  * @property string|null $analytics_id
  * @property bool $maintenance_mode
  * @property string|null $maintenance_message
@@ -38,6 +40,8 @@ use Illuminate\Support\Facades\Storage;
     'favicon_path',
     'apple_touch_icon_path',
     'footer_text',
+    'locale',
+    'timezone',
     'analytics_id',
     'maintenance_mode',
     'maintenance_message',
@@ -147,6 +151,22 @@ class Setting extends Model
     public function description(): ?string
     {
         return $this->meta_description ?: $this->tagline();
+    }
+
+    /**
+     * Get the site-wide locale, falling back to the configured default.
+     */
+    public function siteLocale(): string
+    {
+        return $this->locale ?: (string) config('app.locale');
+    }
+
+    /**
+     * Get the site-wide timezone, falling back to the configured default.
+     */
+    public function siteTimezone(): string
+    {
+        return $this->timezone ?: (string) config('app.timezone');
     }
 
     /**

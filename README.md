@@ -57,8 +57,19 @@ lnx define su identidad por defecto en capas, de modo que una instalación nueva
 | Favicon / Apple touch icon | `public/favicon.png` / `public/apple-touch-icon.png` | `Setting::DEFAULT_FAVICON` / `Setting::DEFAULT_APPLE_TOUCH_ICON` |
 
 - La fila de `settings` **sobrescribe** estos valores: si el sitio define título, lema, footer, logo o favicon, se usan esos. Con los campos vacíos se aplican los defaults de arriba.
+- El **idioma** y la **zona horaria** del sitio también se guardan en la fila `settings` (`locale`, `timezone`) y se editan en **Configuración general**; sin valor se usa `APP_LOCALE` / `APP_TIMEZONE`. El idioma del sitio es el fallback de `SetLocale` (la preferencia por usuario sigue ganando) y la zona horaria alimenta `App\Support\Appearance::currentTimezone()`.
 - `App\Models\Setting` expone `title()`, `tagline()`, `footer()`, `logoUrl()`, `logoDarkUrl()`, `faviconUrl()` y `appleTouchIconUrl()` con esos fallbacks. `Setting::logoUrl()` siempre devuelve una URL (el logo del kit si no hay uno subido).
 - `new-project.sh` sustituye `APP_NAME` y `APP_URL`; el resto de defaults se pueden cambiar en `.env` o en **Configuración general** (`/admin/settings`).
+
+### Identidad por defecto y paquetes de personalización
+
+La identidad se siembra a través de `App\Support\Settings\IdentitySeederRegistry` (ver [CONTRATO-MODULO.md](CONTRATO-MODULO.md) §3.7). El kit registra con la prioridad más baja un **seeder base de identidad** (`Database\Seeders\IdentitySeeder`) que aporta los defaults de `config`; un **paquete de personalización** (la marca de un cliente) declara el suyo en el `boot()` de su provider con una prioridad mayor, y sus valores ganan a igualdad de campo.
+
+- **Precedencia efectiva: root > paquete > lnx.** Lo que root ya guardó en **Configuración general** nunca se pisa: el seeder solo rellena campos vacíos.
+- **Campos declarables:** título, lema, footer, meta descripción, logo, logo oscuro, favicon, apple touch icon, idioma y zona horaria. El paquete publica sus logos/iconos en el disco `public` y pasa la ruta relativa.
+- **Ejecución:** `php artisan migrate --seed`, `php artisan db:seed` y `php artisan lnx:reset`, tras roles y navegación y antes de los datos demo.
+- **Idempotente y sin efectos sin paquete:** sin paquete de personalización no se crea fila `settings` y el resultado es el actual; ejecutarlo dos veces no cambia nada.
+- Registrar algo que no sea una clase `Seeder` (o con `source` vacío) lanza `InvalidArgumentException`.
 
 ## Requisitos
 
@@ -158,7 +169,7 @@ Route::livewire('reports', ReportsIndex::class)
 | `vendor/bin/phpstan`    | Análisis estático                    |
 | `php artisan lnx:reset` | Reinicia el entorno de desarrollo    |
 
-`lnx:reset` es una herramienta de desarrollo (bloqueada en producción): limpia cachés, ejecuta `migrate:fresh`, siembra roles y root, y crea cuentas demo — Samantha (`admin@lnx.dev`, rol `admin`), Leonora (`user@lnx.dev`, sin rol) y 100 usuarios de ejemplo (90 verificados / 10 sin verificar) — todas con contraseña `password`. Opciones: `--faker=0` (sin usuarios de ejemplo), `--no-fresh` (sembrar sobre la base actual sin migrar), `--no-cache`, `--seed=` (datos reproducibles) y `--force` (omite la confirmación). El seeder puede ejecutarse por separado con `php artisan db:seed --class=DemoUserSeeder`.
+`lnx:reset` es una herramienta de desarrollo (bloqueada en producción): limpia cachés, ejecuta `migrate:fresh`, siembra roles, root e identidad (con la precedencia de paquetes), y crea cuentas demo — Samantha (`admin@lnx.dev`, rol `admin`), Leonora (`user@lnx.dev`, sin rol) y 100 usuarios de ejemplo (90 verificados / 10 sin verificar) — todas con contraseña `password`. Opciones: `--faker=0` (sin usuarios de ejemplo), `--no-fresh` (sembrar sobre la base actual sin migrar), `--no-cache`, `--seed=` (datos reproducibles) y `--force` (omite la confirmación). El seeder puede ejecutarse por separado con `php artisan db:seed --class=DemoUserSeeder`.
 
 ## Theming
 
@@ -380,6 +391,8 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 | Identidad | Tagline | Lema del sitio bajo el título del sidebar (y fallback de la meta descripción). Vacío usa `APP_TAGLINE`. |
 | Identidad | Meta description | `<meta name="description">` (fallback: Tagline). |
 | Identidad | Administration email | Destinatario del correo de prueba del checklist y validación de identidad; no altera el remitente de correo. |
+| Identidad | Language | Idioma del sitio; es el fallback de `SetLocale` (la preferencia por usuario sigue ganando). Sin valor usa `APP_LOCALE`. |
+| Identidad | Time zone | Zona horaria del sitio; alimenta `App\Support\Appearance::currentTimezone()`. Sin valor usa `APP_TIMEZONE`. |
 | Personalización | Logo / Dark mode logo | Logo del encabezado, sidebar y pantallas de autenticación; el logo personalizado se muestra sobre fondo transparente. Sin archivo se usa el logo del kit. |
 | Personalización | Favicon / Apple touch icon | Iconos del `<head>`. Sin archivo se usan `favicon.png` y `apple-touch-icon.png` del kit. |
 | Avanzado | Footer text | Texto mostrado en el footer del contenido de las páginas autenticadas. Vacío usa `APP_FOOTER_TEXT`. |
