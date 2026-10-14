@@ -4,6 +4,11 @@
         'admin' => __('Admin'),
         'user' => __('Users without role'),
     ];
+    $regionLabels = [
+        'main' => __('Main'),
+        'bottom' => __('Bottom'),
+    ];
+    $isBottom = $region === \App\Enums\NavigationRegion::Bottom;
 @endphp
 
 <section class="w-full space-y-6">
@@ -14,18 +19,34 @@
         color="violet"
     >
         <x-slot:actions>
-            <flux:button variant="primary" icon="plus" wire:click="openGroupCreator">
-                {{ __('Add group') }}
-            </flux:button>
+            @unless ($isBottom)
+                <flux:button variant="primary" icon="plus" wire:click="openGroupCreator">
+                    {{ __('Add group') }}
+                </flux:button>
+            @endunless
         </x-slot:actions>
     </x-lnx-ui::page-header>
 
-    <div class="max-w-xs">
-        <flux:select wire:model.live="audience" :label="__('Audience')">
-            @foreach ($audiences as $case)
-                <flux:select.option :value="$case->value">{{ $audienceLabels[$case->value] ?? $case->label() }}</flux:select.option>
-            @endforeach
-        </flux:select>
+    <div class="flex flex-wrap items-end gap-4">
+        <div class="max-w-xs">
+            <flux:select wire:model.live="audience" :label="__('Audience')">
+                @foreach ($audiences as $case)
+                    <flux:select.option :value="$case->value">{{ $audienceLabels[$case->value] ?? $case->label() }}</flux:select.option>
+                @endforeach
+            </flux:select>
+        </div>
+
+        <div class="max-w-xs">
+            <flux:select wire:model.live="region" :label="__('Region')">
+                @foreach ($regions as $case)
+                    <flux:select.option :value="$case->value">{{ $regionLabels[$case->value] ?? $case->label() }}</flux:select.option>
+                @endforeach
+            </flux:select>
+        </div>
+
+        @if ($isBottom)
+            <flux:badge color="zinc">{{ __('Curated set for this role. Items can be reordered or hidden, but not autopublished.') }}</flux:badge>
+        @endif
     </div>
 
     <div wire:sort="handleGroupSort" class="space-y-4">
@@ -72,15 +93,17 @@
                         {{ __('Edit') }}
                     </flux:button>
 
-                    <flux:button
-                        size="sm"
-                        variant="ghost"
-                        icon="trash"
-                        wire:click="deleteGroup({{ $group->id }})"
-                        wire:confirm="{{ __('Delete this group and all of its items?') }}"
-                    >
-                        {{ __('Delete') }}
-                    </flux:button>
+                    @unless ($isBottom)
+                        <flux:button
+                            size="sm"
+                            variant="ghost"
+                            icon="trash"
+                            wire:click="deleteGroup({{ $group->id }})"
+                            wire:confirm="{{ __('Delete this group and all of its items?') }}"
+                        >
+                            {{ __('Delete') }}
+                        </flux:button>
+                    @endunless
                 </div>
 
                 <div
@@ -135,24 +158,28 @@
                                 {{ __('Edit') }}
                             </flux:button>
 
-                            <flux:button
-                                size="sm"
-                                variant="ghost"
-                                icon="trash"
-                                wire:click="deleteItem({{ $item->id }})"
-                                wire:confirm="{{ __('Delete this item?') }}"
-                            >
-                                {{ __('Delete') }}
-                            </flux:button>
+                            @unless ($isBottom)
+                                <flux:button
+                                    size="sm"
+                                    variant="ghost"
+                                    icon="trash"
+                                    wire:click="deleteItem({{ $item->id }})"
+                                    wire:confirm="{{ __('Delete this item?') }}"
+                                >
+                                    {{ __('Delete') }}
+                                </flux:button>
+                            @endunless
                         </div>
                     @endforeach
                 </div>
 
-                <div class="mt-3">
-                    <flux:button size="sm" variant="ghost" icon="plus" wire:click="openItemCreator({{ $group->id }})">
-                        {{ __('Add item') }}
-                    </flux:button>
-                </div>
+                @unless ($isBottom)
+                    <div class="mt-3">
+                        <flux:button size="sm" variant="ghost" icon="plus" wire:click="openItemCreator({{ $group->id }})">
+                            {{ __('Add item') }}
+                        </flux:button>
+                    </div>
+                @endunless
             </flux:card>
         @empty
             <flux:card>
@@ -161,45 +188,47 @@
         @endforelse
     </div>
 
-    <flux:card>
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="space-y-1">
-                <flux:heading>{{ __('Available routes') }}</flux:heading>
-                <flux:text>{{ __('Routes offered by packages that are not placed in this audience yet.') }}</flux:text>
-            </div>
-            <flux:badge color="zinc">{{ count($available) }}</flux:badge>
-        </div>
-
-        <div class="mt-4 space-y-2">
-            @forelse ($available as $entry)
-                <div
-                    wire:key="available-{{ $entry['route_name'] }}"
-                    class="flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-zinc-300 px-3 py-2 dark:border-zinc-600"
-                >
-                    <flux:icon :name="$entry['icon'] ?? 'link'" variant="mini" class="size-4 text-zinc-400" />
-
-                    <div class="min-w-0 flex-1">
-                        <flux:text class="truncate font-medium">{{ __($entry['label_key'] ?? $entry['route_name']) }}</flux:text>
-                        <flux:text class="truncate text-xs text-zinc-500">{{ $entry['route_name'] }}</flux:text>
-                    </div>
-
-                    @if ($entry['group_key'] !== null)
-                        <flux:badge color="zinc">{{ __($entry['group_key']) }}</flux:badge>
-                    @endif
-
-                    <flux:badge :color="$entry['auto'] ? 'blue' : 'zinc'">
-                        {{ $entry['auto'] ? __('Auto') : __('Available') }}
-                    </flux:badge>
-
-                    <flux:button size="sm" variant="ghost" icon="plus" wire:click="placeRoute('{{ $entry['route_name'] }}')">
-                        {{ __('Add') }}
-                    </flux:button>
+    @unless ($isBottom)
+        <flux:card>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="space-y-1">
+                    <flux:heading>{{ __('Available routes') }}</flux:heading>
+                    <flux:text>{{ __('Routes offered by packages that are not placed in this audience yet.') }}</flux:text>
                 </div>
-            @empty
-                <flux:text class="text-sm text-zinc-500">{{ __('No available routes for this audience.') }}</flux:text>
-            @endforelse
-        </div>
-    </flux:card>
+                <flux:badge color="zinc">{{ count($available) }}</flux:badge>
+            </div>
+
+            <div class="mt-4 space-y-2">
+                @forelse ($available as $entry)
+                    <div
+                        wire:key="available-{{ $entry['route_name'] }}"
+                        class="flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-zinc-300 px-3 py-2 dark:border-zinc-600"
+                    >
+                        <flux:icon :name="$entry['icon'] ?? 'link'" variant="mini" class="size-4 text-zinc-400" />
+
+                        <div class="min-w-0 flex-1">
+                            <flux:text class="truncate font-medium">{{ __($entry['label_key'] ?? $entry['route_name']) }}</flux:text>
+                            <flux:text class="truncate text-xs text-zinc-500">{{ $entry['route_name'] }}</flux:text>
+                        </div>
+
+                        @if ($entry['group_key'] !== null)
+                            <flux:badge color="zinc">{{ __($entry['group_key']) }}</flux:badge>
+                        @endif
+
+                        <flux:badge :color="$entry['auto'] ? 'blue' : 'zinc'">
+                            {{ $entry['auto'] ? __('Auto') : __('Available') }}
+                        </flux:badge>
+
+                        <flux:button size="sm" variant="ghost" icon="plus" wire:click="placeRoute('{{ $entry['route_name'] }}')">
+                            {{ __('Add') }}
+                        </flux:button>
+                    </div>
+                @empty
+                    <flux:text class="text-sm text-zinc-500">{{ __('No available routes for this audience.') }}</flux:text>
+                @endforelse
+            </div>
+        </flux:card>
+    @endunless
 
     <flux:modal name="navigation-group" wire:model.self="showGroupModal" @close="closeGroupModal" class="max-w-md space-y-6">
         <flux:heading size="lg">{{ $editingGroupId === null ? __('Add group') : __('Edit group') }}</flux:heading>

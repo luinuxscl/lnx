@@ -36,7 +36,7 @@ Route::post('invitations/{invitation}/{token}', [AcceptInvitationController::cla
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', Dashboard::class)->name('dashboard')->menu([
         'label' => 'Dashboard',
-        'icon' => 'home',
+        'icon' => 'squares-2x2',
         'audiences' => ['root', 'admin', 'user'],
     ]);
     Route::livewire('messages', MessagesIndex::class)->name('messages.index');
@@ -46,14 +46,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'icon' => 'chat-bubble-left-right',
         'group' => 'AI Tools',
         'group_icon' => 'sparkles',
-        'audiences' => ['root', 'admin', 'user'],
+        'audiences' => ['root'],
+        'region' => 'bottom',
     ]);
     Route::livewire('knowledge', Index::class)->name('knowledge.index')->menu([
         'label' => 'RAG',
         'icon' => 'book-open',
         'group' => 'AI Tools',
         'group_icon' => 'sparkles',
-        'audiences' => ['root', 'admin', 'user'],
+        'audiences' => ['root'],
+        'region' => 'bottom',
     ]);
     Route::livewire('knowledge/{document}', Show::class)->name('knowledge.show');
     Route::livewire('documents', DocumentsIndex::class)->name('documents.index')->menu([
@@ -61,7 +63,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'icon' => 'document-text',
         'group' => 'AI Tools',
         'group_icon' => 'sparkles',
-        'audiences' => ['root', 'admin', 'user'],
+        'audiences' => ['root'],
+        'region' => 'bottom',
     ]);
     Route::livewire('documents/{document}', DocumentsShow::class)->name('documents.show');
     Route::get('documents/{document}/download', [DocumentDownloadController::class, 'download'])->name('documents.download');

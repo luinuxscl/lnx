@@ -68,7 +68,7 @@ Recorre esta lista y registra cada hallazgo con **evidencia** (número de issue,
 
 ### 4. Informe (formato fijo)
 
-El informe es **corto y orientado a lo que viene**: abre con el **siguiente trabajo**, sigue con el **listado de issues abiertas** y cierra con un **estado de etapas que colapsa las cerradas** en una sola fila. Si no hay desalineaciones, dilo en una línea; el detalle aparece solo cuando existe. Prioriza leer rápido: nada de relleno ni de repetir los criterios de cada issue.
+El informe es **corto y orientado a lo que viene**: abre con el **siguiente trabajo**, sigue con el **listado de issues abiertas**, cierra con un **estado de etapas que colapsa las cerradas** en una sola fila y termina con el bloque **¿Empezamos?**. Si no hay desalineaciones, dilo en una línea; el detalle aparece solo cuando existe. Prioriza leer rápido: nada de relleno ni de repetir los criterios de cada issue.
 
 ```
 # Roadmap — <fecha> · <al día | N desalineaciones>
@@ -94,9 +94,12 @@ El informe es **corto y orientado a lo que viene**: abre con el **siguiente trab
 | Severidad | Hallazgo | Evidencia | Corrección sugerida |
 | --- | --- | --- | --- |
 | alta/media/baja | ... | issue #n / ROADMAP.md:línea / ref | ... |
+
+## ¿Empezamos?
+¿Arranco el plan de **#NN <título sugerido>** (<link>), o prefieres otra issue?
 ```
 
-Reglas del informe: las **etapas cerradas van agrupadas** (una fila, no una por etapa); la etapa abierta se detalla con su secuencia; el listado de issues abiertas es lo único que se enumera una a una. Mantén el informe por debajo de ~30 líneas salvo que haya muchas desalineaciones.
+Reglas del informe: las **etapas cerradas van agrupadas** (una fila, no una por etapa); la etapa abierta se detalla con su secuencia; el listado de issues abiertas es lo único que se enumera una a una. Mantén el informe por debajo de ~30 líneas salvo que haya muchas desalineaciones. El informe **siempre cierra** con el bloque **¿Empezamos?**, señalando por defecto la issue recomendada (la del bloque «Siguiente») y ofreciendo elegir otra; es una pregunta, no el inicio del trabajo.
 
 ### 5. Actualizar el documento (solo si el usuario lo pide)
 
@@ -113,4 +116,5 @@ Si se pide aplicar cambios, hazlo **contra la fuente canónica** y siguiendo las
 - El estado de cada issue se lee del tracker en el momento del análisis; **no** se deduce del texto del roadmap.
 - Cada hallazgo lleva evidencia verificable y una corrección concreta.
 - Si no se pudo consultar el tracker, dilo explícitamente y marca el análisis como no verificado.
+- Termina siempre el informe con el bloque **¿Empezamos?**, preguntando si se arranca el plan de la issue recomendada o se prefiere otra.
 - No cierres ni reabras issues desde aquí, ni inicies la implementación de la próxima tarea.

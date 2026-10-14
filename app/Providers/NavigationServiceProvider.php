@@ -19,6 +19,7 @@ class NavigationServiceProvider extends ServiceProvider
      *         'group_icon' => 'chart-bar',
      *         'audiences' => ['admin'],    // suggested audiences
      *         'roles' => ['admin'],        // allowed roles (omit for everyone)
+     *         'region' => 'main',          // sidebar region: main | bottom (default main)
      *         'auto' => true,              // autopublish in those audiences
      *         'order' => 2,                // default item order within the group
      *         'group_order' => 1,          // default order of the group
@@ -26,8 +27,9 @@ class NavigationServiceProvider extends ServiceProvider
      *
      * Autopublishing is opt-in per route (`auto => true`) or global via
      * `config('navigation.autopublish')`. An explicit `auto => false` always
-     * wins over the global switch. `order` and `group_order` fall back to route
-     * registration order when omitted.
+     * wins over the global switch. Only the `main` region is autopublished;
+     * the curated `bottom` region is never touched by the reconciler. `order`
+     * and `group_order` fall back to route registration order when omitted.
      *
      * The macro is registered in `register()` (not `boot()`) on purpose: a
      * module's service provider loads its own routes during boot and its

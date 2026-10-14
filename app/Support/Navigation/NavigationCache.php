@@ -14,6 +14,12 @@ class NavigationCache
 {
     private const VERSION_KEY = 'navigation:version';
 
+    /**
+     * Bump when the cached structure shape changes, so entries written before
+     * the change (e.g. before the `region` key existed) are never re-read.
+     */
+    private const STRUCTURE_VERSION = 2;
+
     public static function flush(): void
     {
         Cache::forever(self::VERSION_KEY, self::version() + 1);
@@ -21,7 +27,7 @@ class NavigationCache
 
     public static function key(NavigationAudience $audience): string
     {
-        return 'navigation:structure:v'.self::version().':'.$audience->value;
+        return 'navigation:structure:s'.self::STRUCTURE_VERSION.':v'.self::version().':'.$audience->value;
     }
 
     public static function version(): int

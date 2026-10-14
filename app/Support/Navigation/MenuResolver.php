@@ -4,6 +4,7 @@ namespace App\Support\Navigation;
 
 use App\Enums\NavigationAudience;
 use App\Enums\NavigationItemType;
+use App\Enums\NavigationRegion;
 use App\Models\NavigationMenu;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
@@ -22,7 +23,11 @@ class MenuResolver
     public function __construct(private readonly NavigationCatalog $catalog) {}
 
     /**
-     * @return array<int, array{label: ?string, icon: ?string, items: array<int, array{label: string, icon: ?string, href: ?string, current: bool, external: bool}>}>
+     * Resolve the sidebar tree for a user, in region order (main first, then
+     * bottom). Each group carries its region so the layout can render the two
+     * sidebar regions separately.
+     *
+     * @return array<int, array{region: string, label: ?string, icon: ?string, items: array<int, array{label: string, icon: ?string, href: ?string, current: bool, external: bool}>}>
      */
     public function resolve(User $user): array
     {
@@ -42,6 +47,7 @@ class MenuResolver
 
             if ($items !== []) {
                 $groups[] = [
+                    'region' => $group['region'],
                     'label' => $this->resolveLabel($group),
                     'icon' => $group['icon'],
                     'items' => $items,
@@ -53,7 +59,7 @@ class MenuResolver
     }
 
     /**
-     * @return array<int, array{label_key: ?string, label_es: ?string, label_en: ?string, icon: ?string, items: array<int, array<string, mixed>>}>
+     * @return array<int, array{region: string, label_key: ?string, label_es: ?string, label_en: ?string, icon: ?string, items: array<int, array<string, mixed>>}>
      */
     private function structure(NavigationAudience $audience): array
     {
@@ -77,7 +83,7 @@ class MenuResolver
     }
 
     /**
-     * @return array<int, array{label_key: ?string, label_es: ?string, label_en: ?string, icon: ?string, items: array<int, array<string, mixed>>}>
+     * @return array<int, array{region: string, label_key: ?string, label_es: ?string, label_en: ?string, icon: ?string, items: array<int, array<string, mixed>>}>
      */
     private function fromDatabase(NavigationMenu $menu): array
     {
@@ -107,6 +113,7 @@ class MenuResolver
             }
 
             $groups[] = [
+                'region' => $group->region->value,
                 'label_key' => $group->label_key,
                 'label_es' => $group->label_es,
                 'label_en' => $group->label_en,
@@ -119,17 +126,22 @@ class MenuResolver
     }
 
     /**
-     * @return array<int, array{label_key: ?string, label_es: null, label_en: null, icon: ?string, items: array<int, array<string, mixed>>}>
+     * @return array<int, array{region: string, label_key: ?string, label_es: null, label_en: null, icon: ?string, items: array<int, array<string, mixed>>}>
      */
     private function fromRouteTags(NavigationAudience $audience): array
     {
         $groups = [];
 
         foreach ($this->catalog->entriesFor($audience) as $entry) {
+            if ($entry['region'] !== NavigationRegion::Main) {
+                continue;
+            }
+
             $index = $entry['group_key'] ?? '';
 
             if (! isset($groups[$index])) {
                 $groups[$index] = [
+                    'region' => NavigationRegion::Main->value,
                     'label_key' => $entry['group_key'],
                     'label_es' => null,
                     'label_en' => null,
