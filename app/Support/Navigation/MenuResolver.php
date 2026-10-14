@@ -47,7 +47,7 @@ class MenuResolver
 
             if ($items !== []) {
                 $groups[] = [
-                    'region' => $group['region'] ?? NavigationRegion::Main->value,
+                    'region' => $group['region'],
                     'label' => $this->resolveLabel($group),
                     'icon' => $group['icon'],
                     'items' => $items,
