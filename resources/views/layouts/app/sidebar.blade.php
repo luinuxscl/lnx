@@ -10,13 +10,23 @@
                 <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
             </flux:sidebar.header>
 
-            @php($navigation = app(\App\Support\Navigation\MenuResolver::class)->resolve(auth()->user()))
+            @php
+                $navigation = app(\App\Support\Navigation\MenuResolver::class)->resolve(auth()->user());
+                $mainNavigation = array_values(array_filter($navigation, fn ($group) => $group['region'] === 'main'));
+                $bottomNavigation = array_values(array_filter($navigation, fn ($group) => $group['region'] === 'bottom'));
+            @endphp
 
             <flux:sidebar.nav>
-                @include('partials.navigation-sidebar', ['groups' => $navigation])
+                @include('partials.navigation-sidebar', ['groups' => $mainNavigation])
             </flux:sidebar.nav>
 
             <flux:spacer />
+
+            @if ($bottomNavigation !== [])
+                <flux:sidebar.nav>
+                    @include('partials.navigation-sidebar', ['groups' => $bottomNavigation])
+                </flux:sidebar.nav>
+            @endif
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
@@ -28,7 +38,7 @@
             <flux:spacer />
 
             <flux:dropdown position="bottom" align="end">
-                <flux:button type="button" variant="ghost" size="sm" square icon="message-circle-question-mark" :aria-label="__('Feedback and support')" :title="__('Feedback and support')" />
+                <flux:button type="button" variant="ghost" size="sm" square icon="lifebuoy" :aria-label="__('Support')" :title="__('Support')" />
                 <flux:menu>
                     <flux:menu.item icon="plus" x-data x-on:click="$dispatch('support-open')">{{ __('Create request') }}</flux:menu.item>
                     <flux:menu.item icon="list-bullet" :href="route('support.index', ['mine' => 1])" wire:navigate>{{ __('View my requests') }}</flux:menu.item>

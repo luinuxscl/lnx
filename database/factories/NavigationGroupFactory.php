@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\NavigationRegion;
 use App\Enums\NavigationSource;
 use App\Models\NavigationGroup;
 use App\Models\NavigationMenu;
@@ -21,6 +22,7 @@ class NavigationGroupFactory extends Factory
     {
         return [
             'navigation_menu_id' => NavigationMenu::factory(),
+            'region' => NavigationRegion::Main,
             'label_key' => 'Administration',
             'label_es' => null,
             'label_en' => null,
@@ -30,6 +32,11 @@ class NavigationGroupFactory extends Factory
             'source' => NavigationSource::Root,
             'overridden' => false,
         ];
+    }
+
+    public function bottom(): static
+    {
+        return $this->state(fn (): array => ['region' => NavigationRegion::Bottom]);
     }
 
     public function catalog(): static

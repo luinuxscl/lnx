@@ -7,6 +7,7 @@ use App\Actions\RecordAdministrativeActivity;
 use App\Enums\AdministrativeAction;
 use App\Enums\NavigationAudience;
 use App\Enums\NavigationItemType;
+use App\Enums\NavigationRegion;
 use App\Enums\NavigationSource;
 use App\Enums\Role;
 use App\Models\NavigationGroup;
@@ -28,6 +29,9 @@ class Index extends Component
 {
     #[Url(as: 'audience')]
     public string $audience = 'root';
+
+    #[Url(as: 'region')]
+    public string $region = 'main';
 
     public bool $showGroupModal = false;
 
@@ -63,11 +67,19 @@ class Index extends Component
     {
         $this->authorizeRoot();
         $this->normalizeAudience();
+        $this->normalizeRegion();
     }
 
     public function updatedAudience(): void
     {
         $this->normalizeAudience();
+        $this->closeGroupModal();
+        $this->closeItemModal();
+    }
+
+    public function updatedRegion(): void
+    {
+        $this->normalizeRegion();
         $this->closeGroupModal();
         $this->closeItemModal();
     }
@@ -134,7 +146,8 @@ class Index extends Component
             Flux::toast(variant: 'success', text: __('Group updated.'));
         } else {
             $group = $this->menu()->groups()->create($attributes + [
-                'position' => ((int) $this->menu()->groups()->max('position')) + 1,
+                'region' => NavigationRegion::from($this->region),
+                'position' => $this->nextGroupPosition(),
                 'enabled' => true,
             ]);
             $this->record(AdministrativeAction::NavigationGroupCreated, $group, [], $this->groupSnapshot($group));
@@ -183,9 +196,14 @@ class Index extends Component
     {
         $this->authorizeRoot();
         $group = $this->groupOrFail($id);
+
+        if ($group->region->value !== $this->region) {
+            return;
+        }
+
         $before = ['position' => $group->position];
 
-        $ids = $this->menu()->groups()->pluck('id')->all();
+        $ids = $this->menu()->groups()->where('region', $group->region)->pluck('id')->all();
         $this->persistOrder($ids, $id, $position, NavigationGroup::class);
 
         $group->refresh();
@@ -311,6 +329,10 @@ class Index extends Component
     {
         $this->authorizeRoot();
 
+        if ($this->region !== NavigationRegion::Main->value) {
+            return;
+        }
+
         $item = app(NavigationSync::class)->place($this->menu(), $routeName);
 
         if ($item !== null) {
@@ -324,6 +346,11 @@ class Index extends Component
         $this->authorizeRoot();
         $item = $this->itemOrFail($id);
         $group = $this->groupOrFail($groupId);
+
+        if ($group->region->value !== $this->region || $item->group->region !== $group->region) {
+            return;
+        }
+
         $before = ['position' => $item->position];
 
         if ($item->navigation_group_id !== $group->id) {
@@ -351,12 +378,17 @@ class Index extends Component
         $this->authorizeRoot();
 
         $menu = $this->menu();
+        $region = NavigationRegion::from($this->region);
 
         return view('livewire.navigation.index', [
-            'groups' => $menu->groups()->with('items')->get(),
+            'groups' => $menu->groups()->where('region', $region)->with('items')->get(),
             'audiences' => NavigationAudience::cases(),
+            'regions' => NavigationRegion::cases(),
+            'region' => $region,
             'routeOptions' => $this->routeOptions(),
-            'available' => app(NavigationSync::class)->availableFor($menu),
+            'available' => $region === NavigationRegion::Main
+                ? app(NavigationSync::class)->availableFor($menu)
+                : [],
         ])->layout('layouts.app');
     }
 
@@ -494,7 +526,7 @@ class Index extends Component
      */
     private function groupSnapshot(NavigationGroup $group): array
     {
-        return $group->only(['audience', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled']);
+        return $group->only(['audience', 'region', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled']);
     }
 
     /**
@@ -553,6 +585,20 @@ class Index extends Component
         if (NavigationAudience::tryFrom($this->audience) === null) {
             $this->audience = NavigationAudience::Root->value;
         }
+    }
+
+    private function normalizeRegion(): void
+    {
+        if (NavigationRegion::tryFrom($this->region) === null) {
+            $this->region = NavigationRegion::Main->value;
+        }
+    }
+
+    private function nextGroupPosition(): int
+    {
+        $region = NavigationRegion::from($this->region);
+
+        return ((int) $this->menu()->groups()->where('region', $region)->max('position')) + 1;
     }
 
     private function authorizeRoot(): void

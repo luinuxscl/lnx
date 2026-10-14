@@ -919,5 +919,11 @@
     "Reactivate :count selected users?": "Reactivate :count selected users?",
     "This action cannot be undone. Root accounts and your own account are skipped.": "This action cannot be undone. Root accounts and your own account are skipped.",
     "Their access will be revoked immediately. Root accounts and your own account are skipped.": "Their access will be revoked immediately. Root accounts and your own account are skipped.",
-    "They can sign in again. Root accounts and your own account are skipped.": "They can sign in again. Root accounts and your own account are skipped."
+    "They can sign in again. Root accounts and your own account are skipped.": "They can sign in again. Root accounts and your own account are skipped.",
+    "Developer Mode": "Developer Mode",
+    "AI usage": "AI usage",
+    "Region": "Region",
+    "Main": "Main",
+    "Bottom": "Bottom",
+    "Curated set for this role. Items can be reordered or hidden, but not autopublished.": "Curated set for this role. Items can be reordered or hidden, but not autopublished."
 }

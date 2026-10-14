@@ -3,6 +3,7 @@
 namespace App\Support\Navigation;
 
 use App\Enums\NavigationAudience;
+use App\Enums\NavigationRegion;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -18,7 +19,7 @@ class NavigationCatalog
     /**
      * Normalized entries for an audience, in route registration order.
      *
-     * @return array<int, array{route_name: string, label_key: ?string, icon: ?string, group_key: ?string, group_icon: ?string, roles: array<int, string>|null, auto: bool, order: ?int, group_order: ?int, registration: int}>
+     * @return array<int, array{route_name: string, label_key: ?string, icon: ?string, group_key: ?string, group_icon: ?string, roles: array<int, string>|null, region: NavigationRegion, auto: bool, order: ?int, group_order: ?int, registration: int}>
      */
     public function entriesFor(NavigationAudience $audience): array
     {
@@ -46,6 +47,7 @@ class NavigationCatalog
                 'group_key' => isset($tag['group']) ? (string) $tag['group'] : null,
                 'group_icon' => isset($tag['group_icon']) ? (string) $tag['group_icon'] : null,
                 'roles' => is_array($tag['roles'] ?? null) ? array_values(array_map('strval', $tag['roles'])) : null,
+                'region' => $this->region($tag),
                 'auto' => $this->autopublish($tag),
                 'order' => isset($tag['order']) ? (int) $tag['order'] : null,
                 'group_order' => isset($tag['group_order']) ? (int) $tag['group_order'] : null,
@@ -61,18 +63,18 @@ class NavigationCatalog
      * per route, or every tagged route when the global switch is on. An explicit
      * `auto => false` always opts out.
      *
-     * @return array<int, array{route_name: string, label_key: ?string, icon: ?string, group_key: ?string, group_icon: ?string, roles: array<int, string>|null, auto: bool, order: ?int, group_order: ?int, registration: int}>
+     * @return array<int, array{route_name: string, label_key: ?string, icon: ?string, group_key: ?string, group_icon: ?string, roles: array<int, string>|null, region: NavigationRegion, auto: bool, order: ?int, group_order: ?int, registration: int}>
      */
     public function autopublishableFor(NavigationAudience $audience): array
     {
         return array_values(array_filter(
             $this->entriesFor($audience),
-            fn (array $entry): bool => $entry['auto'],
+            fn (array $entry): bool => $entry['auto'] && $entry['region'] === NavigationRegion::Main,
         ));
     }
 
     /**
-     * @return array{route_name: string, label_key: ?string, icon: ?string, group_key: ?string, group_icon: ?string, roles: array<int, string>|null, auto: bool, order: ?int, group_order: ?int, registration: int}|null
+     * @return array{route_name: string, label_key: ?string, icon: ?string, group_key: ?string, group_icon: ?string, roles: array<int, string>|null, region: NavigationRegion, auto: bool, order: ?int, group_order: ?int, registration: int}|null
      */
     public function entryFor(NavigationAudience $audience, string $routeName): ?array
     {
@@ -113,5 +115,17 @@ class NavigationCatalog
         }
 
         return (bool) config('navigation.autopublish', false);
+    }
+
+    /**
+     * @param  array<string, mixed>  $tag
+     */
+    private function region(array $tag): NavigationRegion
+    {
+        $region = $tag['region'] ?? null;
+
+        return is_string($region)
+            ? (NavigationRegion::tryFrom($region) ?? NavigationRegion::Main)
+            : NavigationRegion::Main;
     }
 }

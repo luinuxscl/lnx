@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\NavigationRegion;
 use App\Enums\NavigationSource;
 use App\Support\Navigation\NavigationCache;
 use App\Support\Navigation\NavigationIcon;
@@ -16,6 +17,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $navigation_menu_id
+ * @property NavigationRegion $region
  * @property string|null $label_key
  * @property string|null $label_es
  * @property string|null $label_en
@@ -27,7 +29,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['navigation_menu_id', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled', 'source', 'overridden'])]
+#[Fillable(['navigation_menu_id', 'region', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled', 'source', 'overridden'])]
 class NavigationGroup extends Model
 {
     /** @use HasFactory<NavigationGroupFactory> */
@@ -36,6 +38,7 @@ class NavigationGroup extends Model
     protected function casts(): array
     {
         return [
+            'region' => NavigationRegion::class,
             'enabled' => 'boolean',
             'position' => 'integer',
             'source' => NavigationSource::class,
