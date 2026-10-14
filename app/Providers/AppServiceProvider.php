@@ -16,7 +16,9 @@ use App\Support\Notifications\NotificationTypeRegistry;
 use App\Support\Packages\PackageRegistry;
 use App\Support\Permissions\PermissionRegistry;
 use App\Support\RecordAccess\RecordAccessRegistry;
+use App\Support\Settings\IdentitySeederRegistry;
 use Carbon\CarbonImmutable;
+use Database\Seeders\IdentitySeeder;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -39,6 +41,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PackageRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(RecordAccessRegistry::class);
+        $this->app->singleton(IdentitySeederRegistry::class);
+
+        $this->app->make(IdentitySeederRegistry::class)
+            ->register('lnx', IdentitySeeder::class, IdentitySeederRegistry::KIT_PRIORITY);
     }
 
     /**

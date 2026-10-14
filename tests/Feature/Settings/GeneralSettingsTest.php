@@ -155,3 +155,36 @@ test('the administration email does not override the configured mail sender', fu
 
     expect(config('mail.from.address'))->toBe('noreply@luinuxscl.com');
 });
+
+test('root can save the site locale and timezone', function () {
+    Livewire::actingAs(rootUser())
+        ->test(General::class)
+        ->set('site_title', 'My Site')
+        ->set('locale', 'en')
+        ->set('timezone', 'Europe/Madrid')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $settings = Setting::first();
+
+    expect($settings->locale)->toBe('en')
+        ->and($settings->timezone)->toBe('Europe/Madrid');
+});
+
+test('an unsupported locale is rejected', function () {
+    Livewire::actingAs(rootUser())
+        ->test(General::class)
+        ->set('site_title', 'My Site')
+        ->set('locale', 'fr')
+        ->call('save')
+        ->assertHasErrors(['locale']);
+});
+
+test('an invalid timezone is rejected', function () {
+    Livewire::actingAs(rootUser())
+        ->test(General::class)
+        ->set('site_title', 'My Site')
+        ->set('timezone', 'Not/AZone')
+        ->call('save')
+        ->assertHasErrors(['timezone']);
+});
