@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $analytics_id
  * @property bool $maintenance_mode
  * @property string|null $maintenance_message
+ * @property bool $home_enabled
  * @property Carbon|null $test_email_sent_at
  * @property string|null $test_email_sent_to
  * @property Carbon|null $test_email_failed_at
@@ -46,6 +47,7 @@ use Illuminate\Support\Facades\Storage;
     'maintenance_mode',
     'maintenance_message',
     'registration_mode',
+    'home_enabled',
     'test_email_sent_at',
     'test_email_sent_to',
     'test_email_failed_at',
@@ -55,11 +57,19 @@ class Setting extends Model
     /** @use HasFactory<SettingFactory> */
     use HasFactory;
 
-    protected $attributes = ['registration_mode' => 'open'];
+    protected $attributes = ['registration_mode' => 'open', 'home_enabled' => true];
 
     public static function registrationIsOpen(): bool
     {
         return self::current()->registration_mode !== 'invitation_only';
+    }
+
+    /**
+     * Whether the public landing page is served at the home route.
+     */
+    public static function homeIsEnabled(): bool
+    {
+        return (bool) self::current()->home_enabled;
     }
 
     /**
@@ -85,6 +95,7 @@ class Setting extends Model
     {
         return [
             'maintenance_mode' => 'boolean',
+            'home_enabled' => 'boolean',
             'test_email_sent_at' => 'datetime',
             'test_email_failed_at' => 'datetime',
         ];

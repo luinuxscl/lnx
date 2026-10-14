@@ -376,6 +376,14 @@ La lista permite buscar por nombre o correo, filtrar por estado (activo o suspen
 
 En **Configuración general**, root puede elegir **Registro abierto** o **Solo invitaciones**. El valor inicial es registro abierto, también en instalaciones existentes que todavía no tienen una fila de configuración. En «Solo invitaciones» se ocultan los enlaces de registro público y tanto GET como POST de `/register` responden 403; los enlaces de invitación válidos siguen funcionando. El cambio se aplica al guardar, sin reconstruir la caché de rutas.
 
+### Vista inicial (landing)
+
+`GET /` (ruta `home`) sirve `resources/views/welcome.blade.php`, una landing pública que aplica automáticamente la identidad del kit: logo (`Setting::logoUrl()`/`logoDarkUrl()`), favicon, título (`Setting::title()`), lema (`Setting::tagline()`), color de acento del tema y modo claro/oscuro. Incluye navegación con selector de idioma y accesos a iniciar sesión / registrarse (el registro solo se ofrece con **Registro abierto**), hero, franja **Built with** con los logos del stack (Laravel, Livewire, PHP, Tailwind CSS, Vite, Pest y PostgreSQL), propuesta de valor y llamada a la acción. El contenido es estático y traducible (`__()` y claves en `lang/es.json` y `lang/en.json`); no hay CMS ni bloques editables.
+
+Los logos de marca se vendorizan como componentes Blade en `resources/views/components/brand-logos/` y se consumen con `<x-brand-logo name="laravel" class="h-9 w-auto" />` (fuente: [SVGL](https://svgl.app); Livewire y Pest desde sus activos oficiales). No se enlazan en runtime.
+
+Root puede **deshabilitar la vista inicial** desde **Configuración general** (interruptor **Home page**, persistido en `settings.home_enabled`, habilitado por defecto también en instalaciones existentes). Cuando está deshabilitada, `App\Http\Controllers\HomeController` responde `GET /` redirigiendo a `login` (invitado) o a `dashboard` (autenticado), nunca 404. El cambio se aplica al guardar, sin reconstruir la caché de rutas, y no afecta a invitaciones, idioma ni rutas de autenticación.
+
 ## Configuración general (General Settings)
 
 Vista de configuración global del sitio en `/admin/settings` (`admin.settings.edit`), accesible **solo para `root`** mediante el middleware `role:root` (`routes/settings.php`). El ítem "Settings" vive en el grupo **Administración** del sidebar y solo lo ve root.
@@ -397,6 +405,7 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 | Personalización | Favicon / Apple touch icon | Iconos del `<head>`. Sin archivo se usan `favicon.png` y `apple-touch-icon.png` del kit. |
 | Avanzado | Footer text | Texto mostrado en el footer del contenido de las páginas autenticadas. Vacío usa `APP_FOOTER_TEXT`. |
 | Avanzado | Analytics ID | ID de GA4 inyectado en el `<head>` (solo en producción). |
+| Avanzado | Home page | Muestra la landing pública en `/` (ruta `home`); deshabilitado, `/` redirige a `login` (invitado) o `dashboard` (autenticado). Habilitado por defecto. |
 | Avanzado | Maintenance mode + message | Bloquea la app con una página 503; root y las rutas de auth siguen accesibles. |
 
 ### Cómo se aplica

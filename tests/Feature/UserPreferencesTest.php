@@ -159,8 +159,8 @@ it('seeds the browser appearance from the account for authenticated users', func
 it('does not seed the browser appearance for guests', function () {
     $this->get(route('home'))
         ->assertOk()
-        ->assertDontSee("localStorage.setItem('flux.theme'", false)
-        ->assertDontSee("localStorage.setItem('flux.appearance'", false);
+        ->assertDontSee("localStorage.setItem('flux.theme', \"", false)
+        ->assertDontSee("localStorage.setItem('flux.appearance', \"", false);
 });
 
 /*
