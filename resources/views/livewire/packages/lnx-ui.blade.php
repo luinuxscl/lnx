@@ -3,7 +3,6 @@
         title="lnx-ui"
         :subtitle="__('Check the installed version of the shared component package and update it when a newer one is available.')"
         icon="cube"
-        :breadcrumbs="[['label' => __('Packages')]]"
     />
 
     @php
