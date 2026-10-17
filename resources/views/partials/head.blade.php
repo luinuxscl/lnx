@@ -23,17 +23,18 @@
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+@php
+    $siteTheme = ($site ?? null)?->accentTheme() ?? \App\Support\Appearance::defaultTheme();
+@endphp
+
+<script>
+    window.localStorage.setItem('flux.theme', @json($siteTheme));
+</script>
+
 @auth
     @php
-        $accountTheme = auth()->user()->theme;
         $accountColorScheme = auth()->user()->color_scheme;
     @endphp
-
-    @if (in_array($accountTheme, \App\Support\Appearance::THEMES, true))
-        <script>
-            window.localStorage.setItem('flux.theme', @json($accountTheme));
-        </script>
-    @endif
 
     @if (in_array($accountColorScheme, \App\Support\Appearance::COLOR_SCHEMES, true))
         <script>

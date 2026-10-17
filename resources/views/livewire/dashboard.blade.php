@@ -211,17 +211,6 @@
                 </div>
             </section>
         @else
-            <x-lnx-ui::statistics-panel :title="__('Notifications')">
-                <x-lnx-ui::stat-card
-                    class="col-span-12 sm:col-span-6 xl:col-span-4"
-                    :label="__('Unread notifications')"
-                    :value="\Illuminate\Support\Number::format($unreadNotifications)"
-                    icon="bell-alert"
-                    color="amber"
-                    :href="route('notifications.index')"
-                />
-            </x-lnx-ui::statistics-panel>
-
             <section aria-labelledby="dashboard-account-heading" class="space-y-4">
                 <flux:heading id="dashboard-account-heading" level="2">{{ __('Your account') }}</flux:heading>
 

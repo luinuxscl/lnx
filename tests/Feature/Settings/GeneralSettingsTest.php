@@ -188,3 +188,24 @@ test('an invalid timezone is rejected', function () {
         ->call('save')
         ->assertHasErrors(['timezone']);
 });
+
+test('root can save the site accent theme', function () {
+    Livewire::actingAs(rootUser())
+        ->test(General::class)
+        ->set('site_title', 'My Site')
+        ->set('theme', 'violet')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(Setting::first()->theme)->toBe('violet')
+        ->and(Setting::current()->accentTheme())->toBe('violet');
+});
+
+test('an unsupported site theme is rejected', function () {
+    Livewire::actingAs(rootUser())
+        ->test(General::class)
+        ->set('site_title', 'My Site')
+        ->set('theme', 'neon')
+        ->call('save')
+        ->assertHasErrors(['theme']);
+});

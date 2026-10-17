@@ -5,6 +5,7 @@ use App\Enums\Role;
 use App\Livewire\LocaleSwitcher;
 use App\Livewire\Settings\Appearance;
 use App\Models\AdministrativeActivity;
+use App\Models\Setting;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Carbon;
@@ -93,29 +94,25 @@ it('saves appearance preferences on the account', function () {
 
     Livewire::actingAs($user)
         ->test(Appearance::class)
-        ->call('saveTheme', 'teal')
         ->call('saveColorScheme', 'dark')
         ->set('timezone', 'America/New_York')
         ->assertHasNoErrors();
 
     $user->refresh();
 
-    expect($user->theme)->toBe('teal')
-        ->and($user->color_scheme)->toBe('dark')
+    expect($user->color_scheme)->toBe('dark')
         ->and($user->timezone)->toBe('America/New_York');
 });
 
-it('rejects unsupported themes and color schemes', function () {
+it('rejects unsupported color schemes', function () {
     $user = preferencesUser();
     $component = Livewire::actingAs($user)->test(Appearance::class);
 
-    $component->call('saveTheme', 'neon')->assertHasErrors(['theme']);
     $component->call('saveColorScheme', 'sepia')->assertHasErrors(['color_scheme']);
 
     $user->refresh();
 
-    expect($user->theme)->toBeNull()
-        ->and($user->color_scheme)->toBeNull();
+    expect($user->color_scheme)->toBeNull();
 });
 
 it('rejects an invalid time zone', function () {
@@ -140,14 +137,24 @@ it('rejects an unsupported locale in the appearance form', function () {
     expect($user->refresh()->locale)->toBe('es');
 });
 
+it('does not offer an accent color option in the appearance settings', function () {
+    $user = preferencesUser();
+
+    $this->actingAs($user)
+        ->get(route('appearance.edit'))
+        ->assertOk()
+        ->assertDontSee('Select the accent color used throughout the application.');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Browser hydration
 |--------------------------------------------------------------------------
 */
 
-it('seeds the browser appearance from the account for authenticated users', function () {
-    $user = preferencesUser(['theme' => 'teal', 'color_scheme' => 'dark']);
+it('seeds the site theme and the account color scheme for authenticated users', function () {
+    Setting::factory()->create(['theme' => 'teal']);
+    $user = preferencesUser(['color_scheme' => 'dark']);
 
     $this->actingAs($user)
         ->get(route('dashboard'))
@@ -156,10 +163,10 @@ it('seeds the browser appearance from the account for authenticated users', func
         ->assertSee("localStorage.setItem('flux.appearance', \"dark\")", false);
 });
 
-it('does not seed the browser appearance for guests', function () {
+it('seeds the site theme but not the account color scheme for guests', function () {
     $this->get(route('home'))
         ->assertOk()
-        ->assertDontSee("localStorage.setItem('flux.theme', \"", false)
+        ->assertSee("localStorage.setItem('flux.theme', \"orange\")", false)
         ->assertDontSee("localStorage.setItem('flux.appearance', \"", false);
 });
 

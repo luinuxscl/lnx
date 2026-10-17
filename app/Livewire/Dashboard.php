@@ -62,7 +62,6 @@ class Dashboard extends Component
             'userCounts' => $userCounts,
             'pendingInvitations' => $pendingInvitations,
             'canCreateInvitations' => $canCreateInvitations,
-            'unreadNotifications' => $user->unreadNotifications()->count(),
         ])->layout('layouts.app');
     }
 }
