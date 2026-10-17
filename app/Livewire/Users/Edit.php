@@ -60,9 +60,13 @@ class Edit extends Component
         $this->authorize('update', $this->user);
 
         $rules = [
-            ...$this->profileRules($this->user->id),
+            'name' => $this->nameRules(),
             'role' => $this->roleRules(),
         ];
+
+        if ($this->canChangeEmail()) {
+            $rules['email'] = $this->emailRules($this->user->id);
+        }
 
         if ($this->password !== '') {
             $rules['password'] = $this->passwordRules();
@@ -76,7 +80,11 @@ class Edit extends Component
             $this->authorize('update', $user);
             $old = ['name' => $user->name, 'email' => $user->email];
             $oldRole = $user->primaryRole()?->value;
-            $user->fill(['name' => $validated['name'], 'email' => $validated['email']]);
+            $attributes = ['name' => $validated['name']];
+            if ($this->canChangeEmail()) {
+                $attributes['email'] = $validated['email'];
+            }
+            $user->fill($attributes);
             if ($this->password !== '') {
                 $user->password = $validated['password'];
             }
@@ -100,6 +108,16 @@ class Edit extends Component
         Flux::toast(variant: 'success', text: __('User updated.'));
 
         $this->redirect(route('admin.users.index'), navigate: true);
+    }
+
+    /**
+     * Determine whether the current actor may change the user's email.
+     *
+     * Only superusers can change another user's email address.
+     */
+    public function canChangeEmail(): bool
+    {
+        return auth()->user()?->hasRole(Role::Root) ?? false;
     }
 
     /**

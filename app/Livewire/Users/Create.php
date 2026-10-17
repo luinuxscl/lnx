@@ -8,10 +8,8 @@ use App\Models\UserInvitation;
 use Flux\Flux;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title('Invite user')]
 class Create extends Component
 {
     public string $email = '';
@@ -47,8 +45,6 @@ class Create extends Component
 
     public function render(): View
     {
-        return view('livewire.users.create')->layout('layouts.app', [
-            'breadcrumbs' => [['label' => __('Users'), 'href' => route('admin.users.index')]],
-        ]);
+        return view('livewire.users.create');
     }
 }
