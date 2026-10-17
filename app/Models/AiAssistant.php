@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\KnowledgeAudience;
+use Database\Factories\AiAssistantFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,7 @@ use Illuminate\Support\Carbon;
  */
 class AiAssistant extends Model
 {
+    /** @use HasFactory<AiAssistantFactory> */
     use HasFactory;
 
     protected $fillable = [
