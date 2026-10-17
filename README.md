@@ -596,7 +596,7 @@ Cada intento se guarda en `ai_usage_events` con actor (id y copia de nombre/corr
 
 ### Panel y dashboard
 
-- **Consumo de IA** (`/admin/ai/usage`, `admin.ai.usage`) es exclusivo de `root` y está separado del historial administrativo. Permite filtrar por período, usuario, función, modelo y estado, y muestra solicitudes, tokens, coste reportado, estimado y desconocido. Se enlaza desde `/admin/ai`.
+- **Consumo de IA** (`/admin/ai/usage`, `admin.ai.usage`) es exclusivo de `root` y está separado del historial administrativo. Muestra el resumen en una fila de indicadores y permite filtrar por período, usuario, función, modelo y estado; la barra de filtros incluye «Limpiar filtros» y «Exportar CSV» alineados a la derecha. La tabla usa la variante `data-table-inline` y fechas `dd/mm/aa HH:mm`. La exportación (`admin.ai.usage.export`) descarga las filas que cumplen los filtros actuales. Se enlaza desde `/admin/ai`.
 - El dashboard de `root` muestra un resumen del **mes en curso** con enlace al panel, sin duplicar sus datos.
 
 ### Retención

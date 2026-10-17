@@ -164,7 +164,7 @@
     "Conversations": "Conversaciones",
     "Copy this access token now. For security reasons it will not be shown again.": "Copia este token de acceso ahora. Por seguridad, no se volverá a mostrar.",
     "Cost": "Coste",
-    "Costs reported by OpenRouter are the provider figure. Estimates come from configured rates and are not an invoice. A missing cost is shown as unknown, never as zero. Local limits do not cap the provider bill exactly.": "Los costes reportados por OpenRouter son la cifra del proveedor. Las estimaciones provienen de tarifas configuradas y no son una factura. Un coste ausente se muestra como desconocido, nunca como cero. Los límites locales no acotan exactamente la factura del proveedor.",
+    "Cost source": "Origen del coste",
     "Create a token to let an agent query the application": "Crea un token para que un agente consulte la aplicación",
     "Create account": "Crear cuenta",
     "Create an account": "Cree una cuenta",

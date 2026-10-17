@@ -4,6 +4,7 @@ use App\Enums\Role;
 use App\Livewire\Ai\Usage;
 use App\Models\AiUsageEvent;
 use App\Models\User;
+use App\Support\Appearance;
 use Database\Seeders\RolePermissionSeeder;
 use Livewire\Livewire;
 
@@ -146,4 +147,55 @@ it('keeps consumption records when retention is disabled', function () {
     $this->artisan('ai:prune-usage')->assertSuccessful();
 
     expect(AiUsageEvent::query()->whereKey($old->id)->exists())->toBeTrue();
+});
+
+it('renders the inline filter bar without a filters label and with export', function () {
+    $root = usageRoot();
+    AiUsageEvent::factory()->create();
+
+    $this->actingAs($root)->get(route('admin.ai.usage'))
+        ->assertOk()
+        ->assertSee(__('Export CSV'))
+        ->assertDontSee(__('Filters'));
+});
+
+it('exports the filtered consumption as csv', function () {
+    $root = usageRoot();
+
+    $exported = AiUsageEvent::factory()->create([
+        'user_id' => $root->id,
+        'user_name' => 'Exported Person',
+        'user_email' => 'exported@example.com',
+        'application' => 'feature_a',
+        'effective_model' => 'test/model',
+        'total_tokens' => 150,
+    ]);
+    AiUsageEvent::factory()->create([
+        'user_name' => 'Hidden Person',
+        'application' => 'feature_b',
+    ]);
+
+    $response = $this->actingAs($root)->get(route('admin.ai.usage.export', ['application' => 'feature_a']));
+
+    $response->assertOk();
+
+    expect($response->streamedContent())
+        ->toContain('Exported Person')
+        ->toContain('exported@example.com')
+        ->toContain('feature_a')
+        ->toContain(__('Cost source'))
+        ->toContain($exported->recorded_at->timezone(Appearance::currentTimezone())->format('d/m/y H:i'))
+        ->not->toContain('Hidden Person')
+        ->not->toContain('feature_b');
+});
+
+it('forbids users without the root role from exporting consumption', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    $this->actingAs($admin)->get(route('admin.ai.usage.export'))->assertForbidden();
+});
+
+it('redirects guests from the consumption export to login', function () {
+    $this->get(route('admin.ai.usage.export'))->assertRedirect(route('login'));
 });
