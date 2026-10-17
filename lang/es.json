@@ -1010,5 +1010,9 @@
     "General assistant": "Asistente general",
     "Recorded requests": "Solicitudes registradas",
     "Every attempt recorded by the shared AI controls, with its tokens, cost and status.": "Cada intento registrado por los controles de IA compartidos, con sus tokens, coste y estado.",
-    "Some filters are invalid": "Algunos filtros no son válidos"
+    "Some filters are invalid": "Algunos filtros no son válidos",
+    "Showing": "Mostrando",
+    "to": "a",
+    "of": "de",
+    "results": "resultados"
 }
