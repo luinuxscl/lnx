@@ -3,9 +3,11 @@
 namespace App\Ai\Knowledge;
 
 use App\Ai\AiConfig;
+use App\Models\KnowledgeBase;
 use App\Models\KnowledgeChunk;
 use App\Models\KnowledgeDocument;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Laravel\Ai\Embeddings;
 use Throwable;
 
@@ -24,11 +26,36 @@ class KnowledgeSearchService
     }
 
     /**
+     * The knowledge bases a user is allowed to use.
+     *
+     * When requested ids are given, they are intersected with the bases the
+     * user can actually see, so a client can never widen its own scope.
+     *
+     * @param  array<int, int>|null  $requestedIds
+     * @return Collection<int, KnowledgeBase>
+     */
+    public function usableBases(User $user, ?array $requestedIds = null): Collection
+    {
+        $query = KnowledgeBase::query()->visibleTo($user);
+
+        if ($requestedIds !== null) {
+            $query->whereIn('id', array_map('intval', $requestedIds));
+        }
+
+        return $query->orderBy('name')->get();
+    }
+
+    /**
      * Search relevant authorized knowledge chunks for a given prompt and user.
      *
+     * When `$knowledgeBaseIds` is null the search spans every document the
+     * user can access (legacy behavior). When an array is given, the search is
+     * limited to those bases, intersected with the ones the user may use.
+     *
+     * @param  array<int, int>|null  $knowledgeBaseIds
      * @return list<array{chunk_id: int, document_id: int, document_title: string, chunk_index: int, content: string, similarity: float}>
      */
-    public function search(User $user, string $queryPrompt, ?int $limit = null): array
+    public function search(User $user, string $queryPrompt, ?array $knowledgeBaseIds = null, ?int $limit = null): array
     {
         $queryPrompt = trim($queryPrompt);
         if ($queryPrompt === '') {
@@ -39,11 +66,21 @@ class KnowledgeSearchService
         $minSimilarity = (float) config('lnx_ai.knowledge.min_similarity', 0.15);
 
         // 1. Authorization-first: query ONLY accessible and indexed documents
-        $accessibleDocumentIds = KnowledgeDocument::query()
+        $documentQuery = KnowledgeDocument::query()
             ->accessibleTo($user)
-            ->indexed()
-            ->pluck('id')
-            ->all();
+            ->indexed();
+
+        if ($knowledgeBaseIds !== null) {
+            $effectiveBaseIds = $this->usableBases($user, $knowledgeBaseIds)->pluck('id')->all();
+
+            if ($effectiveBaseIds === []) {
+                return [];
+            }
+
+            $documentQuery->inBases($effectiveBaseIds);
+        }
+
+        $accessibleDocumentIds = $documentQuery->pluck('id')->all();
 
         if (empty($accessibleDocumentIds)) {
             return [];

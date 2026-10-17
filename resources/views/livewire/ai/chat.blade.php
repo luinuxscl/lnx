@@ -56,6 +56,56 @@
         <!-- Chat Main Area -->
         <div class="lg:col-span-3 flex flex-col flex-1 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
             @if ($activeConversation)
+                <!-- Conversation Context -->
+                <div class="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <flux:select wire:model="selectedAssistantId" label="{{ __('Assistant') }}" wire:change="updateAssistant">
+                            <flux:select.option value="">{{ __('No assistant') }}</flux:select.option>
+                            @foreach ($assistants as $assistant)
+                                <flux:select.option value="{{ $assistant->id }}">{{ $assistant->name }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+
+                        <div class="flex flex-col gap-2">
+                            <flux:label>{{ __('Knowledge bases') }}</flux:label>
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                @forelse ($bases as $base)
+                                    <flux:checkbox wire:model="selectedBaseIds" value="{{ $base->id }}" label="{{ $base->name }}" />
+                                @empty
+                                    <span class="text-xs text-neutral-500">{{ __('No knowledge bases available.') }}</span>
+                                @endforelse
+                                <flux:button size="sm" variant="subtle" icon="check" wire:click="updateKnowledgeBases">
+                                    {{ __('Apply') }}
+                                </flux:button>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if ($canConfigure)
+                        <details class="mt-3">
+                            <summary class="cursor-pointer text-xs font-medium text-neutral-600 dark:text-neutral-300">
+                                {{ __('Advanced configuration (root/admin)') }}
+                            </summary>
+                            <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <flux:select wire:model="model" label="{{ __('Model') }}">
+                                    <flux:select.option value="">{{ __('Default model') }}</flux:select.option>
+                                    @foreach ($availableModels as $availableModel)
+                                        <flux:select.option value="{{ $availableModel }}">{{ $availableModel }}</flux:select.option>
+                                    @endforeach
+                                </flux:select>
+                                <div class="md:col-span-2">
+                                    <flux:textarea wire:model="systemPrompt" label="{{ __('System prompt') }}" rows="2" placeholder="{{ __('Extra instructions for this chat...') }}" />
+                                </div>
+                                <div class="md:col-span-3 flex justify-end">
+                                    <flux:button size="sm" variant="primary" icon="check" wire:click="updateConversationConfig">
+                                        {{ __('Save configuration') }}
+                                    </flux:button>
+                                </div>
+                            </div>
+                        </details>
+                    @endif
+                </div>
+
                 <!-- Chat Messages Stream -->
                 <div class="flex-1 p-6 overflow-y-auto flex flex-col gap-4 max-h-[550px]" id="chat-messages">
                     @forelse ($activeConversation->messages as $message)
