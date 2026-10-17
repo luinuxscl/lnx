@@ -621,8 +621,9 @@ El kit registra los correos salientes dirigidos a las cuentas y los expone en un
 
 - **Cobertura global**: la captura decora el transporte de correo (`App\Mail\RecordingTransport`, registrado en `App\Mail\RecordingMailManager`), así que registra todo correo que sale por el transporte configurado sin tocar los puntos de envío: invitaciones, verificación y recuperación de contraseña, correo de prueba del checklist y cualquier notificación futura.
 - **Contenido**: destinatario (nombre y correo), asunto, fecha y resultado del envío (`sent` cuando el transporte aceptó el mensaje, `failed` cuando lo rechazó). En un fallo se guarda solo la clase de la excepción, **nunca** su mensaje (puede filtrar credenciales). El destinatario se vincula a la cuenta cuando el correo coincide con un usuario.
-- **Búsqueda y filtro**: la bandeja busca por destinatario o asunto y filtra por estado, con paginación.
-- **Autorización**: `App\Policies\OutboundEmailPolicy` limita la lectura a `root` y se revalida en cada render; un acceso sin autorización responde 403.
+- **Búsqueda y filtro**: la bandeja busca por destinatario o asunto y filtra por estado, con paginación. La selección del correo abierto también se conserva en la URL (`#[Url] selected`).
+- **Maestro-detalle**: la pantalla usa los componentes de correo de `luinuxscl/lnx-ui` (`x-lnx-ui::mail-list-item` para la lista y `x-lnx-ui::mail-viewer` para el detalle, apilados en pantallas estrechas). Como son mensajes salientes, la persona que muestra la pieza (`sender`) es el destinatario del envío. Al abrir un correo se ven destinatario, asunto, fecha, estado y, si `failed`, el **motivo** (`outbound_emails.error`); un envío correcto no muestra bloque de error. Sin selección, el detalle queda en estado vacío.
+- **Autorización**: `App\Policies\OutboundEmailPolicy` limita la lectura a `root` y se revalida en cada selección (`view`) y en cada render (`viewAny`); un acceso sin autorización responde 403.
 - **Sin recepción entrante**: solo se registran los correos salientes; no hay buzón de entrada.
 
 Las tablas del antiguo módulo de mensajería interna (`internal_*`) se eliminan con la migración `2026_10_14_120000_drop_internal_messaging_tables`.
