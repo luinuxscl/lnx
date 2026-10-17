@@ -31,6 +31,8 @@ class General extends Component
 
     public string $footer_text = '';
 
+    public string $theme = '';
+
     public string $locale = '';
 
     public string $timezone = '';
@@ -67,6 +69,7 @@ class General extends Component
         $this->meta_description = $settings->meta_description ?? '';
         $this->admin_email = $settings->admin_email ?? '';
         $this->footer_text = $settings->footer() ?? '';
+        $this->theme = $settings->accentTheme();
         $this->locale = $settings->siteLocale();
         $this->timezone = $settings->siteTimezone();
         $this->analytics_id = $settings->analytics_id ?? '';
@@ -91,6 +94,7 @@ class General extends Component
             'meta_description' => $validated['meta_description'] ?: null,
             'admin_email' => $validated['admin_email'] ?: null,
             'footer_text' => $validated['footer_text'] ?: null,
+            'theme' => $validated['theme'],
             'locale' => $validated['locale'] ?: null,
             'timezone' => $validated['timezone'] ?: null,
             'analytics_id' => $validated['analytics_id'] ?: null,
@@ -191,6 +195,7 @@ class General extends Component
             'meta_description' => ['nullable', 'string', 'max:255'],
             'admin_email' => ['nullable', 'email', 'max:255'],
             'footer_text' => ['nullable', 'string', 'max:255'],
+            'theme' => ['required', 'string', Rule::in(Appearance::THEMES)],
             'locale' => ['required', 'string', Rule::in(array_keys((array) config('app.available_locales')))],
             'timezone' => ['required', 'string', 'timezone'],
             'analytics_id' => ['nullable', 'string', 'max:50'],
@@ -234,6 +239,7 @@ class General extends Component
     {
         return view('livewire.settings.general', [
             'settings' => Setting::current(),
+            'themes' => Appearance::THEMES,
             'timezones' => Appearance::timezones(),
         ])->layout('layouts.app');
     }

@@ -41,6 +41,37 @@
                 <flux:text class="mt-1">{{ __('Upload the logo and icons used across the application.') }}</flux:text>
             </div>
 
+            <div>
+                <flux:heading size="sm" class="mb-2">{{ __('Theme') }}</flux:heading>
+                <flux:text class="mb-4">{{ __('Select the accent color used throughout the application.') }}</flux:text>
+
+                <div class="grid grid-cols-3 gap-3 sm:grid-cols-6">
+                    @foreach ($themes as $option)
+                        <button
+                            type="button"
+                            wire:click="$set('theme', '{{ $option }}')"
+                            x-on:click="window.localStorage.setItem('flux.theme', '{{ $option }}'); window.applyFluxTheme()"
+                            @class([
+                                'flex flex-col items-center gap-2 rounded-xl border p-3 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                                'border-accent/60 bg-accent/5 ring-2 ring-accent/40' => $theme === $option,
+                                'border-zinc-200 hover:border-accent/60 dark:border-zinc-700' => $theme !== $option,
+                            ])
+                            aria-pressed="{{ $theme === $option ? 'true' : 'false' }}"
+                        >
+                            <span
+                                @class([
+                                    'size-7 rounded-full shadow-sm ring-2 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900',
+                                    'ring-accent' => $theme === $option,
+                                    'ring-zinc-200 dark:ring-zinc-700' => $theme !== $option,
+                                ])
+                                style="background-color: var(--color-{{ $option }}-500)"
+                            ></span>
+                            <span class="text-xs font-medium text-zinc-600 dark:text-zinc-300">{{ __(ucfirst($option)) }}</span>
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
             <div class="space-y-3">
                 <flux:input wire:model="logo" :label="__('Logo')" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" />
 

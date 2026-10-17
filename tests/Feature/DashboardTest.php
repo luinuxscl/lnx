@@ -27,7 +27,7 @@ test('guests are redirected to the login page', function () {
     $this->get(route('dashboard'))->assertRedirect(route('login'));
 });
 
-test('ordinary users see their account, notifications and support shortcuts without administrative data', function () {
+test('ordinary users see their account and support shortcuts without administrative data', function () {
     $user = User::factory()->create(['name' => '<script>alert(1)</script>']);
     dashboardUser(Role::Admin);
     UserInvitation::factory()->create(['invited_by' => $user->id]);
@@ -42,8 +42,7 @@ test('ordinary users see their account, notifications and support shortcuts with
     $response->assertOk()
         ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)
         ->assertDontSee('<script>alert(1)</script>', false)
-        ->assertSee('Notificaciones sin leer')
-        ->assertSee(route('notifications.index'))
+        ->assertDontSee('Notificaciones sin leer')
         ->assertSee(route('profile.edit'))
         ->assertSee(route('security.edit'))
         ->assertSee(route('support.index'))
@@ -58,8 +57,7 @@ test('ordinary users see their account, notifications and support shortcuts with
 
     $component = Livewire::actingAs($user)->test(Dashboard::class);
     expect($component->viewData('userCounts'))->toBeNull()
-        ->and($component->viewData('pendingInvitations'))->toBeNull()
-        ->and($component->viewData('unreadNotifications'))->toBe(1);
+        ->and($component->viewData('pendingInvitations'))->toBeNull();
     expect(json_encode($component->effects))->not->toContain('userCounts', 'pendingInvitations');
 });
 
