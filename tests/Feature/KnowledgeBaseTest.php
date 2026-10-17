@@ -7,6 +7,7 @@ use App\Ai\Knowledge\KnowledgeSearchService;
 use App\Ai\Knowledge\TextChunker;
 use App\Ai\Tools\KnowledgeSearchTool;
 use App\Livewire\Knowledge\Index as KnowledgeIndex;
+use App\Models\KnowledgeBase;
 use App\Models\KnowledgeDocument;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -148,8 +149,10 @@ it('integrates RAG knowledge search into chat prompt with citations and prompt i
     ChatAgent::fake(['According to [Fuente 1: Security Guidelines (Fragmento #0)], 2FA is mandatory.']);
 
     $user = User::factory()->create();
+    $base = KnowledgeBase::factory()->create();
     $doc = KnowledgeDocument::create([
         'user_id' => $user->id,
+        'knowledge_base_id' => $base->id,
         'title' => 'Security Guidelines',
         'source_type' => 'text',
         'content' => 'Security guidelines require 2FA authentication for all accounts.',
@@ -158,7 +161,7 @@ it('integrates RAG knowledge search into chat prompt with citations and prompt i
     app(KnowledgeIndexer::class)->index($doc);
 
     $chatService = app(ChatService::class);
-    $conv = $chatService->createConversation($user);
+    $conv = $chatService->createConversation($user, knowledgeBaseIds: [$base->id]);
 
     $result = $chatService->sendMessage($user, $conv, 'What are the 2FA requirements?');
 

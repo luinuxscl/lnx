@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int|null $user_id
+ * @property int|null $knowledge_base_id
  * @property string $title
  * @property string $source_type
  * @property string|null $file_path
@@ -27,6 +28,7 @@ class KnowledgeDocument extends Model
 {
     protected $fillable = [
         'user_id',
+        'knowledge_base_id',
         'title',
         'source_type',
         'file_path',
@@ -57,6 +59,14 @@ class KnowledgeDocument extends Model
     }
 
     /**
+     * @return BelongsTo<KnowledgeBase, $this>
+     */
+    public function base(): BelongsTo
+    {
+        return $this->belongsTo(KnowledgeBase::class, 'knowledge_base_id');
+    }
+
+    /**
      * @return HasMany<KnowledgeChunk, $this>
      */
     public function chunks(): HasMany
@@ -67,6 +77,11 @@ class KnowledgeDocument extends Model
     /**
      * Scope query to documents accessible by the given user.
      *
+     * A document that belongs to a knowledge base inherits the base audience.
+     * A document without a base keeps the legacy ownership rules: root and
+     * admin see everything, any other user sees their own documents and the
+     * global ones (`user_id` null).
+     *
      * @param  Builder<KnowledgeDocument>  $query
      * @return Builder<KnowledgeDocument>
      */
@@ -74,13 +89,29 @@ class KnowledgeDocument extends Model
     {
         return $query->whereNull('withdrawn_at')
             ->where(function (Builder $q) use ($user) {
-                if ($user->hasRole([Role::Root, Role::Admin])) {
-                    $q->whereNotNull('id'); // Root and Admin see all non-withdrawn documents
-                } else {
-                    $q->where('user_id', $user->id)
-                        ->orWhereNull('user_id');
-                }
+                $q->whereHas('base', fn (Builder $base) => $base->visibleTo($user))
+                    ->orWhere(function (Builder $legacy) use ($user) {
+                        $legacy->whereNull('knowledge_base_id');
+
+                        if (! $user->hasRole([Role::Root, Role::Admin])) {
+                            $legacy->where(function (Builder $owner) use ($user) {
+                                $owner->where('user_id', $user->id)->orWhereNull('user_id');
+                            });
+                        }
+                    });
             });
+    }
+
+    /**
+     * Scope query to documents that belong to any of the given bases.
+     *
+     * @param  Builder<KnowledgeDocument>  $query
+     * @param  array<int, int>  $baseIds
+     * @return Builder<KnowledgeDocument>
+     */
+    public function scopeInBases(Builder $query, array $baseIds): Builder
+    {
+        return $query->whereIn('knowledge_base_id', $baseIds);
     }
 
     /**

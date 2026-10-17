@@ -74,6 +74,23 @@ class Usage extends Component
         $this->resetPage();
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset('user', 'application', 'model', 'status', 'from', 'to');
+        $this->resetPage();
+        $this->resetValidation();
+    }
+
+    public function hasActiveFilters(): bool
+    {
+        return $this->user !== ''
+            || $this->application !== ''
+            || $this->model !== ''
+            || $this->status !== ''
+            || $this->from !== ''
+            || $this->to !== '';
+    }
+
     public function render(): View
     {
         $this->authorizeRoot();

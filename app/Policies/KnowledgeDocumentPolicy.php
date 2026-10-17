@@ -18,11 +18,18 @@ class KnowledgeDocumentPolicy
 
     /**
      * Determine whether the user can view the knowledge document.
+     *
+     * A document that belongs to a base is visible to whoever may use that
+     * base; a document without a base keeps the legacy ownership rules.
      */
     public function view(User $user, KnowledgeDocument $document): bool
     {
         if ($document->withdrawn_at !== null) {
             return false;
+        }
+
+        if ($document->knowledge_base_id !== null) {
+            return $document->base?->isVisibleTo($user) ?? false;
         }
 
         if ($user->hasRole([Role::Root, Role::Admin])) {
@@ -45,11 +52,7 @@ class KnowledgeDocumentPolicy
      */
     public function update(User $user, KnowledgeDocument $document): bool
     {
-        if ($user->hasRole([Role::Root, Role::Admin])) {
-            return true;
-        }
-
-        return (int) $user->id === (int) $document->user_id;
+        return $this->canManage($user, $document);
     }
 
     /**
@@ -57,11 +60,7 @@ class KnowledgeDocumentPolicy
      */
     public function delete(User $user, KnowledgeDocument $document): bool
     {
-        if ($user->hasRole([Role::Root, Role::Admin])) {
-            return true;
-        }
-
-        return (int) $user->id === (int) $document->user_id;
+        return $this->canManage($user, $document);
     }
 
     /**
@@ -69,11 +68,7 @@ class KnowledgeDocumentPolicy
      */
     public function reindex(User $user, KnowledgeDocument $document): bool
     {
-        if ($user->hasRole([Role::Root, Role::Admin])) {
-            return true;
-        }
-
-        return (int) $user->id === (int) $document->user_id;
+        return $this->canManage($user, $document);
     }
 
     /**
@@ -81,6 +76,19 @@ class KnowledgeDocumentPolicy
      */
     public function withdraw(User $user, KnowledgeDocument $document): bool
     {
+        return $this->canManage($user, $document);
+    }
+
+    /**
+     * A document can be managed by managers and by its owner, as long as the
+     * document itself is visible to the user.
+     */
+    protected function canManage(User $user, KnowledgeDocument $document): bool
+    {
+        if (! $this->view($user, $document)) {
+            return false;
+        }
+
         if ($user->hasRole([Role::Root, Role::Admin])) {
             return true;
         }

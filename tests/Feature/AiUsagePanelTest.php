@@ -74,7 +74,38 @@ it('rejects an invalid status filter', function () {
 
     Livewire::actingAs($root)->test(Usage::class)
         ->set('status', 'not-a-status')
-        ->assertHasErrors('status');
+        ->assertHasErrors('status')
+        ->assertSee(__('Some filters are invalid'));
+});
+
+it('clears all filters at once', function () {
+    $root = usageRoot();
+
+    Livewire::actingAs($root)->test(Usage::class)
+        ->set('user', 'someone')
+        ->set('application', 'feature_a')
+        ->set('model', 'test/model')
+        ->set('status', AiUsageEvent::STATUS_SUCCESS)
+        ->set('from', '2026-01-01')
+        ->set('to', '2026-01-31')
+        ->call('clearFilters')
+        ->assertSet('user', '')
+        ->assertSet('application', '')
+        ->assertSet('model', '')
+        ->assertSet('status', '')
+        ->assertSet('from', '')
+        ->assertSet('to', '');
+});
+
+it('clears filters and validation errors together', function () {
+    $root = usageRoot();
+
+    Livewire::actingAs($root)->test(Usage::class)
+        ->set('status', 'not-a-status')
+        ->assertHasErrors('status')
+        ->call('clearFilters')
+        ->assertHasNoErrors()
+        ->assertSet('status', '');
 });
 
 it('links the AI tools on the root dashboard without rendering the consumption summary', function () {

@@ -11,6 +11,13 @@ use Stringable;
 
 class KnowledgeSearchTool implements Tool
 {
+    /**
+     * @param  array<int, int>|null  $knowledgeBaseIds  Bases to search; null spans every accessible document.
+     */
+    public function __construct(
+        private readonly ?array $knowledgeBaseIds = null,
+    ) {}
+
     public function description(): Stringable|string
     {
         return 'Search authorized knowledge base documents and manuals for verifiable information.';
@@ -38,7 +45,7 @@ class KnowledgeSearchTool implements Tool
         }
 
         $searchService = app(KnowledgeSearchService::class);
-        $results = $searchService->search($user, $query, limit: 5);
+        $results = $searchService->search($user, $query, $this->knowledgeBaseIds, limit: 5);
 
         if ($results === []) {
             return 'No relevant authorized knowledge base documents found matching query: '.$query;

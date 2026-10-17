@@ -6,6 +6,7 @@ use App\Ai\Exceptions\AiNotConfiguredException;
 use App\Ai\Exceptions\AiQuotaExceededException;
 use App\Ai\Exceptions\ModelNotAllowedException;
 use App\Ai\Exceptions\UnsupportedCapabilityException;
+use App\Ai\OpenRouter\OpenRouterStreamCosts;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Laravel\Ai\Contracts\Agent;
@@ -31,6 +32,7 @@ class AiGateway
         private readonly AiQuota $quota,
         private readonly RecordAiUsage $usage,
         private readonly AiErrorCategorizer $categorizer,
+        private readonly OpenRouterStreamCosts $streamCosts,
     ) {}
 
     /**
@@ -213,7 +215,7 @@ class AiGateway
             throw $exception;
         }
 
-        $streamable->then(function ($response) use ($reservation, $correlationId, $user, $application, $resolved, $startedAt): void {
+        $streamable->then(function ($response) use ($reservation, $correlationId, $user, $application, $resolved, $startedAt, $streamable): void {
             $totalTokens = $response->usage?->totalTokens();
             $this->quota->reconcile($reservation, $totalTokens);
             $this->usage->success(
@@ -223,10 +225,12 @@ class AiGateway
                 $resolved,
                 $response,
                 $this->elapsedMilliseconds($startedAt),
+                reportedCost: $this->streamCosts->pull($streamable->invocationId),
             );
         });
 
-        $streamable->catch(function ($exception) use ($reservation, $correlationId, $user, $application, $resolved, $startedAt): void {
+        $streamable->catch(function ($exception) use ($reservation, $correlationId, $user, $application, $resolved, $startedAt, $streamable): void {
+            $this->streamCosts->pull($streamable->invocationId);
             $this->quota->release($reservation);
             $this->usage->failure(
                 $correlationId,

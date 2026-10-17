@@ -25,6 +25,10 @@ class RecordAiUsage
 
     /**
      * Record a successful attempt, reading tokens and reported cost.
+     *
+     * A caller that captured the cost itself (streamed runs, whose raw response
+     * the SDK does not expose) passes it explicitly; otherwise it is read from
+     * the response.
      */
     public function success(
         string $correlationId,
@@ -33,12 +37,13 @@ class RecordAiUsage
         string $requestedModel,
         AgentResponse $response,
         int $durationMs,
+        ?float $reportedCost = null,
     ): AiUsageEvent {
         $inputTokens = $response->usage->inputTokens;
         $outputTokens = $response->usage->outputTokens;
         $effectiveModel = $response->meta->model ?: $requestedModel;
 
-        $reportedCost = $this->extractReportedCost($response);
+        $reportedCost ??= $this->extractReportedCost($response);
 
         $attributes = [
             'estimated_cost' => null,
