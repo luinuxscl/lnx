@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Ai\AiApplicationRegistry;
+use App\Ai\OpenRouter\OpenRouterStreamCosts;
+use App\Ai\OpenRouter\StreamCostParser;
+use App\Ai\OpenRouter\UsageTrackingOpenRouterGateway;
 use App\Enums\Role;
 use App\Mail\RecordingMailManager;
 use App\Mcp\McpToolRegistry;
@@ -22,6 +25,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Number;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Ai\Ai;
+use Laravel\Ai\Providers\OpenRouterProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(AiApplicationRegistry::class);
+        $this->app->singleton(OpenRouterStreamCosts::class);
+        $this->app->singleton(StreamCostParser::class);
         $this->app->singleton(McpToolRegistry::class);
         $this->app->singleton(NotificationTypeRegistry::class);
         $this->app->singleton(PackageRegistry::class);
@@ -53,7 +60,28 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureAuthorization();
+        $this->configureAiStreamingCost();
         $this->guardAgainstDevRootCredentials();
+    }
+
+    /**
+     * Record the cost OpenRouter reports for streamed runs.
+     *
+     * The SDK exposes the raw response only for non-streamed prompts, so the
+     * OpenRouter text gateway is swapped for one that reads the reported
+     * `usage.cost` from the streamed body.
+     */
+    protected function configureAiStreamingCost(): void
+    {
+        Ai::extend('openrouter', function ($app, array $config): OpenRouterProvider {
+            $gateway = new UsageTrackingOpenRouterGateway(
+                $app['events'],
+                $app->make(OpenRouterStreamCosts::class),
+                $app->make(StreamCostParser::class),
+            );
+
+            return (new OpenRouterProvider($config, $app['events']))->useTextGateway($gateway);
+        });
     }
 
     /**

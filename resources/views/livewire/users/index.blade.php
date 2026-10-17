@@ -65,7 +65,6 @@
 
         <x-lnx-ui::data-table
             :paginate="$users"
-            table-class="min-w-[44rem]"
         >
             <x-slot:toolbar>
                 <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -142,17 +141,17 @@
                             />
                         </flux:table.cell>
                         <flux:table.cell variant="strong">
-                            <div class="flex items-center gap-3">
+                            <div class="flex min-w-0 items-center gap-3">
                                 <x-user-avatar :user="$user" size="sm" />
                                 <div class="min-w-0">
-                                    <div class="text-base font-semibold text-zinc-900 dark:text-white">
+                                    <div class="truncate text-base font-semibold text-zinc-900 dark:text-white">
                                         @if ($user->hasRole(\App\Enums\Role::Root))
                                             {{ $user->name }}
                                         @else
                                             <a href="{{ route('admin.users.edit', $user) }}" wire:navigate class="rounded hover:underline focus-visible:underline focus-visible:outline-none">{{ $user->name }}</a>
                                         @endif
                                     </div>
-                                    <div class="text-xs font-normal text-zinc-500 dark:text-zinc-400">
+                                    <div class="truncate text-xs font-normal text-zinc-500 dark:text-zinc-400">
                                         @if ($user->hasRole(\App\Enums\Role::Root))
                                             {{ __(\App\Enums\Role::Root->label()) }}
                                         @elseif ($user->hasRole(\App\Enums\Role::Admin))
@@ -161,7 +160,7 @@
                                             {{ __('Standard user') }}
                                         @endif
                                     </div>
-                                    <div class="text-xs text-zinc-500 lg:hidden dark:text-zinc-400">{{ $user->email }}</div>
+                                    <div class="truncate text-xs text-zinc-500 lg:hidden dark:text-zinc-400">{{ $user->email }}</div>
                                 </div>
                             </div>
                         </flux:table.cell>

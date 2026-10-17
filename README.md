@@ -590,7 +590,7 @@ Cada intento se guarda en `ai_usage_events` con actor (id y copia de nombre/corr
 
 ### Coste
 
-- **Reportado**: OpenRouter informa `usage.cost` en la respuesta; se guarda tal cual (USD).
+- **Reportado**: OpenRouter informa `usage.cost` en la respuesta; se guarda tal cual (USD). Se captura tanto en peticiones directas como en **streaming** (chat): como el SDK no expone la respuesta cruda del stream, se lee del cuerpo SSE mediante un gateway propio y se suma por petición lógica.
 - **Estimado**: si no hay coste reportado pero el despliegue declara tarifas en `pricing.models` (con `pricing.version`/`pricing.updated_at` y `pricing.currency`), se estima a partir de los tokens y se registra la moneda y la versión de tarifas aplicada.
 - **Desconocido**: sin coste reportado ni tarifas, el coste queda **vacío**, nunca cero. Una estimación nunca se presenta como factura.
 

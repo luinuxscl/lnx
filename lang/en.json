@@ -1003,5 +1003,12 @@
     "Conversation configuration updated.": "Conversation configuration updated.",
     "Failed to update the conversation configuration.": "Failed to update the conversation configuration.",
     "Default shared knowledge base.": "Default shared knowledge base.",
-    "General assistant": "General assistant"
+    "General assistant": "General assistant",
+    "Recorded requests": "Recorded requests",
+    "Every attempt recorded by the shared AI controls, with its tokens, cost and status.": "Every attempt recorded by the shared AI controls, with its tokens, cost and status.",
+    "Some filters are invalid": "Some filters are invalid",
+    "Showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results"
 }
