@@ -4,18 +4,17 @@ namespace App\Ai\OpenRouter;
 
 use Generator;
 use Illuminate\Contracts\Events\Dispatcher;
-use Laravel\Ai\Contracts\Providers\TextProvider;
 use Laravel\Ai\Gateway\OpenRouter\OpenRouterGateway;
-use Laravel\Ai\Gateway\StepContext;
-use Laravel\Ai\Gateway\TextGenerationOptions;
+use Laravel\Ai\Providers\Provider;
+use Psr\Http\Message\StreamInterface;
 
 /**
  * OpenRouter text gateway that records the cost OpenRouter reports while streaming.
  *
- * The Laravel AI SDK does not expose the raw streamed response, so the body is
- * decorated to keep what the SDK reads and the reported `usage.cost` is parsed
+ * The Laravel AI SDK does not expose the raw streamed response, so the SSE body
+ * is read through a recording decorator and the reported `usage.cost` is parsed
  * once the step completes. Streaming is preserved: nothing is buffered ahead of
- * the first emitted event.
+ * the first emitted event, because the decorator records what the SDK reads.
  */
 class UsageTrackingOpenRouterGateway extends OpenRouterGateway
 {
@@ -30,39 +29,17 @@ class UsageTrackingOpenRouterGateway extends OpenRouterGateway
     /**
      * Stream a single Chat Completions step, recording the reported cost.
      *
-     * Mirrors the SDK step but wraps the response body so the raw SSE can be
-     * parsed for `usage.cost` after the stream is fully consumed.
+     * @param  StreamInterface  $streamBody
      */
-    public function generateStreamStep(
+    protected function processTextStream(
         string $invocationId,
-        TextProvider $provider,
+        Provider $provider,
         string $model,
-        ?string $instructions,
-        array $messages,
-        array $tools,
-        ?array $schema,
-        ?TextGenerationOptions $options,
-        ?int $timeout,
-        StepContext $stepContext,
+        $streamBody,
     ): Generator {
-        $body = $this->buildStepBody($provider, $model, $instructions, $messages, $tools, $schema, $options, $stepContext);
+        $recording = new RecordingStream($streamBody);
 
-        $body['stream'] = true;
-
-        if (filled($streamOptions = $this->streamOptions($provider))) {
-            $body['stream_options'] = $streamOptions;
-        }
-
-        $response = $this->withErrorHandling(
-            $provider->name(),
-            fn () => $this->client($provider, $timeout)
-                ->withOptions(['stream' => true])
-                ->post('chat/completions', $body),
-        );
-
-        $recording = new RecordingStream($response->getBody());
-
-        $result = yield from $this->processTextStream($invocationId, $provider, $model, $recording);
+        $result = yield from parent::processTextStream($invocationId, $provider, $model, $recording);
 
         $cost = $this->parser->parse($recording->recorded());
 
