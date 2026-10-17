@@ -6,6 +6,11 @@
         color="emerald"
     >
         <x-slot:actions>
+            @can('manageAny', \App\Models\KnowledgeBase::class)
+                <flux:button variant="subtle" icon="rectangle-stack" :href="route('knowledge.bases')" wire:navigate>
+                    {{ __('Manage bases') }}
+                </flux:button>
+            @endcan
             <flux:button variant="primary" icon="plus" wire:click="openCreateModal">
                 {{ __('Add document') }}
             </flux:button>
@@ -15,6 +20,14 @@
     <div class="flex items-center justify-between gap-4">
         <div class="w-full max-w-sm">
             <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Search documents...') }}" icon="magnifying-glass" />
+        </div>
+        <div class="w-full max-w-xs">
+            <flux:select wire:model.live="baseFilter" placeholder="{{ __('All bases') }}">
+                <flux:select.option value="">{{ __('All bases') }}</flux:select.option>
+                @foreach ($bases as $base)
+                    <flux:select.option value="{{ $base->id }}">{{ $base->name }}</flux:select.option>
+                @endforeach
+            </flux:select>
         </div>
     </div>
 
@@ -29,6 +42,7 @@
                     <thead class="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                         <tr>
                             <th scope="col" class="px-4 py-3">{{ __('Title') }}</th>
+                            <th scope="col" class="px-4 py-3">{{ __('Base') }}</th>
                             <th scope="col" class="px-4 py-3">{{ __('Type') }}</th>
                             <th scope="col" class="px-4 py-3">{{ __('Status') }}</th>
                             <th scope="col" class="px-4 py-3">{{ __('Chunks') }}</th>
@@ -47,6 +61,13 @@
                                             {{ $doc->title }}
                                         </a>
                                     </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    @if ($doc->base)
+                                        <flux:badge color="emerald">{{ $doc->base->name }}</flux:badge>
+                                    @else
+                                        <flux:badge color="zinc">{{ __('Personal') }}</flux:badge>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3 text-xs uppercase">
                                     <flux:badge color="zinc">{{ $doc->source_type }}</flux:badge>
@@ -113,6 +134,13 @@
 
             <form wire:submit="createDocument" class="space-y-4">
                 <flux:input wire:model="title" label="{{ __('Document Title') }}" placeholder="{{ __('e.g. Employee Handbook 2026') }}" required />
+
+                <flux:select wire:model="baseId" label="{{ __('Knowledge Base') }}">
+                    <flux:select.option value="">{{ __('Personal (no base)') }}</flux:select.option>
+                    @foreach ($bases as $base)
+                        <flux:select.option value="{{ $base->id }}">{{ $base->name }}</flux:select.option>
+                    @endforeach
+                </flux:select>
 
                 <div class="flex items-center gap-4">
                     <flux:radio.group wire:model.live="sourceType" label="{{ __('Content Source') }}">

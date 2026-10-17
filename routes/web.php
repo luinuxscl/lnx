@@ -15,6 +15,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\Documents\Index as DocumentsIndex;
 use App\Livewire\Documents\Show as DocumentsShow;
 use App\Livewire\Emails\Index as EmailsIndex;
+use App\Livewire\Knowledge\Bases as KnowledgeBases;
 use App\Livewire\Knowledge\Index;
 use App\Livewire\Knowledge\Show;
 use App\Livewire\Navigation\Index as NavigationIndex;
@@ -57,6 +58,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'audiences' => ['root'],
         'region' => 'bottom',
     ]);
+    Route::livewire('knowledge/bases', KnowledgeBases::class)->name('knowledge.bases');
     Route::livewire('knowledge/{document}', Show::class)->name('knowledge.show');
     Route::livewire('documents', DocumentsIndex::class)->name('documents.index')->menu([
         'label' => 'Document AI',

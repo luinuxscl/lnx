@@ -706,10 +706,17 @@ lnx incluye un módulo de extracción de datos de documentos con IA en `/documen
 
 lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`knowledge.index`, `knowledge.show`) integrado con el chat interactivo contextual (`/chat`). Permite incorporar manuales, guías o catálogos, dividirlos en fragmentos (chunks), generar embeddings vectoriales mediante OpenRouter y responder preguntas con referencias verificables.
 
+### Bases de conocimiento y audiencia
+
+- Los documentos se agrupan en **bases de conocimiento** (`knowledge_bases`), gestionadas en `/knowledge/bases` (`knowledge.bases`, solo root y admin).
+- Cada base declara una **audiencia** (`App\Enums\KnowledgeAudience`: `root`, `admin` o `user`). Una base con audiencia `admin` es invisible para el usuario estándar; una con audiencia `root` es invisible para admin y usuario estándar.
+- La resolución de bases permitidas es siempre server-side: los ids que llegan del cliente se intersecan con las bases visibles para el usuario antes de consultar nada.
+- Un documento sin base conserva las reglas heredadas (propietario o global con `user_id` null); un documento con base hereda la audiencia de su base.
+
 ### Infraestructura opcional y almacenamiento vectorial
 
 - **Almacenamiento vectorial integrado**: Los vectores y fragmentos se guardan directamente en las tablas `knowledge_documents` y `knowledge_chunks` de la base de datos de la aplicación (SQLite/PostgreSQL). No se exige una base vectorial externa (Pinecone/Qdrant/pgvector).
-- **Módulo inactivo por defecto**: `AI_KNOWLEDGE_ENABLED=false` mantiene el módulo apagado por defecto. La instalación básica de SQLite funciona sin depender del módulo.
+- **Módulo inactivo por defecto**: `AI_KNOWLEDGE_ENABLED=false` mantiene el módulo apagado por defecto. La instalación básica de SQLite funciona sin depender del módulo. Nota: la bandera solo controla la **recuperación**; la indexación depende de `AI_ENABLED` y de la configuración del proveedor, así que un documento puede quedar indexado mientras el RAG sigue apagado.
 
 ### Embeddings con OpenRouter
 
@@ -727,23 +734,32 @@ lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`kn
 - El motor de búsqueda `KnowledgeSearchService` aplica la política `KnowledgeDocumentPolicy` y el scope `accessibleTo($user)` **antes** de enviar fragmentos al LLM. Un usuario nunca puede recuperar fragmentos de documentos a los que no tiene permiso.
 - Las instrucciones contenidas dentro de fragmentos de documentos se tratan estrictamente como texto pasivo de lectura, previniendo inyecciones de prompt.
 
-### Respuestas con citas verificables e integración con Chat
+### RAG, prompt y modelo por conversación
+
+- Cada conversación (`ai_conversations`) puede adjuntar una o varias bases mediante el pivote `ai_conversation_knowledge_base`. **Sin bases asociadas, el chat no inyecta `<knowledge_sources>` ni adjunta `KnowledgeSearchTool`**: se puede tener un chat con RAG y otro sin él.
+- El **prompt de sistema** y el **modelo** por conversación (`system_prompt`, `model`) solo pueden fijarlos root y admin; el usuario estándar consume la configuración permitida.
+- **Presets de asistente** (`ai_assistants`): agrupan prompt, modelo y bases por defecto con una audiencia. Una conversación puede referenciar un preset (`assistant_id`) y heredar su configuración, salvo override de bases.
+
+### Respuestas con citas verificables
 
 - Las respuestas generadas por el chat citan expresamente las fuentes recuperadas mediante etiquetas `[Fuente: Título (Fragmento #)]`.
 - Cuando las fuentes disponibles no contienen suficiente información para responder a la consulta, el asistente indica explícitamente la falta de sustento.
-- Incluye la herramienta `App\Ai\Tools\KnowledgeSearchTool` accesible para agentes y chats interactivos.
+- La herramienta `App\Ai\Tools\KnowledgeSearchTool` se adjunta al chat solo si el modelo resuelto declara la capability `tools`; el pre-fetch de fuentes funciona con independencia de las tools.
 
 ### Cuotas y registro de consumo
 
-- Las peticiones de embeddings y generación de respuestas utilizan las aplicaciones `knowledge_indexing` y `knowledge_query` a través del `AiGateway`, aplicando cuotas locales por usuario/aplicación y registrando el consumo en `ai_usage_events`.
+- La **generación de la respuesta** pasa por `AiGateway` con la aplicación `chat`, aplicando cuotas locales por usuario/aplicación y registrando el consumo en `ai_usage_events`.
+- **Limitación conocida**: los embeddings (indexación y consulta) se solicitan directamente al SDK (`Embeddings::for(...)`), por lo que **no** pasan por `AiGateway` ni aplican cuota ni registro. Las entradas `knowledge_indexing` y `knowledge_query` de `config/lnx_ai.php` están declaradas pero **no se usan** todavía; cablearlas por el gateway queda como trabajo pendiente.
 
 ### Evaluación manual de calidad
 
-1. Ingesta de un manual técnico o procedimiento en `/knowledge`.
+1. Crear una base en `/knowledge/bases` con la audiencia deseada y cargar un manual técnico o procedimiento en `/knowledge` dentro de esa base.
 2. Verificación de que la indexación genere fragmentos coherentes.
-3. Consulta en `/chat` comprobando que la respuesta incluya citas precisas a la fuente.
-4. Prueba con una pregunta ajena al corpus comprobando que el asistente informe que las fuentes no sustentan la respuesta.
-5. Retiro del documento comprobando la imposibilidad inmediata de recuperar sus fragmentos.
+3. Adjuntar la base a una conversación en `/chat` y comprobar que la respuesta incluya citas precisas a la fuente.
+4. Probar una conversación sin bases y comprobar que no se inyectan fuentes.
+5. Probar con una pregunta ajena al corpus comprobando que el asistente informe que las fuentes no sustentan la respuesta.
+6. Probar una base con audiencia `admin` desde un usuario estándar y verificar que no recupera fragmentos.
+7. Retiro del documento comprobando la imposibilidad inmediata de recuperar sus fragmentos.
 
 ## Estrategia de ramas (Git Flow)
 
