@@ -13,17 +13,19 @@
                 </flux:menu>
             </flux:dropdown>
 
-            <flux:button
-                variant="ghost"
-                size="sm"
-                square
-                icon="envelope"
-                :href="route('messages.index')"
-                wire:navigate
-                class="cursor-pointer"
-                :aria-label="__('Messages')"
-                :title="__('Messages')"
-            />
+            @if (auth()->user()->hasRole(\App\Enums\Role::Root))
+                <flux:button
+                    variant="ghost"
+                    size="sm"
+                    square
+                    icon="envelope"
+                    :href="route('admin.emails.index')"
+                    wire:navigate
+                    class="cursor-pointer"
+                    :aria-label="__('Sent emails')"
+                    :title="__('Sent emails')"
+                />
+            @endif
 
             <livewire:notifications.bell />
 

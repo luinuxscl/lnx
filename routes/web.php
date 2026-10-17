@@ -14,9 +14,9 @@ use App\Livewire\Ai\Usage as AiUsage;
 use App\Livewire\Dashboard;
 use App\Livewire\Documents\Index as DocumentsIndex;
 use App\Livewire\Documents\Show as DocumentsShow;
+use App\Livewire\Emails\Index as EmailsIndex;
 use App\Livewire\Knowledge\Index;
 use App\Livewire\Knowledge\Show;
-use App\Livewire\Messages\Index as MessagesIndex;
 use App\Livewire\Navigation\Index as NavigationIndex;
 use App\Livewire\Notifications\Index as NotificationsIndex;
 use App\Livewire\Packages\Index as PackagesIndex;
@@ -40,7 +40,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'icon' => 'squares-2x2',
         'audiences' => ['root', 'admin', 'user'],
     ]);
-    Route::livewire('messages', MessagesIndex::class)->name('messages.index');
     Route::livewire('notifications', NotificationsIndex::class)->name('notifications.index');
     Route::livewire('chat/{conversation?}', AiChat::class)->name('chat')->menu([
         'label' => 'Chat',
@@ -150,6 +149,10 @@ Route::livewire('admin/packages/lnx-ui', LnxUi::class)
 Route::livewire('admin/ai/usage', AiUsage::class)
     ->middleware(['auth', 'role:'.Role::Root->value])
     ->name('admin.ai.usage');
+
+Route::livewire('admin/emails', EmailsIndex::class)
+    ->middleware(['auth', 'role:'.Role::Root->value])
+    ->name('admin.emails.index');
 
 Route::livewire('admin/navigation', NavigationIndex::class)
     ->middleware(['auth', 'role:'.Role::Root->value])

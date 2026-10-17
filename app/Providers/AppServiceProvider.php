@@ -4,12 +4,8 @@ namespace App\Providers;
 
 use App\Ai\AiApplicationRegistry;
 use App\Enums\Role;
-use App\Events\SupportPublicReplyAdded;
-use App\Events\SupportTicketCreated;
-use App\Events\SupportTicketStatusChanged;
-use App\Listeners\SyncSupportTicketToMessaging;
+use App\Mail\RecordingMailManager;
 use App\Mcp\McpToolRegistry;
-use App\Models\InternalConversation;
 use App\Models\User;
 use App\Support\DevRootCredentials;
 use App\Support\Notifications\NotificationTypeRegistry;
@@ -21,7 +17,6 @@ use Carbon\CarbonImmutable;
 use Database\Seeders\IdentitySeeder;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Number;
@@ -45,6 +40,10 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->make(IdentitySeederRegistry::class)
             ->register('lnx', IdentitySeeder::class, IdentitySeederRegistry::KIT_PRIORITY);
+
+        $this->app->extend('mail.manager', function ($manager, $app) {
+            return $manager instanceof RecordingMailManager ? $manager : new RecordingMailManager($app);
+        });
     }
 
     /**
@@ -55,14 +54,6 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->configureAuthorization();
         $this->guardAgainstDevRootCredentials();
-        $this->registerSupportMessagingSync();
-    }
-
-    protected function registerSupportMessagingSync(): void
-    {
-        Event::listen(SupportTicketCreated::class, [SyncSupportTicketToMessaging::class, 'handleTicketCreated']);
-        Event::listen(SupportPublicReplyAdded::class, [SyncSupportTicketToMessaging::class, 'handlePublicReplyAdded']);
-        Event::listen(SupportTicketStatusChanged::class, [SyncSupportTicketToMessaging::class, 'handleStatusChanged']);
     }
 
     /**
@@ -92,23 +83,12 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Configure role-based authorization.
      *
-     * The root role is a superuser: it bypasses every gate and policy check,
-     * except for private internal conversations which require participation.
+     * The root role is a superuser: it bypasses every gate and policy check.
      */
     protected function configureAuthorization(): void
     {
-        Gate::before(function (User $user, string $ability, array $arguments = []): ?bool {
-            if (! $user->hasRole(Role::Root)) {
-                return null;
-            }
-
-            // Root does not bypass privacy on non-support internal conversations.
-            $target = $arguments[0] ?? null;
-            if ($target instanceof InternalConversation && ! $target->isSupport()) {
-                return null;
-            }
-
-            return true;
+        Gate::before(function (User $user): ?bool {
+            return $user->hasRole(Role::Root) ? true : null;
         });
 
         // Extension point for the reusable text assistant. Derived projects
