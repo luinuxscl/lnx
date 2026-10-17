@@ -81,6 +81,21 @@ class Usage extends Component
         $this->resetValidation();
     }
 
+    /**
+     * Build the export URL mirroring the current filters.
+     */
+    public function exportUrl(): string
+    {
+        return route('admin.ai.usage.export', array_filter([
+            'user' => $this->user,
+            'application' => $this->application,
+            'model' => $this->model,
+            'status' => $this->status,
+            'from' => $this->from,
+            'to' => $this->to,
+        ], fn (string $value): bool => $value !== ''));
+    }
+
     public function hasActiveFilters(): bool
     {
         return $this->user !== ''

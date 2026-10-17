@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\LazyCollection;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -66,6 +67,21 @@ class ListAiUsage
         return $this->query($filters)
             ->orderByDesc('recorded_at')->orderByDesc('id')
             ->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /**
+     * Stream every record matching the filters, without pagination.
+     *
+     * @param  array{user?: string, application?: string, model?: string, status?: string, from?: string, to?: string}  $filters
+     * @return LazyCollection<int, AiUsageEvent>
+     *
+     * @throws ValidationException
+     */
+    public function export(array $filters): LazyCollection
+    {
+        return $this->query($filters)
+            ->orderByDesc('recorded_at')->orderByDesc('id')
+            ->lazy();
     }
 
     /**

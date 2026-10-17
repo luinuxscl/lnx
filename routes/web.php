@@ -2,6 +2,7 @@
 
 use App\Enums\Role;
 use App\Http\Controllers\AcceptInvitationController;
+use App\Http\Controllers\AiUsageExportController;
 use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
@@ -151,6 +152,10 @@ Route::livewire('admin/packages/lnx-ui', LnxUi::class)
 Route::livewire('admin/ai/usage', AiUsage::class)
     ->middleware(['auth', 'role:'.Role::Root->value])
     ->name('admin.ai.usage');
+
+Route::get('admin/ai/usage/export', AiUsageExportController::class)
+    ->middleware(['auth', 'role:'.Role::Root->value])
+    ->name('admin.ai.usage.export');
 
 Route::livewire('admin/emails', EmailsIndex::class)
     ->middleware(['auth', 'role:'.Role::Root->value])

@@ -6,64 +6,56 @@
         color="violet"
     />
 
-    <flux:callout icon="information-circle">
-        <flux:callout.text>{{ __('Costs reported by OpenRouter are the provider figure. Estimates come from configured rates and are not an invoice. A missing cost is shown as unknown, never as zero. Local limits do not cap the provider bill exactly.') }}</flux:callout.text>
-    </flux:callout>
-
     @if ($summary !== null)
-        <x-lnx-ui::statistics-panel
-            :title="__('Summary')"
-            :description="$priceNote !== null ? __('Pricing version: :version', ['version' => $priceNote]) : null"
-        >
-            <x-lnx-ui::summary-card
-                class="col-span-12 sm:col-span-6 xl:col-span-4"
-                :label="__('Attempts')"
-                :value="\Illuminate\Support\Number::format($summary['events'])"
-                icon="cursor-arrow-rays"
-                color="violet"
-            />
-            <x-lnx-ui::summary-card
-                class="col-span-12 sm:col-span-6 xl:col-span-4"
-                :label="__('Tokens')"
-                :value="\Illuminate\Support\Number::format($summary['tokens'])"
-                icon="cpu-chip"
-                color="cyan"
-            />
-            <x-lnx-ui::summary-card
-                class="col-span-12 sm:col-span-6 xl:col-span-4"
-                :label="__('Reported cost')"
-                :value="\App\Support\NumberFormat::currency($summary['reported_cost'], $currency, 4)"
-                icon="banknotes"
-                color="emerald"
-            />
-            <x-lnx-ui::summary-card
-                class="col-span-12 sm:col-span-6 xl:col-span-4"
-                :label="__('Estimated cost')"
-                :value="\App\Support\NumberFormat::currency($summary['estimated_cost'], $currency, 4)"
-                icon="calculator"
-                color="blue"
-            />
-            <x-lnx-ui::summary-card
-                class="col-span-12 sm:col-span-6 xl:col-span-4"
-                :label="__('Unknown cost')"
-                :value="\Illuminate\Support\Number::format($summary['unknown_cost'])"
-                icon="question-mark-circle"
-                color="amber"
-            />
-            <x-lnx-ui::summary-card
-                class="col-span-12 sm:col-span-6 xl:col-span-4"
-                :label="__('Blocked / errors')"
-                :value="\Illuminate\Support\Number::format($summary['blocked']).' / '.\Illuminate\Support\Number::format($summary['errors'])"
-                icon="exclamation-triangle"
-                color="rose"
-            />
-        </x-lnx-ui::statistics-panel>
+        <div class="space-y-3 py-4 sm:py-6">
+            <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                <x-lnx-ui::stat
+                    :label="__('Attempts')"
+                    :value="\Illuminate\Support\Number::format($summary['events'])"
+                    icon="cursor-arrow-rays"
+                    color="violet"
+                />
+                <x-lnx-ui::stat
+                    :label="__('Tokens')"
+                    :value="\Illuminate\Support\Number::format($summary['tokens'])"
+                    icon="cpu-chip"
+                    color="cyan"
+                />
+                <x-lnx-ui::stat
+                    :label="__('Reported cost')"
+                    :value="\App\Support\NumberFormat::currency($summary['reported_cost'], $currency, 4)"
+                    icon="banknotes"
+                    color="emerald"
+                />
+                <x-lnx-ui::stat
+                    :label="__('Estimated cost')"
+                    :value="\App\Support\NumberFormat::currency($summary['estimated_cost'], $currency, 4)"
+                    icon="calculator"
+                    color="blue"
+                />
+                <x-lnx-ui::stat
+                    :label="__('Unknown cost')"
+                    :value="\Illuminate\Support\Number::format($summary['unknown_cost'])"
+                    icon="question-mark-circle"
+                    color="amber"
+                />
+                <x-lnx-ui::stat
+                    :label="__('Blocked / errors')"
+                    :value="\Illuminate\Support\Number::format($summary['blocked']).' / '.\Illuminate\Support\Number::format($summary['errors'])"
+                    icon="exclamation-triangle"
+                    color="rose"
+                />
+            </div>
+
+            @if ($priceNote !== null)
+                <flux:text class="text-xs">{{ __('Pricing version: :version', ['version' => $priceNote]) }}</flux:text>
+            @endif
+        </div>
     @endif
 
-    <x-lnx-ui::data-table
+    <x-lnx-ui::data-table-inline
         :title="__('Recorded requests')"
         :description="__('Every attempt recorded by the shared AI controls, with its tokens, cost and status.')"
-        :filters-label="__('Filters')"
         :paginate="$events"
         {{-- Flux removes the padding of the first and last column (first:ps-0 / last:pe-0); restore a small breath. --}}
         table-class="[&_th:first-child]:ps-3 [&_td:first-child]:ps-3 [&_th:last-child]:pe-3 [&_td:last-child]:pe-3"
@@ -117,15 +109,17 @@
             @endif
         </x-slot:filters>
 
-        <x-slot:actions>
+        <x-slot:filtersActions>
             @if ($this->hasActiveFilters())
-                <flux:button icon="x-mark" wire:click="clearFilters">{{ __('Clear filters') }}</flux:button>
+                <flux:button variant="ghost" icon="x-mark" wire:click="clearFilters">{{ __('Clear filters') }}</flux:button>
             @endif
-        </x-slot:actions>
+
+            <flux:button icon="arrow-down-tray" :href="$this->exportUrl()">{{ __('Export CSV') }}</flux:button>
+        </x-slot:filtersActions>
 
         {{-- No forced min-width: on narrow screens columns are hidden by breakpoint so the table always fits without horizontal scroll. --}}
         <flux:table.columns>
-            <flux:table.column class="w-16 sm:w-36">{{ __('Date') }}</flux:table.column>
+            <flux:table.column class="w-28 sm:w-32">{{ __('Date') }}</flux:table.column>
             <flux:table.column class="w-36 sm:w-40 lg:w-48 xl:w-56">{{ __('User') }}</flux:table.column>
             <flux:table.column class="w-20 max-md:hidden">{{ __('Application') }}</flux:table.column>
             <flux:table.column class="w-48 max-xl:hidden">{{ __('Model') }}</flux:table.column>
@@ -153,8 +147,7 @@
                 @endphp
                 <flux:table.row :key="$event->id">
                     <flux:table.cell class="whitespace-nowrap text-zinc-500 dark:text-zinc-400">
-                        <span class="hidden sm:inline">{{ $event->recorded_at->timezone(\App\Support\Appearance::currentTimezone())->format('Y-m-d H:i:s') }}</span>
-                        <span class="sm:hidden">{{ $event->recorded_at->timezone(\App\Support\Appearance::currentTimezone())->format('d/m') }}</span>
+                        {{ $event->recorded_at->timezone(\App\Support\Appearance::currentTimezone())->format('d/m/y H:i') }}
                     </flux:table.cell>
                     <flux:table.cell>
                         <span class="block min-w-0" @if ($event->user_id !== null) title="{{ trim($event->user_email.' #'.$event->user_id) }}" @endif>

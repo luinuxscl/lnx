@@ -142,7 +142,7 @@
     "Copy": "Copy",
     "Copy this access token now. For security reasons it will not be shown again.": "Copy this access token now. For security reasons it will not be shown again.",
     "Cost": "Cost",
-    "Costs reported by OpenRouter are the provider figure. Estimates come from configured rates and are not an invoice. A missing cost is shown as unknown, never as zero. Local limits do not cap the provider bill exactly.": "Costs reported by OpenRouter are the provider figure. Estimates come from configured rates and are not an invoice. A missing cost is shown as unknown, never as zero. Local limits do not cap the provider bill exactly.",
+    "Cost source": "Cost source",
     "Could not check for updates": "Could not check for updates",
     "Could not check for updates.": "Could not check for updates.",
     "Create a token to let an agent query the application": "Create a token to let an agent query the application",

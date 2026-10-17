@@ -2732,16 +2732,16 @@
         },
         {
             "name": "luinuxscl/lnx-ui",
-            "version": "v1.14.1",
+            "version": "v1.15.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:luinuxscl/lnx-ui.git",
-                "reference": "c4e0e2797f6454e6f12a89b9db790b71ab3b57ad"
+                "reference": "12eb7e91184325e883a7f505b4b94441e6fbb15a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/luinuxscl/lnx-ui/zipball/c4e0e2797f6454e6f12a89b9db790b71ab3b57ad",
-                "reference": "c4e0e2797f6454e6f12a89b9db790b71ab3b57ad",
+                "url": "https://api.github.com/repos/luinuxscl/lnx-ui/zipball/12eb7e91184325e883a7f505b4b94441e6fbb15a",
+                "reference": "12eb7e91184325e883a7f505b4b94441e6fbb15a",
                 "shasum": ""
             },
             "require": {
@@ -2793,7 +2793,7 @@
                 "lnx",
                 "ui"
             ],
-            "time": "2026-10-17T06:56:14+00:00"
+            "time": "2026-10-17T15:31:45+00:00"
         },
         {
             "name": "monolog/monolog",
