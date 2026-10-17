@@ -65,8 +65,8 @@
         :description="__('Every attempt recorded by the shared AI controls, with its tokens, cost and status.')"
         :filters-label="__('Filters')"
         :paginate="$events"
-        {{-- Flux removes the leading padding of the first column (first:ps-0); restore a small breath. --}}
-        table-class="[&_th:first-child]:ps-3 [&_td:first-child]:ps-3"
+        {{-- Flux removes the padding of the first and last column (first:ps-0 / last:pe-0); restore a small breath. --}}
+        table-class="[&_th:first-child]:ps-3 [&_td:first-child]:ps-3 [&_th:last-child]:pe-3 [&_td:last-child]:pe-3"
     >
         <x-slot:filters>
             <div class="w-full sm:w-44">
