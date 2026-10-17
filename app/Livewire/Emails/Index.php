@@ -22,6 +22,9 @@ class Index extends Component
     #[Url]
     public string $status = 'all';
 
+    #[Url]
+    public ?int $selected = null;
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -30,6 +33,15 @@ class Index extends Component
     public function updatedStatus(): void
     {
         $this->resetPage();
+    }
+
+    public function selectEmail(int $id): void
+    {
+        $email = OutboundEmail::query()->findOrFail($id);
+
+        abort_unless(auth()->user()?->can('view', $email) ?? false, 403);
+
+        $this->selected = $email->id;
     }
 
     public function render(): View
@@ -56,8 +68,13 @@ class Index extends Component
             $query->where('status', $this->status);
         }
 
+        $selectedEmail = $this->selected === null
+            ? null
+            : OutboundEmail::query()->with('user')->find($this->selected);
+
         return view('livewire.emails.index', [
             'emails' => $query->orderByDesc('id')->paginate(15),
+            'selectedEmail' => $selectedEmail,
             'timezone' => Appearance::currentTimezone($user),
         ])->layout('layouts.app');
     }

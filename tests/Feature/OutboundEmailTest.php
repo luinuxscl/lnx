@@ -85,6 +85,39 @@ it('lets root browse and search the outbound email log', function () {
         ->assertDontSee('a@example.com');
 });
 
+it('opens the detail of the selected email and shows the failure reason', function () {
+    $root = User::factory()->create();
+    $root->assignRole(Role::Root);
+
+    $sent = OutboundEmail::create(['to_email' => 'sent@example.com', 'subject' => 'Delivered mail', 'status' => OutboundEmail::STATUS_SENT, 'sent_at' => now()]);
+    $failed = OutboundEmail::create(['to_email' => 'failed@example.com', 'subject' => 'Broken mail', 'status' => OutboundEmail::STATUS_FAILED, 'error' => 'TransportException']);
+
+    Livewire::actingAs($root)
+        ->test(EmailsIndex::class)
+        ->assertSet('selected', null)
+        ->assertSee(__('Select an email to review it.'))
+        ->call('selectEmail', $failed->id)
+        ->assertSet('selected', $failed->id)
+        ->assertSee(__('Delivery failed'))
+        ->assertSee('TransportException')
+        ->assertDontSee(__('Select an email to review it.'))
+        ->call('selectEmail', $sent->id)
+        ->assertSet('selected', $sent->id)
+        ->assertDontSee('TransportException');
+});
+
+it('explains a failed email that recorded no reason', function () {
+    $root = User::factory()->create();
+    $root->assignRole(Role::Root);
+
+    $failed = OutboundEmail::create(['to_email' => 'failed@example.com', 'status' => OutboundEmail::STATUS_FAILED]);
+
+    Livewire::actingAs($root)
+        ->test(EmailsIndex::class)
+        ->call('selectEmail', $failed->id)
+        ->assertSee(__('The transport rejected the message and no reason was recorded.'));
+});
+
 it('forbids non-root users from viewing the outbound email log', function () {
     $user = User::factory()->create();
 
