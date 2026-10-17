@@ -94,6 +94,15 @@
         @endif
 
         @if ($galleryEnabled)
+            <section class="space-y-4" aria-label="{{ __('Interactive preview') }}">
+                <div>
+                    <flux:heading level="2">{{ __('Interactive preview') }}</flux:heading>
+                    <flux:text class="mt-1">{{ __('Livewire component that composes the shared mail pieces with preview state (no mail backend).') }}</flux:text>
+                </div>
+
+                <livewire:mail-ui.preview />
+            </section>
+
             <section aria-label="{{ __('Design gallery') }}">
                 @include('lnx-ui::design-gallery')
             </section>

@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.22.0] - 2026-10-17
+
+### Documentado
+- **Skill `create-ui-component` — dónde vive el shell interactivo:** se aclara que el paquete `luinuxscl/lnx-ui` es **Blade-only** (no depende de `livewire/livewire`) y que, cuando la referencia sea un shell con estado (selección, búsqueda, borradores, acciones), ese shell es un componente Livewire **en la app** —Livewire es dependencia base del kit— que compone las piezas Blade del paquete y les conecta la interacción por slots (`select`, `star`), sin añadir Livewire al paquete ni meter datos de negocio ni consultas en las piezas. Se refleja en la fila «Tipo» de la ficha previa y en un criterio nuevo de «Construcción y revisión». Detectado al construir las piezas de correo (`mail-list-item`, `attachment-card`, `presence-list`, `mail-viewer`).
+
 ## [1.21.0] - 2026-10-14
 
 ### Añadido
