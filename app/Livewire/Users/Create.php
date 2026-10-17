@@ -47,6 +47,8 @@ class Create extends Component
 
     public function render(): View
     {
-        return view('livewire.users.create')->layout('layouts.app');
+        return view('livewire.users.create')->layout('layouts.app', [
+            'breadcrumbs' => [['label' => __('Users'), 'href' => route('admin.users.index')]],
+        ]);
     }
 }

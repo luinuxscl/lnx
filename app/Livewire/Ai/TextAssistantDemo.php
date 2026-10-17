@@ -31,7 +31,9 @@ class TextAssistantDemo extends Component
     {
         $this->authorizeRoot();
 
-        return view('livewire.ai.text-assistant-demo')->layout('layouts.app');
+        return view('livewire.ai.text-assistant-demo')->layout('layouts.app', [
+            'breadcrumbs' => [['label' => __('AI'), 'href' => route('admin.ai.index')]],
+        ]);
     }
 
     private function authorizeRoot(): void

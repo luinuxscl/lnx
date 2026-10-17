@@ -3,7 +3,6 @@
         :title="__('Invitations')"
         icon="envelope"
         color="blue"
-        :breadcrumbs="[['label' => __('Users'), 'href' => route('admin.users.index')]]"
     >
         <x-slot:actions>
             <flux:button variant="primary" :href="route('admin.users.create')" wire:navigate>{{ __('Invite user') }}</flux:button>

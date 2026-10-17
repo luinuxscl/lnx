@@ -4,7 +4,6 @@
         :subtitle="__('The recipient will choose their name and password.')"
         icon="user-plus"
         color="blue"
-        :breadcrumbs="[['label' => __('Users'), 'href' => route('admin.users.index')]]"
     />
 
     <form wire:submit="save" class="mt-6 w-full max-w-lg space-y-6">

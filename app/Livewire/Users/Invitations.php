@@ -68,6 +68,8 @@ class Invitations extends Component
             'invitations' => UserInvitation::query()
                 ->when($this->search !== '', fn ($query) => $query->where('email', 'like', "%{$this->search}%"))
                 ->orderByDesc('created_at')->orderByDesc('id')->paginate(10),
-        ])->layout('layouts.app');
+        ])->layout('layouts.app', [
+            'breadcrumbs' => [['label' => __('Users'), 'href' => route('admin.users.index')]],
+        ]);
     }
 }

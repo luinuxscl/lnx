@@ -4,7 +4,6 @@
         :subtitle="__('Created :date by :user', ['date' => $document->created_at->diffForHumans(), 'user' => $document->user ? $document->user->name : __('Global')])"
         icon="book-open"
         color="emerald"
-        :breadcrumbs="[['label' => __('Knowledge Base'), 'href' => route('knowledge.index')]]"
     >
         <x-slot:meta>
             @if ($document->status === 'indexed')

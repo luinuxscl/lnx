@@ -4,7 +4,6 @@
         :subtitle="$ticket->user->name.' · '.$ticket->created_at->format('Y-m-d H:i')"
         icon="inbox"
         color="rose"
-        :breadcrumbs="[['label' => __('Support requests'), 'href' => route('support.index')]]"
     >
         <x-slot:meta>
             <flux:badge>{{ __(str_replace('_', ' ', ucfirst($ticket->status))) }}</flux:badge>
