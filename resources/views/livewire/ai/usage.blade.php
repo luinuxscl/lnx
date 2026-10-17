@@ -65,7 +65,6 @@
         :description="__('Every attempt recorded by the shared AI controls, with its tokens, cost and status.')"
         :filters-label="__('Filters')"
         :paginate="$events"
-        container-class="max-h-[70vh] overflow-auto"
     >
         <x-slot:filters>
             <div class="w-full sm:w-44">
@@ -123,7 +122,7 @@
         </x-slot:actions>
 
         {{-- No forced min-width: on narrow screens columns are hidden by breakpoint so the table always fits without horizontal scroll. --}}
-        <flux:table.columns sticky class="bg-white dark:bg-zinc-900">
+        <flux:table.columns>
             <flux:table.column class="w-16 sm:w-36">{{ __('Date') }}</flux:table.column>
             <flux:table.column class="w-36 sm:w-40 lg:w-48 xl:w-56">{{ __('User') }}</flux:table.column>
             <flux:table.column class="w-20 max-md:hidden">{{ __('Application') }}</flux:table.column>
