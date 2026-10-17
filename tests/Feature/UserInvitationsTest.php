@@ -157,7 +157,7 @@ it('does not let ordinary users manage invitations', function () {
     $ordinary = User::factory()->create();
 
     $this->actingAs($ordinary)->get(route('admin.users.invitations'))->assertForbidden();
-    $this->actingAs($ordinary)->get(route('admin.users.create'))->assertForbidden();
+    expect($ordinary->can('create', UserInvitation::class))->toBeFalse();
     expect(fn () => app(IssueUserInvitation::class)->create($ordinary, 'another@example.com', null, 'es'))
         ->toThrow(HttpException::class);
     expect(UserInvitation::count())->toBe(1);

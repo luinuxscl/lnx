@@ -19,7 +19,6 @@ test('profile information can be updated', function () {
 
     $response = Livewire::test(Profile::class)
         ->set('name', 'Test User')
-        ->set('email', 'test@example.com')
         ->call('updateProfileInformation');
 
     $response->assertHasNoErrors();
@@ -27,8 +26,20 @@ test('profile information can be updated', function () {
     $user->refresh();
 
     expect($user->name)->toEqual('Test User');
-    expect($user->email)->toEqual('test@example.com');
-    expect($user->email_verified_at)->toBeNull();
+});
+
+test('the email address cannot be changed from the profile', function () {
+    $user = User::factory()->create(['email' => 'original@example.com']);
+
+    $this->actingAs($user);
+
+    $response = Livewire::test(Profile::class)
+        ->set('email', 'changed@example.com')
+        ->call('updateProfileInformation');
+
+    $response->assertHasNoErrors();
+
+    expect($user->refresh()->email)->toEqual('original@example.com');
 });
 
 test('a user can upload and replace their avatar', function () {

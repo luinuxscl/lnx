@@ -3,7 +3,7 @@
 
     <flux:heading level="2" class="sr-only">{{ __('Profile settings') }}</flux:heading>
 
-    <x-settings.layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
+    <x-settings.layout :heading="__('Profile')" :subheading="__('Update your name')">
         <div class="my-6 space-y-4">
             <flux:heading level="3">{{ __('Avatar') }}</flux:heading>
 
@@ -42,7 +42,14 @@
             <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
 
             <div>
-                <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
+                <flux:input
+                    wire:model="email"
+                    :label="__('Email')"
+                    type="email"
+                    readonly
+                    :description="__('Only a superuser can change the email address.')"
+                    autocomplete="email"
+                />
 
                 @if ($this->hasUnverifiedEmail)
                     <div>

@@ -24,9 +24,9 @@ it('renders the ancestor breadcrumb link on a nested page', function () {
     $admin->assignRole(Role::Admin->value);
 
     $this->actingAs($admin)
-        ->get(route('admin.users.create'))
+        ->get(route('admin.users.invitations'))
         ->assertOk()
-        ->assertSee('Invitar usuario')
+        ->assertSee('Invitaciones')
         ->assertSee(route('admin.users.index'), false);
 });
 

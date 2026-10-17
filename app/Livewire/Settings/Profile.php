@@ -90,18 +90,19 @@ class Profile extends Component
 
     /**
      * Update the profile information for the currently authenticated user.
+     *
+     * Only the name is user-editable: the email address can only be changed
+     * by a superuser from user management.
      */
     public function updateProfileInformation(): void
     {
         $user = Auth::user();
 
-        $validated = $this->validate($this->profileRules($user->id));
+        $validated = $this->validate([
+            'name' => $this->nameRules(),
+        ]);
 
         $user->fill($validated);
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
 
         $user->save();
 
