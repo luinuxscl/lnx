@@ -824,6 +824,8 @@ La biblioteca del paquete incluye `x-lnx-ui::stat` (`label`, `value`, `icon` Flu
 
 El dashboard de admin usa `x-lnx-ui::stat` dentro de las tarjetas de usuarios que incluyen acciones; el dashboard de root usa `x-lnx-ui::tool-card` para enlazar las herramientas de root y las de la app. Los estados vacíos y los enlaces siguen en la pantalla; `x-lnx-ui::trend-card` se reserva para datos que tengan una serie histórica real.
 
+`x-lnx-ui::mail-list-item`, `x-lnx-ui::attachment-card`, `x-lnx-ui::presence-list` y `x-lnx-ui::mail-viewer` componen una pantalla tipo cliente de correo y tienen ejemplos aprobados en `/admin/packages/lnx-ui`. `mail-list-item` es la fila de mensaje (avatar, remitente, asunto, vista previa, hora, badge, estados `unread`/`starred`/`selected` y enlace opcional, con slots `select` y `star` para conectar la interacción del consumidor); `attachment-card` es la tarjeta de un archivo (`name`, `size`, `icon`, `color`, `href`); `presence-list` lista personas en línea (`users`); `mail-viewer` es el panel de detalle con slots `actions`, `attachments`, `reply` y `footer`. Son presentacionales —el consumidor aporta datos y textos ya traducidos— y el contenedor asigna el ancho desde una grilla de 12 columnas.
+
 ```blade
 <x-lnx-ui::statistics-panel :title="__('Statistics')" :updated-label="__('Updated 1 month ago')">
     <x-lnx-ui::stat class="col-span-12 md:col-span-6 xl:col-span-3" :label="__('Sales')" value="230k" icon="chart-pie" color="violet" />
