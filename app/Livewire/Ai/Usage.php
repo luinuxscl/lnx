@@ -112,7 +112,9 @@ class Usage extends Component
                 AiUsageEvent::STATUS_ERROR,
                 AiUsageEvent::STATUS_BLOCKED,
             ],
-        ])->layout('layouts.app');
+        ])->layout('layouts.app', [
+            'breadcrumbs' => [['label' => __('AI'), 'href' => route('admin.ai.index')]],
+        ]);
     }
 
     /**

@@ -4,7 +4,6 @@
         :subtitle="__('Requests, tokens and cost recorded by the shared AI controls.')"
         icon="chart-bar"
         color="violet"
-        :breadcrumbs="[['label' => __('AI'), 'href' => route('admin.ai.index')]]"
     />
 
     <flux:callout icon="information-circle">

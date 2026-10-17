@@ -4,7 +4,6 @@
         :subtitle="__('Try the reusable assistant on a scratch field. It applies changes to the form only when you accept them.')"
         icon="sparkles"
         color="violet"
-        :breadcrumbs="[['label' => __('AI'), 'href' => route('admin.ai.index')]]"
     />
 
     <div class="mt-6 w-full max-w-5xl space-y-6">

@@ -4,7 +4,6 @@
         :subtitle="__('Uploaded :date', ['date' => $document->created_at->format('Y-m-d H:i')])"
         icon="document-text"
         color="cyan"
-        :breadcrumbs="[['label' => __('Document extraction'), 'href' => route('documents.index')]]"
     >
         <x-slot:meta>
             @if ($document->isPending())

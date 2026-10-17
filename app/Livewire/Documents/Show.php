@@ -182,6 +182,8 @@ class Show extends Component
 
         return view('livewire.documents.show', [
             'document' => $this->document,
-        ])->layout('layouts.app');
+        ])->layout('layouts.app', [
+            'breadcrumbs' => [['label' => __('Document extraction'), 'href' => route('documents.index')]],
+        ]);
     }
 }
