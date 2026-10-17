@@ -99,7 +99,7 @@
                 @endif
                 @if ($canCreateInvitations)
                     <x-slot:actions>
-                        <flux:button size="sm" variant="primary" icon="user-plus" :href="route('admin.users.create')" wire:navigate>
+                        <flux:button size="sm" variant="primary" icon="user-plus" :href="route('admin.users.index', ['invite' => 1])" wire:navigate>
                             {{ __('Invite user') }}
                         </flux:button>
                     </x-slot:actions>

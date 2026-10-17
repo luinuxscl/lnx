@@ -110,7 +110,14 @@
                 </div>
                 <flux:button icon="arrow-down-tray" :href="$this->exportUrl()">{{ __('Export CSV') }}</flux:button>
                 <flux:button :href="route('admin.users.invitations')" wire:navigate>{{ __('Invitations') }}</flux:button>
-                <flux:button variant="primary" icon="plus" :href="route('admin.users.create')" wire:navigate>{{ __('Invite user') }}</flux:button>
+                @if (auth()->user()->hasRole(\App\Enums\Role::Root))
+                    <flux:modal.trigger name="create-user">
+                        <flux:button icon="user-plus">{{ __('Create user') }}</flux:button>
+                    </flux:modal.trigger>
+                @endif
+                <flux:modal.trigger name="invite-user">
+                    <flux:button variant="primary" icon="plus">{{ __('Invite user') }}</flux:button>
+                </flux:modal.trigger>
             </x-slot:actions>
 
             <flux:table.columns>
@@ -234,7 +241,16 @@
                                 @if ($this->hasActiveFilters())
                                     <flux:button size="sm" variant="ghost" wire:click="clearFilters">{{ __('Clear filters') }}</flux:button>
                                 @else
-                                    <flux:button size="sm" variant="primary" icon="plus" :href="route('admin.users.create')" wire:navigate>{{ __('Invite user') }}</flux:button>
+                                    <div class="flex flex-wrap items-center justify-center gap-3">
+                                        <flux:modal.trigger name="invite-user">
+                                            <flux:button size="sm" variant="primary" icon="plus">{{ __('Invite user') }}</flux:button>
+                                        </flux:modal.trigger>
+                                        @if (auth()->user()->hasRole(\App\Enums\Role::Root))
+                                            <flux:modal.trigger name="create-user">
+                                                <flux:button size="sm" icon="user-plus">{{ __('Create user') }}</flux:button>
+                                            </flux:modal.trigger>
+                                        @endif
+                                    </div>
                                 @endif
                             </div>
                         </flux:table.cell>
@@ -321,4 +337,14 @@
             </div>
         </div>
     </flux:modal>
+
+    @if (request()->boolean('invite'))
+        <div x-data x-init="$nextTick(() => $dispatch('modal-show', { name: 'invite-user' }))"></div>
+    @endif
+
+    <livewire:users.create />
+
+    @if (auth()->user()->hasRole(\App\Enums\Role::Root))
+        <livewire:users.create-direct />
+    @endif
 </section>

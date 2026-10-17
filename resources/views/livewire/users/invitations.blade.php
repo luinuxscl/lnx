@@ -5,7 +5,9 @@
         color="blue"
     >
         <x-slot:actions>
-            <flux:button variant="primary" :href="route('admin.users.create')" wire:navigate>{{ __('Invite user') }}</flux:button>
+            <flux:modal.trigger name="invite-user">
+                <flux:button variant="primary" icon="plus">{{ __('Invite user') }}</flux:button>
+            </flux:modal.trigger>
         </x-slot:actions>
     </x-lnx-ui::page-header>
 
@@ -44,4 +46,6 @@
             </flux:table.rows>
         </flux:table>
     </div>
+
+    <livewire:users.create />
 </section>

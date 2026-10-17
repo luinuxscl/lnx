@@ -1,7 +1,9 @@
 <?php
 
+use App\Actions\CreateVerifiedUser;
 use App\Enums\Role;
 use App\Livewire\Users\Create;
+use App\Livewire\Users\CreateDirect;
 use App\Livewire\Users\Edit;
 use App\Livewire\Users\Index;
 use App\Models\User;
@@ -365,4 +367,135 @@ it('forbids users without an admin role from exporting', function () {
 
 it('redirects guests from the export route to login', function () {
     $this->get(route('admin.users.export'))->assertRedirect(route('login'));
+});
+
+it('does not let admins change a user email', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    $user = User::factory()->create(['email' => 'original@example.com']);
+
+    Livewire::actingAs($admin)
+        ->test(Edit::class, ['user' => $user])
+        ->set('name', 'Renamed')
+        ->set('email', 'tampered@example.com')
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('admin.users.index'));
+
+    $user->refresh();
+
+    expect($user->name)->toBe('Renamed')
+        ->and($user->email)->toBe('original@example.com');
+});
+
+it('lets root change a user email and keeps the verification status', function () {
+    $root = User::factory()->create();
+    $root->assignRole(Role::Root->value);
+
+    $user = User::factory()->create(['email' => 'original@example.com', 'email_verified_at' => now()]);
+
+    Livewire::actingAs($root)
+        ->test(Edit::class, ['user' => $user])
+        ->set('email', 'changed@example.com')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $user->refresh();
+
+    expect($user->email)->toBe('changed@example.com')
+        ->and($user->email_verified_at)->not->toBeNull();
+});
+
+it('lets root create a verified user directly', function () {
+    $root = User::factory()->create();
+    $root->assignRole(Role::Root->value);
+
+    Livewire::actingAs($root)
+        ->test(CreateDirect::class)
+        ->set('name', 'Direct Person')
+        ->set('email', 'DIRECT@example.com')
+        ->set('password', 'password')
+        ->set('password_confirmation', 'password')
+        ->set('role', Role::Admin->value)
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('admin.users.index'));
+
+    $created = User::where('email', 'direct@example.com')->first();
+
+    expect($created)->not->toBeNull()
+        ->and($created->hasVerifiedEmail())->toBeTrue()
+        ->and($created->hasRole(Role::Admin))->toBeTrue();
+});
+
+it('forbids admins from using the direct creation', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    $this->actingAs($admin)
+        ->get(route('admin.users.index'))
+        ->assertOk()
+        ->assertDontSee('create-user', false);
+
+    expect($admin->can('createDirectly', User::class))->toBeFalse();
+});
+
+it('shows the direct creation entry only to root', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    $this->actingAs($admin)
+        ->get(route('admin.users.index'))
+        ->assertOk()
+        ->assertDontSee('create-user', false);
+
+    $root = User::factory()->create();
+    $root->assignRole(Role::Root->value);
+
+    $this->actingAs($root)
+        ->get(route('admin.users.index'))
+        ->assertOk()
+        ->assertSee('create-user', false);
+});
+
+it('rejects a direct creation attempted by a non-superuser action call', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+
+    try {
+        app(CreateVerifiedUser::class)->handle($admin, 'Ghost', 'ghost@example.com', 'password');
+    } catch (Throwable) {
+        // Expected: the action aborts with a 403.
+    }
+
+    expect(User::where('email', 'ghost@example.com')->exists())->toBeFalse();
+});
+
+it('renders the direct creation modal for root', function () {
+    $root = User::factory()->create();
+    $root->assignRole(Role::Root->value);
+
+    Livewire::actingAs($root)
+        ->test(CreateDirect::class)
+        ->assertSee(__('The account will be created already verified.'));
+});
+
+it('shows the email as read only to admins and editable to root', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::Admin->value);
+    $user = User::factory()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.users.edit', $user))
+        ->assertOk()
+        ->assertSee(__('Only a superuser can change the email address.'));
+
+    $root = User::factory()->create();
+    $root->assignRole(Role::Root->value);
+
+    $this->actingAs($root)
+        ->get(route('admin.users.edit', $user))
+        ->assertOk()
+        ->assertDontSee(__('Only a superuser can change the email address.'));
 });

@@ -24,6 +24,16 @@ class UserPolicy
     }
 
     /**
+     * Determine whether the user can create an account directly, already verified.
+     *
+     * Only superusers may bypass the invitation flow and confirm the email.
+     */
+    public function createDirectly(User $user): bool
+    {
+        return $user->hasRole(Role::Root);
+    }
+
+    /**
      * Determine whether the user can update the given user.
      */
     public function update(User $user, User $model): bool

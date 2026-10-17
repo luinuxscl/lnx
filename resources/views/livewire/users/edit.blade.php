@@ -8,7 +8,15 @@
     <form wire:submit="save" class="mt-6 w-full max-w-lg space-y-6">
         <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
 
-        <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
+        <flux:input
+            wire:model="email"
+            :label="__('Email')"
+            type="email"
+            required
+            autocomplete="email"
+            :readonly="! $this->canChangeEmail()"
+            :description="$this->canChangeEmail() ? null : __('Only a superuser can change the email address.')"
+        />
 
         <flux:input
             wire:model="password"
