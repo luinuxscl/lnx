@@ -44,16 +44,18 @@
                     <flux:menu.item icon="list-bullet" :href="route('support.index', ['mine' => 1])" wire:navigate>{{ __('View my requests') }}</flux:menu.item>
                 </flux:menu>
             </flux:dropdown>
-            <flux:button
-                variant="ghost"
-                size="sm"
-                square
-                icon="envelope"
-                :href="route('messages.index')"
-                wire:navigate
-                :aria-label="__('Messages')"
-                :title="__('Messages')"
-            />
+            @if (auth()->user()->hasRole(\App\Enums\Role::Root))
+                <flux:button
+                    variant="ghost"
+                    size="sm"
+                    square
+                    icon="envelope"
+                    :href="route('admin.emails.index')"
+                    wire:navigate
+                    :aria-label="__('Sent emails')"
+                    :title="__('Sent emails')"
+                />
+            @endif
             <livewire:notifications.bell />
             <livewire:locale-switcher />
 

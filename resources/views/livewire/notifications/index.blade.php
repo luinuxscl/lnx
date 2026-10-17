@@ -22,9 +22,6 @@
                         @if ($supportLink = $this->supportLink($notification))
                             <flux:button size="sm" :href="$supportLink" wire:navigate>{{ __('View request') }}</flux:button>
                         @endif
-                        @if ($messageLink = $this->messageLink($notification))
-                            <flux:button size="sm" :href="$messageLink" wire:navigate>{{ __('View message') }}</flux:button>
-                        @endif
                         @if ($moduleLink = $this->moduleLink($notification))
                             <flux:button size="sm" :href="$moduleLink" wire:navigate>{{ __('View') }}</flux:button>
                         @endif

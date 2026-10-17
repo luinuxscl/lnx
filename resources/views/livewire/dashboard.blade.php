@@ -70,13 +70,6 @@
             <div class="grid grid-cols-12 gap-4">
                 <x-lnx-ui::tool-card
                     class="col-span-12 sm:col-span-6 xl:col-span-3"
-                    :title="__('Messages')"
-                    :description="__('Chat with users and follow announcements.')"
-                    icon="envelope"
-                    :href="route('messages.index')"
-                />
-                <x-lnx-ui::tool-card
-                    class="col-span-12 sm:col-span-6 xl:col-span-3"
                     :title="__('Chat')"
                     :description="__('Have interactive conversations with the AI assistant.')"
                     icon="chat-bubble-left-right"
