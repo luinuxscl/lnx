@@ -239,3 +239,91 @@ it('invalidates the old link even when resending fails', function () {
     $this->post($oldUrl, ['name' => 'Old', 'password' => 'password', 'password_confirmation' => 'password'])
         ->assertSessionHasErrors('invitation');
 });
+
+it('filters the invitation list by status', function () {
+    $actor = invitationActor();
+    UserInvitation::factory()->create(['email' => 'pending@example.com', 'invited_by' => $actor->id]);
+    UserInvitation::factory()->create(['email' => 'accepted@example.com', 'invited_by' => $actor->id, 'accepted_at' => now()]);
+    UserInvitation::factory()->create(['email' => 'expired@example.com', 'invited_by' => $actor->id, 'expires_at' => now()->subDay()]);
+    UserInvitation::factory()->create(['email' => 'revoked@example.com', 'invited_by' => $actor->id, 'revoked_at' => now()]);
+    UserInvitation::factory()->create(['email' => 'failed@example.com', 'invited_by' => $actor->id, 'send_failed_at' => now()]);
+
+    Livewire::actingAs($actor)->test(Invitations::class)
+        ->set('status', 'pending')
+        ->assertSee('pending@example.com')
+        ->assertDontSee('accepted@example.com')
+        ->assertDontSee('expired@example.com')
+        ->assertDontSee('revoked@example.com')
+        ->assertDontSee('failed@example.com');
+
+    Livewire::actingAs($actor)->test(Invitations::class)
+        ->set('status', 'send_failed')
+        ->assertSee('failed@example.com')
+        ->assertDontSee('pending@example.com');
+
+    Livewire::actingAs($actor)->test(Invitations::class)
+        ->set('status', 'expired')
+        ->assertSee('expired@example.com')
+        ->assertDontSee('accepted@example.com');
+});
+
+it('searches invitations by email', function () {
+    $actor = invitationActor();
+    UserInvitation::factory()->create(['email' => 'alpha@example.com', 'invited_by' => $actor->id]);
+    UserInvitation::factory()->create(['email' => 'beta@example.com', 'invited_by' => $actor->id]);
+
+    Livewire::actingAs($actor)->test(Invitations::class)
+        ->set('search', 'alpha')
+        ->assertSee('alpha@example.com')
+        ->assertDontSee('beta@example.com');
+});
+
+it('sorts the invitation list by email and expiry', function () {
+    $actor = invitationActor();
+    UserInvitation::factory()->create(['email' => 'charlie@example.com', 'invited_by' => $actor->id, 'expires_at' => now()->addDays(3)]);
+    UserInvitation::factory()->create(['email' => 'alpha@example.com', 'invited_by' => $actor->id, 'expires_at' => now()->addDays(1)]);
+    UserInvitation::factory()->create(['email' => 'bravo@example.com', 'invited_by' => $actor->id, 'expires_at' => now()->addDays(2)]);
+
+    Livewire::actingAs($actor)->test(Invitations::class)
+        ->set('sortBy', 'email')
+        ->set('sortDirection', 'asc')
+        ->assertSeeInOrder(['alpha@example.com', 'bravo@example.com', 'charlie@example.com']);
+
+    Livewire::actingAs($actor)->test(Invitations::class)
+        ->set('sortBy', 'expires')
+        ->set('sortDirection', 'asc')
+        ->assertSeeInOrder(['alpha@example.com', 'bravo@example.com', 'charlie@example.com']);
+});
+
+it('normalizes an unknown sort column and page size in the invitation list', function () {
+    $actor = invitationActor();
+
+    Livewire::actingAs($actor)->test(Invitations::class)
+        ->set('sortBy', 'token_hash')
+        ->assertSet('sortBy', 'created');
+
+    Livewire::actingAs($actor)->test(Invitations::class)
+        ->set('status', 'bogus')
+        ->assertSet('status', 'all');
+
+    Livewire::actingAs($actor)->test(Invitations::class)
+        ->set('perPage', 999)
+        ->assertSet('perPage', 10);
+
+    Livewire::actingAs($actor)->test(Invitations::class)
+        ->set('perPage', 25)
+        ->assertSet('perPage', 25);
+});
+
+it('shows the invitation quick filters as clickable stat cards', function () {
+    $actor = invitationActor();
+
+    $this->actingAs($actor)->get(route('admin.users.invitations'))
+        ->assertOk()
+        ->assertSee(__('Pending'))
+        ->assertSee(__('Accepted'))
+        ->assertSee(__('Expired'))
+        ->assertSee(__('Revoked'))
+        ->assertSee(__('Send failed'))
+        ->assertSee(route('admin.users.invitations', ['status' => 'pending']), false);
+});
