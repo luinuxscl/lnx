@@ -27,6 +27,7 @@ class SettingFactory extends Factory
             'favicon_path' => null,
             'apple_touch_icon_path' => null,
             'footer_text' => fake()->sentence(),
+            'theme' => null,
             'analytics_id' => null,
             'maintenance_mode' => false,
             'registration_mode' => 'open',

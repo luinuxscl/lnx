@@ -33,14 +33,13 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $remember_token
  * @property string|null $locale
  * @property string|null $timezone
- * @property string|null $theme
  * @property string|null $color_scheme
  * @property Carbon|null $suspended_at
  * @property int $auth_version
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password', 'locale', 'timezone', 'theme', 'color_scheme'])]
+#[Fillable(['name', 'email', 'password', 'locale', 'timezone', 'color_scheme'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {

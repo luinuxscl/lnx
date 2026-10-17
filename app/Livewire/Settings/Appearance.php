@@ -16,8 +16,6 @@ use Livewire\Component;
 #[Title('Appearance settings')]
 class Appearance extends Component
 {
-    public string $theme;
-
     public string $colorScheme;
 
     public string $timezone;
@@ -31,10 +29,6 @@ class Appearance extends Component
     {
         $user = Auth::user();
 
-        $this->theme = in_array($user->theme, AppearanceSupport::THEMES, true)
-            ? $user->theme
-            : AppearanceSupport::defaultTheme();
-
         $this->colorScheme = in_array($user->color_scheme, AppearanceSupport::COLOR_SCHEMES, true)
             ? $user->color_scheme
             : AppearanceSupport::defaultColorScheme();
@@ -42,21 +36,6 @@ class Appearance extends Component
         $this->timezone = AppearanceSupport::currentTimezone($user);
 
         $this->locale = App::getLocale();
-    }
-
-    /**
-     * Persist the selected accent theme.
-     */
-    public function saveTheme(string $theme): void
-    {
-        $validated = Validator::make(
-            ['theme' => $theme],
-            ['theme' => ['required', 'string', Rule::in(AppearanceSupport::THEMES)]],
-        )->validate();
-
-        $this->persist(['theme' => $validated['theme']]);
-
-        $this->theme = $validated['theme'];
     }
 
     /**
@@ -141,7 +120,6 @@ class Appearance extends Component
     public function render(): View
     {
         return view('livewire.settings.appearance', [
-            'themes' => AppearanceSupport::THEMES,
             'timezones' => AppearanceSupport::timezones(),
         ])
             ->layout('layouts.app');

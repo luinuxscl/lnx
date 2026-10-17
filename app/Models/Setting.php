@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Appearance;
 use Database\Factories\SettingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $favicon_path
  * @property string|null $apple_touch_icon_path
  * @property string|null $footer_text
+ * @property string|null $theme
  * @property string|null $locale
  * @property string|null $timezone
  * @property string|null $analytics_id
@@ -41,6 +43,7 @@ use Illuminate\Support\Facades\Storage;
     'favicon_path',
     'apple_touch_icon_path',
     'footer_text',
+    'theme',
     'locale',
     'timezone',
     'analytics_id',
@@ -162,6 +165,16 @@ class Setting extends Model
     public function description(): ?string
     {
         return $this->meta_description ?: $this->tagline();
+    }
+
+    /**
+     * Get the site-wide accent theme, falling back to the kit default.
+     */
+    public function accentTheme(): string
+    {
+        return is_string($this->theme) && in_array($this->theme, Appearance::THEMES, true)
+            ? $this->theme
+            : Appearance::defaultTheme();
     }
 
     /**

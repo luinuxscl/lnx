@@ -173,37 +173,38 @@ Route::livewire('reports', ReportsIndex::class)
 
 ## Theming
 
-La aplicación soporta selección de tema (color de acento) y modo claro/oscuro/sistema desde **Settings → Appearance**:
+El **color de acento** es una decisión de **sitio** y el **modo claro/oscuro/sistema** una **preferencia por usuario**:
 
-- **Colores de acento**: Naranja (por defecto), Teal, Rosa, Violeta, Azul, Esmeralda.
-- **Modo**: Light, Dark, System.
+- **Color de acento** (global, solo `root`): Naranja (por defecto), Teal, Rosa, Violeta, Azul, Esmeralda. Se edita en **Configuración general** (`/admin/settings`), se persiste en la fila `settings` y se aplica a **todos** los usuarios y visitantes.
+- **Modo** (por usuario): Light, Dark, System. Se edita en **Settings → Appearance**, se guarda en la cuenta y en `localStorage`.
 
-Ambas preferencias se guardan en la cuenta y en `localStorage`, de modo que siguen al usuario entre dispositivos. Los visitantes conservan solo el valor local del navegador.
+El acento **no** se ofrece en **Settings → Appearance** a ningún rol (ni a `root`): admin y usuario estándar no ven ninguna opción de tema. El modo sigue guardándose por cuenta y siguiendo al usuario entre dispositivos.
 
 ### Cómo funciona
 
 - El gris base de Flux (`zinc`) ya está reasignado a la paleta `neutral` del proyecto en `resources/css/app.css`.
 - Cada tema se define como una clase `.theme-{color}` en `resources/css/app.css`, que sobreescribe las variables CSS `--color-accent`, `--color-accent-content` y `--color-accent-foreground` (con variantes `.dark` por tema).
-- Al cargar la página, `resources/views/partials/head.blade.php` aplica la clase `theme-*` desde `localStorage['flux.theme']` antes del render para evitar flashes.
-- El modo claro/oscuro lo gestiona Flux vía `localStorage['flux.appearance']`.
+- Al cargar la página, `resources/views/partials/head.blade.php` siembra `localStorage['flux.theme']` desde el ajuste de sitio (`Setting::accentTheme()`, con respaldo `App\Support\Appearance::defaultTheme()`) para **todos** los usuarios y visitantes, de modo que el valor de sitio prevalece sobre cualquier `[flux.theme]` previo; después aplica la clase `theme-*` antes del render para evitar flashes.
+- El modo claro/oscuro lo gestiona Flux vía `localStorage['flux.appearance']`, sembrado desde la cuenta solo para usuarios autenticados.
 - Tras cada navegación SPA (`wire:navigate`), el tema y el modo claro/oscuro se re-aplican al escuchar `livewire:navigated` en `resources/views/partials/head.blade.php`. Esto evita que el servidor (que renderiza `class="dark"`) elimine las clases `theme-{color}` cuando sustituye los atributos del elemento `<html>` durante la navegación.
 
-Para añadir un nuevo color de acento: agrega el valor en la constante `App\Support\Appearance::THEMES` y define `.theme-{color}` (+ `.dark.theme-{color}`) en `resources/css/app.css`.
+Para añadir un nuevo color de acento: agrega el valor en la constante `App\Support\Appearance::THEMES` y define `.theme-{color}` (+ `.dark.theme-{color}`) en `resources/css/app.css`; aparecerá automáticamente en el selector de Configuración general.
 
-## Preferencias por usuario (idioma, zona horaria y apariencia)
+## Preferencias por usuario (idioma, zona horaria y modo)
 
-Cada cuenta guarda su idioma (`locale`), zona horaria (`timezone`), tema (`theme`) y modo claro/oscuro/sistema (`color_scheme`) en columnas **nullable** de `users`. Se editan en **Settings → Appearance**, donde el servidor valida cada valor: el idioma debe estar en `config('app.available_locales')`, el tema en `App\Support\Appearance::THEMES`, el modo en `App\Support\Appearance::COLOR_SCHEMES` y la zona debe ser un identificador IANA válido (regla `timezone` de Laravel, opciones desde `DateTimeZone::listIdentifiers()`).
+Cada cuenta guarda su idioma (`locale`), zona horaria (`timezone`) y modo claro/oscuro/sistema (`color_scheme`) en columnas **nullable** de `users`. Se editan en **Settings → Appearance**, donde el servidor valida cada valor: el idioma debe estar en `config('app.available_locales')`, el modo en `App\Support\Appearance::COLOR_SCHEMES` y la zona debe ser un identificador IANA válido (regla `timezone` de Laravel, opciones desde `DateTimeZone::listIdentifiers()`).
 
 ### Cómo se sincroniza
 
-- **Al iniciar sesión y en cada carga autenticada**, `resources/views/partials/head.blade.php` siembra `localStorage['flux.theme']` y `localStorage['flux.appearance']` desde la cuenta antes de que Flux aplique el tema, de modo que las preferencias de la cuenta prevalecen sobre valores antiguos del navegador.
+- **Ajuste de sitio**: el color de acento vive en `settings.theme` (nullable) y se resuelve con `Setting::accentTheme()`, que cae a `App\Support\Appearance::defaultTheme()` si el valor no es válido. Se edita solo por `root` en Configuración general y `head.blade.php` lo siembra en `localStorage` para todos en cada carga.
+- **Modo (por cuenta)**: `head.blade.php` siembra `localStorage['flux.appearance']` desde la cuenta en cada carga autenticada antes de que Flux aplique el modo, de modo que la preferencia de la cuenta prevalece sobre valores antiguos del navegador.
 - **Idioma**: `SetLocale` usa primero `users.locale`; el `LocaleSwitcher` y `LocaleController` lo persisten en la cuenta cuando hay sesión iniciada. Los invitados mantienen el idioma de sesión.
 - **Modo sistema**: se guarda como `color_scheme = 'system'` y Flux sigue el esquema del dispositivo actual.
 - **Zona horaria**: no cambia el almacenamiento (los timestamps siguen en UTC/app tz). Solo afecta la presentación de fechas y los límites de los filtros por día; el helper es `App\Support\Appearance::currentTimezone()`, que cae a `config('app.timezone')` cuando no hay preferencia.
-- **Navegación Livewire**: el tema y el idioma se re-aplican en `livewire:navigated` desde el mismo partial.
-- Las páginas de ajustes mantienen la autorización existente (`auth` + `verified`); no se introducen permisos nuevos.
+- **Navegación Livewire**: el tema de sitio y el idioma se re-aplican en `livewire:navigated` desde el mismo partial.
+- Las páginas de ajustes mantienen la autorización existente (`auth` + `verified`); no se introducen permisos nuevos. La selección de acento exige `role:root` (Configuración general).
 
-Al desplegar, aplicar la migración `add_preferences_to_users_table` con `php artisan migrate --force`.
+Al desplegar, aplicar la migración `move_theme_from_users_to_settings_table` con `php artisan migrate --force`.
 
 ## Layout de la aplicación
 
@@ -789,7 +790,7 @@ La instrucción explícita del usuario prevalece. Después se aplican las reglas
 
 ### Contrato visual
 
-La referencia de tokens es `resources/css/app.css`: Instrument Sans, escala de espaciado de Tailwind 4, superficies zinc y variables `--color-accent`, `--color-accent-content` y `--color-accent-foreground`. En las pantallas actuales, `flux:heading` y `flux:text` establecen la jerarquía tipográfica, `gap-4` separa acciones próximas y `mt-6` o `space-y-6` separan secciones y campos. Las seis variantes de acento y la selección claro/oscuro/sistema se implementan en `resources/views/livewire/settings/appearance.blade.php` y `resources/views/partials/head.blade.php`. El proyecto derivado puede sustituir la identidad y el acento predeterminado sin alterar los patrones de interacción del kit.
+La referencia de tokens es `resources/css/app.css`: Instrument Sans, escala de espaciado de Tailwind 4, superficies zinc y variables `--color-accent`, `--color-accent-content` y `--color-accent-foreground`. En las pantallas actuales, `flux:heading` y `flux:text` establecen la jerarquía tipográfica, `gap-4` separa acciones próximas y `mt-6` o `space-y-6` separan secciones y campos. Las seis variantes de acento se implementan en `resources/views/livewire/settings/general.blade.php` (selector de sitio, solo `root`) y la selección claro/oscuro/sistema en `resources/views/livewire/settings/appearance.blade.php`, ambas aplicadas por `resources/views/partials/head.blade.php`. El proyecto derivado puede sustituir la identidad y el acento predeterminado sin alterar los patrones de interacción del kit.
 
 | Patrón | Implementación canónica |
 | --- | --- |
@@ -801,7 +802,7 @@ La referencia de tokens es `resources/css/app.css`: Instrument Sans, escala de e
 
 La página **Paquetes** (`/admin/packages`, rol `root`; grupo `Packages` → ítem `Installed packages` del sidebar) es el registro genérico de módulos: lista cada paquete registrado con su versión instalada, la última disponible y el comando de actualización, y ofrece un botón **Buscar actualizaciones**. Un paquete aparece ahí al declararse en el `boot()` de su provider con `App\Support\Packages\PackageRegistry` (`name` y `label` obligatorios; `description`, `repository`, `url` y `update_command` opcionales); la versión instalada se lee de Composer y la última se consulta a la API de GitHub. Sin token solo se muestra la versión instalada. `lnx-ui` queda fuera de ese registro general y conserva su página dedicada. Detalles en [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.5.
 
-La página `/admin/packages/lnx-ui` (rol `root`, disponible en todos los entornos; grupo `Packages` → ítem `UI/UX components` del sidebar) muestra la versión instalada y la última disponible del paquete `luinuxscl/lnx-ui`, permite buscar actualizaciones contra la API de GitHub y ofrece el comando de actualización; debajo incluye la galería de diseño. El token se configura con `GITHUB_TOKEN` (`PACKAGES_GITHUB_TOKEN` o `LNX_UI_GITHUB_TOKEN` con precedencia); sin él solo se muestra la versión instalada. `DESIGN_GALLERY_ENABLED=false` oculta solo la galería, no la tarjeta de versión. La galería muestra estados de carga, vacío, error, validación y acciones con componentes Flux existentes. Para revisar una pantalla, comparar móvil estrecho y escritorio, temas claro/oscuro, los seis acentos, navegación por teclado y foco visible; anotar capturas y correcciones en el PR. El selector de acento en `resources/views/livewire/settings/appearance.blade.php` es el primer caso aplicado: sus botones muestran un contorno de foco explícito. Las **páginas de lista** comparten un patrón único: una fila de KPIs clicables (`x-lnx-ui::stat-card` con `href` y `active`, que actúan como filtros rápidos) sobre una tarjeta `x-lnx-ui::data-table` que reúne filtros, búsqueda, acciones, tabla y estado vacío. Si cambia un patrón, actualizar implementación, ejemplo de galería y esta guía en el mismo cambio. La skill `.ai/skills/design-screen/SKILL.md` indica el recorrido de revisión sin duplicar estas decisiones.
+La página `/admin/packages/lnx-ui` (rol `root`, disponible en todos los entornos; grupo `Packages` → ítem `UI/UX components` del sidebar) muestra la versión instalada y la última disponible del paquete `luinuxscl/lnx-ui`, permite buscar actualizaciones contra la API de GitHub y ofrece el comando de actualización; debajo incluye la galería de diseño. El token se configura con `GITHUB_TOKEN` (`PACKAGES_GITHUB_TOKEN` o `LNX_UI_GITHUB_TOKEN` con precedencia); sin él solo se muestra la versión instalada. `DESIGN_GALLERY_ENABLED=false` oculta solo la galería, no la tarjeta de versión. La galería muestra estados de carga, vacío, error, validación y acciones con componentes Flux existentes. Para revisar una pantalla, comparar móvil estrecho y escritorio, temas claro/oscuro, los seis acentos, navegación por teclado y foco visible; anotar capturas y correcciones en el PR. El selector de acento en `resources/views/livewire/settings/general.blade.php` es el primer caso aplicado: sus botones muestran un contorno de foco explícito. Las **páginas de lista** comparten un patrón único: una fila de KPIs clicables (`x-lnx-ui::stat-card` con `href` y `active`, que actúan como filtros rápidos) sobre una tarjeta `x-lnx-ui::data-table` que reúne filtros, búsqueda, acciones, tabla y estado vacío. Si cambia un patrón, actualizar implementación, ejemplo de galería y esta guía en el mismo cambio. La skill `.ai/skills/design-screen/SKILL.md` indica el recorrido de revisión sin duplicar estas decisiones.
 
 Para publicar cambios del paquete, la skill `.ai/skills/lnx-ui-release/SKILL.md` (cuya fuente canónica es el paquete `lnx-ui`) describe el flujo: editar en el checkout de desarrollo del paquete, verificar, commitear en `develop`, mergear a `main`, crear el tag SemVer anotado, subir todo a `origin` y, preguntando la lista, actualizar con `composer update luinuxscl/lnx-ui` las instancias de lnx que lo requieren.
 
