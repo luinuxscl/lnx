@@ -55,7 +55,7 @@ class Show extends Component
         return view('livewire.knowledge.show', [
             'document' => $this->document,
         ])->layout('layouts.app', [
-            'breadcrumbs' => [['label' => __('Knowledge Base'), 'href' => route('knowledge.index')]],
+            'breadcrumbs' => [['label' => $this->document->title]],
         ]);
     }
 }

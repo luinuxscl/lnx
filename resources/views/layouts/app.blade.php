@@ -1,15 +1,17 @@
 <x-layouts::app.sidebar :title="$title ?? null">
     <flux:main class="flex flex-col">
         <div class="mb-6 flex items-center gap-4 border-b border-zinc-200 pb-4 max-lg:hidden dark:border-zinc-700">
-            @if (filled($breadcrumbs ?? []))
-                <flux:breadcrumbs>
-                    @foreach ($breadcrumbs as $item)
-                        <flux:breadcrumbs.item :href="$item['href'] ?? null" wire:navigate>
-                            {{ $item['label'] }}
-                        </flux:breadcrumbs.item>
-                    @endforeach
-                </flux:breadcrumbs>
-            @endif
+            @php
+                $breadcrumbItems = app(\App\Support\Navigation\Breadcrumbs::class)->resolve($breadcrumbs ?? null, $title ?? null);
+            @endphp
+
+            <flux:breadcrumbs data-test="page-breadcrumbs">
+                @foreach ($breadcrumbItems as $item)
+                    <flux:breadcrumbs.item :href="$item['href']" wire:navigate>
+                        {{ $item['label'] }}
+                    </flux:breadcrumbs.item>
+                @endforeach
+            </flux:breadcrumbs>
 
             <flux:spacer />
 

@@ -91,7 +91,7 @@ class Show extends Component
             'statuses' => TicketService::STATUSES,
             'priorities' => TicketService::PRIORITIES,
         ])->layout('layouts.app', [
-            'breadcrumbs' => [['label' => __('Support requests'), 'href' => route('support.index')]],
+            'breadcrumbs' => [['label' => '#'.$ticket->id.' · '.$ticket->title]],
         ]);
     }
 }
