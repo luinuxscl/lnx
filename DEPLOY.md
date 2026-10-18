@@ -46,8 +46,10 @@ Con `stop_grace_period=10` (antes 30) el deploy baja otros ~30 s.
 
 ## Cómo agregar una app
 
-1. **Workflow**: copiar `templates/docker-publish.yml` a `.github/workflows/publish.yml`
-   de la app y reemplazar `<OWNER>/<APP>` y `<scope>`.
+1. **Workflow**: una app creada con `scripts/new-project.sh` ya lo trae puesto
+   (`.github/workflows/publish.yml`, con `<OWNER>/<APP>` y `<scope>` resueltos). En
+   una app existente, copiar `templates/docker-publish.yml` a
+   `.github/workflows/publish.yml` y reemplazar `<OWNER>/<APP>` y `<scope>`.
 2. **Secretos del repo** (Settings → Secrets and variables → Actions):
    - `COMPOSER_AUTH`: JSON `{"github-oauth":{"github.com":"<token>"}}`, para bajar
      los paquetes privados (el módulo y `lnx-ui`) durante el build.
@@ -77,6 +79,11 @@ Con `stop_grace_period=10` (antes 30) el deploy baja otros ~30 s.
   El cambio hay que hacerlo sobre la base de datos del recurso:
   `update applications set build_pack='dockerimage', docker_registry_image_name='ghcr.io/luinuxscl/<app>', docker_registry_image_tag='latest' where uuid='<uuid>';`
   más `is_auto_deploy_enabled=false` en `application_settings`.
+- **`docker/base/` y `.github/workflows/base-image.yml` son del kit, no de la app.**
+  Ese workflow publica `ghcr.io/luinuxscl/lnx-php:8.5` con nombre fijo, y el
+  `GITHUB_TOKEN` de una app no puede escribir en el paquete de otro repositorio: en
+  una app derivada cada push dejaría un run rojo. `scripts/new-project.sh` los
+  elimina al crear la app.
 - **El Dockerfile debe declarar `ARG COMPOSER_AUTH`** en la etapa que corre Composer.
   Si el workflow pasa el build arg pero el Dockerfile no lo declara, se ignora en
   silencio y el build falla con `404` al bajar `luinuxscl/lnx-ui`.
