@@ -1,0 +1,85 @@
+name: publish
+
+# Plantilla: construye la imagen de una app lnx en GitHub y la publica en GHCR,
+# para que Coolify despliegue por "Docker Image" (solo pull) en vez de
+# reconstruir la imagen entera en el VPS.
+#
+# Copiar a `.github/workflows/publish.yml` del repo de la app y reemplazar:
+#   <OWNER>/<APP>  -> p. ej. luinuxscl/luz-app   (dos veces, en los tags)
+#   <scope>        -> nombre corto para la cache, p. ej. luz-app
+#
+# No se puede dejar como workflow reusable en el kit: GitHub no permite llamar a
+# un workflow reusable alojado en otro repositorio **privado** del mismo usuario
+# (la restriccion es solo para la misma organizacion). Verificado con el error
+# "workflow was not found" al intentarlo desde luz-app.
+#
+# Secretos que consume el repo:
+#   COMPOSER_AUTH  (opcional) JSON {"github-oauth":{"github.com":"<token>"}}
+#                  para bajar los paquetes privados del modulo y de lnx-ui.
+#   COOLIFY_TOKEN  token de la API de Coolify, para disparar el deploy.
+# Variables del repo:
+#   COOLIFY_URL    p. ej. https://vps.luinuxscl.com
+#   COOLIFY_UUID   UUID del recurso en Coolify. Vacia = no dispara deploy.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ghcr.io/<OWNER>/<APP>:${{ github.sha }}
+            ghcr.io/<OWNER>/<APP>:latest
+          build-args: |
+            COMPOSER_AUTH=${{ secrets.COMPOSER_AUTH }}
+          cache-from: type=gha,scope=<scope>
+          cache-to: type=gha,mode=max,scope=<scope>
+          provenance: false
+
+      - name: Trigger Coolify deploy
+        if: ${{ vars.COOLIFY_UUID != '' }}
+        env:
+          COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+          COOLIFY_UUID: ${{ vars.COOLIFY_UUID }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          if [ -z "$COOLIFY_TOKEN" ]; then
+            echo "::error::COOLIFY_TOKEN no esta configurado; no puedo disparar el deploy."
+            exit 1
+          fi
+          curl -fsS -X POST "$COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_UUID&force=false" \
+            -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            -H "Content-Type: application/json"
+          echo
+          echo "Deploy disparado."
