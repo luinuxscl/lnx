@@ -54,9 +54,7 @@ class LnxUi extends Component
             'packageName' => $this->version()->name(),
             'updateCommand' => $this->version()->updateCommand(),
             'galleryEnabled' => (bool) config('app.design_gallery_enabled'),
-        ])->layout('layouts.app', [
-            'breadcrumbs' => [['label' => __('Packages')]],
-        ]);
+        ])->layout('layouts.app');
     }
 
     /**

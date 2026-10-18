@@ -175,9 +175,7 @@ class Invitations extends Component
             ),
             'stats' => $this->stats(),
             'perPageOptions' => SearchInvitations::PER_PAGE,
-        ])->layout('layouts.app', [
-            'breadcrumbs' => [['label' => __('Users'), 'href' => route('admin.users.index')]],
-        ]);
+        ])->layout('layouts.app');
     }
 
     /**

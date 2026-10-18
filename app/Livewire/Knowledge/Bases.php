@@ -150,7 +150,7 @@ class Bases extends Component
             'bases' => $query->orderBy('name')->paginate(10),
             'audiences' => KnowledgeAudience::assignableBy($user),
         ])->layout('layouts.app', [
-            'breadcrumbs' => [['label' => __('Knowledge Base'), 'href' => route('knowledge.index')]],
+            'breadcrumbs' => [['label' => __('Knowledge Bases')]],
         ]);
     }
 
