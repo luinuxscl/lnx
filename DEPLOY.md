@@ -94,3 +94,32 @@ Con `stop_grace_period=10` (antes 30) el deploy baja otros ~30 s.
   de otro repo). Publicarla ahorra ~1 min en builds en frío.
 - **`docker/base/Dockerfile` no debe construirse en cada app**: el build de GitHub ya
   cachea la capa de extensiones; la base compartida solo aporta en builds en frío.
+
+## Rollback de un deploy
+
+Cada build publica `:<sha>` ademas del tag movil (`latest` o `staging`), asi que
+volver atras es apuntar el recurso al sha anterior y desplegar:
+
+```bash
+# 1. sha disponibles
+gh api /user/packages/container/<app>/versions --jq '.[].metadata.container.tags'
+
+# 2. apuntar el recurso al sha anterior
+curl -X PATCH https://vps.luinuxscl.com/api/v1/applications/<uuid> \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"docker_registry_image_tag":"<sha>"}'
+
+# 3. desplegar
+curl -X POST "https://vps.luinuxscl.com/api/v1/deploy?uuid=<uuid>&force=false" \
+  -H "Authorization: Bearer <token>"
+```
+
+Probado el 18/10 en `rukatv-editorial-staging`: bajo al sha `c44958ed` (deploy
+50 s, contenedor healthy) y se restauro al tag `staging` (46 s). **Despues de un
+rollback hay que devolver el tag movil**, o el proximo push no llegara solo.
+
+## Respaldos
+
+`/root/.hermes/backups/coolify-apps-<fecha>.json` guarda la configuracion y las
+variables de entorno de todos los recursos de Coolify, por si hay que rehacer un
+recurso o comparar antes/despues de un cambio.
