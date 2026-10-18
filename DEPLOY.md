@@ -95,12 +95,18 @@ Con `stop_grace_period=10` (antes 30) el deploy baja otros ~30 s.
   (`PATCH /applications/{uuid}` con `{"stop_grace_period": 10}`). Los contenedores
   no responden al SIGTERM, asi que hoy se comen el timeout completo.
 
-- **La imagen base compartida `ghcr.io/luinuxscl/lnx-php:8.5`** (`docker/base/Dockerfile`,
-  publicada por `base-image.yml`) todavía está **privada**. Mientras siga así las apps
-  no pueden usarla en el `FROM` (un runner de GitHub no puede leer un paquete privado
-  de otro repo). Publicarla ahorra ~1 min en builds en frío.
-- **`docker/base/Dockerfile` no debe construirse en cada app**: el build de GitHub ya
-  cachea la capa de extensiones; la base compartida solo aporta en builds en frío.
+- **La imagen base compartida `ghcr.io/luinuxscl/lnx-php:8.5` es pública** (desde el
+  18/10/2026; se construye desde `docker/base/Dockerfile` con `base-image.yml`). Las
+  apps hacen `FROM ghcr.io/luinuxscl/lnx-php:8.5 AS base` y **no** declaran
+  `install-php-extensions`: la base ya trae `intl`, `bcmath` y `gd` (`pdo_pgsql` viene
+  de serversideup). Verificado en la imagen publicada: PHP 8.5.11 con las cuatro
+  extensiones cargadas y pull anónimo funcionando (la condición real de un runner).
+  La visibilidad **no** se cambia por API (`PATCH /user/packages/container/<pkg>` →
+  404): es un clic en los ajustes del paquete.
+- **`docker/base/Dockerfile` no debe construirse en cada app**: el workflow del kit lo
+  publica una vez, y `new-project.sh` borra `docker/` y `base-image.yml` de la app
+  derivada (ese workflow empujaría a `ghcr.io/luinuxscl/lnx-php` con el token de la
+  app, que no puede).
 
 ## Rollback de un deploy
 

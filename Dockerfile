@@ -1,20 +1,17 @@
 # syntax=docker/dockerfile:1
 
-# Hay una imagen base propia (ghcr.io/luinuxscl/lnx-php:8.5, con las extensiones
-# ya compiladas) publicada por .github/workflows/base-image.yml desde
-# docker/base/Dockerfile. Mientras ese paquete siga **privado** no se puede usar
-# en el FROM: un runner de GitHub no puede leer paquetes privados de otro repo.
-# Si se hace publico, basta cambiar el FROM de la etapa base por
-# `FROM ghcr.io/luinuxscl/lnx-php:8.5 AS base` y borrar el install-php-extensions.
+# La base la publica este kit: `ghcr.io/luinuxscl/lnx-php:8.5` es un paquete
+# **publico** construido desde `docker/base/Dockerfile` por el workflow
+# `base-image.yml`. Trae PHP 8.5 + Nginx con `intl`, `bcmath` y `gd` ya compiladas
+# (`pdo_pgsql` viene de serversideup), asi que ninguna app recompila extensiones
+# en su build.
+#
+# Reconstruirla solo al subir la version de PHP o cambiar la lista de extensiones.
 
 ############################################
-# Base: PHP 8.5 + Nginx (serversideup)
+# Base: PHP 8.5 + Nginx + extensiones (imagen del kit)
 ############################################
-FROM serversideup/php:8.5-fpm-nginx AS base
-
-USER root
-
-RUN install-php-extensions pdo_pgsql intl bcmath gd
+FROM ghcr.io/luinuxscl/lnx-php:8.5 AS base
 
 USER www-data
 
