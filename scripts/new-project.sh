@@ -90,6 +90,26 @@ fi
 # README
 sed -i "s|^# lnx — Base de desarrollo Laravel$|# ${NAME} — Base de desarrollo Laravel\n\n- **Producción:** ${DOMAIN_URL}\n- **Repositorio:** ${REPO_URL}\n- **Kit base:** https://github.com/${GITHUB_OWNER}/lnx|" README.md
 
+# Workflow de publicacion de la imagen: el build corre en GitHub Actions y sube
+# la imagen a GHCR; Coolify despues solo hace pull. La plantilla vive en el kit y
+# aqui se resuelve la identidad de la app.
+if [[ ! -f templates/docker-publish.yml ]]; then
+    echo "Falta templates/docker-publish.yml en el kit: no puedo dejar el workflow de despliegue." >&2
+    exit 1
+fi
+
+mkdir -p .github/workflows
+sed "s|<OWNER>/<APP>|${GITHUB_OWNER}/${NAME}|g; s|<scope>|${NAME}|g" \
+    templates/docker-publish.yml > .github/workflows/publish.yml
+echo "==> Workflow de publicacion en .github/workflows/publish.yml"
+
+# La imagen base compartida y su workflow son del kit, no de la app:
+# `docker/base/Dockerfile` y `base-image.yml` publican ghcr.io/luinuxscl/lnx-php y
+# el token de la app no puede escribir en ese paquete (cada push dejaria un run
+# rojo). La plantilla tampoco se queda: ya se aplico arriba.
+rm -rf docker/base .github/workflows/base-image.yml templates
+rmdir docker 2>/dev/null || true
+
 git add -A
 git commit -q -m "chore: proyecto inicial ${NAME} a partir del kit lnx"
 git branch develop
@@ -115,9 +135,25 @@ Siguientes pasos:
   1. Crear el repositorio remoto:
        gh repo create ${GITHUB_OWNER}/${NAME} --private --source=. --remote=origin --push
        git push -u origin develop
-  2. Desplegar en Coolify (usa la skill global coolify-laravel-deploy):
-       - PostgreSQL gestionado
-       - App build-pack dockerfile, puerto 8080, dominio ${DOMAIN_URL}, healthcheck /up
-       - Volumen persistente en /var/www/html/storage/app/public
-  3. Apuntar el DNS A de ${DOMAIN} al VPS de Coolify.
+  2. Apuntar el DNS A de ${DOMAIN} al VPS de Coolify.
+  3. Desplegar en Coolify. El build corre en GitHub Actions y Coolify solo hace
+     pull; la receta completa esta en DEPLOY.md del kit:
+       https://github.com/${GITHUB_OWNER}/lnx/blob/main/DEPLOY.md
+
+     En corto (el workflow .github/workflows/publish.yml ya quedo en el repo):
+       a. Secretos del repo:
+            COMPOSER_AUTH   JSON {"github-oauth":{"github.com":"<token con repo>"}}
+            COOLIFY_TOKEN   token de la API de Coolify
+       b. Variables del repo:
+            COOLIFY_URL     https://vps.luinuxscl.com
+            COOLIFY_UUID    UUID del recurso en Coolify (vacio = no dispara deploy)
+       c. Coolify, una vez por servidor: Servers -> Docker Registries ->
+          Multi-server login -> GitHub Container Registry, con usuario de GitHub y
+          un token clasico de scope read:packages; sin esto no puede bajar la imagen.
+       d. Recurso en Coolify: PostgreSQL gestionado, puerto 8080, healthcheck /up y
+          volumen persistente en /var/www/html/storage/app/public. El recurso debe
+          quedar como tipo *Docker Image* -> ghcr.io/${GITHUB_OWNER}/${NAME}:latest,
+          con el auto-deploy por git apagado (el deploy lo dispara el workflow).
+       e. Si la app lleva staging: copiar el workflow a la rama develop cambiando
+          la rama, el tag (staging) y COOLIFY_UUID al del recurso de staging.
 EOF

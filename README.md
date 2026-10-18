@@ -31,7 +31,7 @@ Ejemplo:
 ./scripts/new-project.sh rukatv-admin admin.rukatv.cl --app-name "Ruka TV Admin"
 ```
 
-El script copia solo los archivos versionados (`git archive`), inicializa `main`/`develop`, sustituye `APP_NAME`, `APP_URL`, remitente de correo, `composer.json`, README y los enlaces al repositorio, y ejecuta la instalación local. Al terminar, imprime los pasos para crear el repo en GitHub y desplegar en Coolify (skill global `coolify-laravel-deploy`).
+El script copia solo los archivos versionados (`git archive`), inicializa `main`/`develop`, sustituye `APP_NAME`, `APP_URL`, remitente de correo, `composer.json`, README y los enlaces al repositorio, deja el workflow de publicación (`.github/workflows/publish.yml`, a partir de `templates/docker-publish.yml`) con la identidad de la app ya resuelta, y ejecuta la instalación local. Al terminar, imprime los pasos para crear el repo en GitHub y desplegar en Coolify (build en GitHub Actions → GHCR → Coolify hace pull; receta completa en [`DEPLOY.md`](DEPLOY.md)). La imagen base compartida y su workflow (`docker/base/`, `.github/workflows/base-image.yml`) son del kit y **no** se copian a la app.
 
 El kit es además un **GitHub Template**: también puedes crear el proyecto con `gh repo create <owner>/<nombre> --template luinuxscl/lnx --private`, aunque el script aporta la sustitución de identidad y el setup.
 

@@ -23,6 +23,12 @@ USER www-data
 ############################################
 FROM base AS vendor
 
+# Token de GitHub para que Composer baje los paquetes privados (lnx-ui y, en una
+# app, tambien el modulo). Lo pasa el build de GitHub Actions como build arg
+# (COMPOSER_AUTH). Si la etapa que corre Composer no declara este ARG, el valor se
+# ignora en silencio y el build falla con 404 al resolver los paquetes privados.
+ARG COMPOSER_AUTH
+
 WORKDIR /var/www/html
 
 COPY --chown=www-data:www-data composer.json composer.lock ./
