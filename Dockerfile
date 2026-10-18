@@ -1,15 +1,12 @@
 # syntax=docker/dockerfile:1
 
 ############################################
-# Base: PHP 8.5 + Nginx (serversideup)
+# Base: imagen compartida de las apps lnx
 ############################################
-FROM serversideup/php:8.5-fpm-nginx AS base
-
-USER root
-
-RUN install-php-extensions pdo_pgsql intl bcmath gd
-
-USER www-data
+# PHP 8.5 + Nginx con las extensiones (pdo_pgsql, intl, bcmath, gd) ya
+# compiladas, para no recompilarlas en cada build. Se construye desde
+# docker/base/Dockerfile y se publica con .github/workflows/base-image.yml.
+FROM ghcr.io/luinuxscl/lnx-php:8.5 AS base
 
 ############################################
 # Vendor: dependencias de Composer (sin dev)
