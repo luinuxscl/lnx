@@ -1,21 +1,21 @@
 name: publish
 
-# Plantilla: construye la imagen de una app lnx en GitHub y la publica en GHCR,
-# para que Coolify despliegue por "Docker Image" (solo pull) en vez de
-# reconstruir la imagen entera en el VPS.
+# Construye la imagen de <OWNER>/<APP> en GitHub y la publica en GHCR, para que
+# Coolify despliegue por "Docker Image" (solo pull) en vez de reconstruir la
+# imagen entera en el VPS.
 #
-# Copiar a `.github/workflows/publish.yml` del repo de la app y reemplazar:
-#   <OWNER>/<APP>  -> p. ej. luinuxscl/luz-app   (dos veces, en los tags)
-#   <scope>        -> nombre corto para la cache, p. ej. luz-app
+# Este archivo lo copia `scripts/new-project.sh` del kit lnx desde
+# `templates/docker-publish.yml` (ahi se sustituyen <OWNER>/<APP> y <scope>).
+# Si la plantilla del kit cambia, hay que volver a copiarla en la app.
 #
 # No se puede dejar como workflow reusable en el kit: GitHub no permite llamar a
 # un workflow reusable alojado en otro repositorio **privado** del mismo usuario
-# (la restriccion es solo para la misma organizacion). Verificado con el error
-# "workflow was not found" al intentarlo desde luz-app.
+# (la restriccion es solo dentro de la misma organizacion). Error exacto al
+# intentarlo: "workflow was not found" (access-to-reusable-workflows).
 #
-# Secretos que consume el repo:
+# Secretos del repo:
 #   COMPOSER_AUTH  (opcional) JSON {"github-oauth":{"github.com":"<token>"}}
-#                  para bajar los paquetes privados del modulo y de lnx-ui.
+#                  para bajar el modulo privado y lnx-ui durante el build.
 #   COOLIFY_TOKEN  token de la API de Coolify, para disparar el deploy.
 # Variables del repo:
 #   COOLIFY_URL    p. ej. https://vps.luinuxscl.com
