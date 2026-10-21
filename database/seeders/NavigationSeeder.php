@@ -149,6 +149,7 @@ class NavigationSeeder extends Seeder
                     ['route_name' => 'admin.setup.index'],
                     ['route_name' => 'admin.ai.index'],
                     ['route_name' => 'admin.navigation.index'],
+                    ['route_name' => 'admin.help.index'],
                     ['route_name' => 'admin.packages.index'],
                     ['route_name' => 'admin.packages.lnx-ui'],
                     ['route_name' => 'help.index'],

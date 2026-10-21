@@ -24,4 +24,8 @@ enum AdministrativeAction: string
     case NavigationItemCreated = 'navigation_item_created';
     case NavigationItemUpdated = 'navigation_item_updated';
     case NavigationItemDeleted = 'navigation_item_deleted';
+    case HelpEntryCreated = 'help_entry_created';
+    case HelpEntryUpdated = 'help_entry_updated';
+    case HelpEntryHidden = 'help_entry_hidden';
+    case HelpGroupUpdated = 'help_group_updated';
 }
