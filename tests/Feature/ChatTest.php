@@ -7,6 +7,7 @@ use App\Ai\Tools\ProductHelpSearchTool;
 use App\Livewire\Ai\Chat;
 use App\Models\AiUsageEvent;
 use App\Models\User;
+use App\Support\Help\HelpRegistry;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Laravel\Ai\Tools\Request;
@@ -107,6 +108,16 @@ it('sends messages and streams responses through ChatAgent recording usage', fun
 });
 
 it('authorizes and executes ProductHelpSearchTool for authenticated users', function () {
+    app(HelpRegistry::class)->register('lnx', [
+        'lnx.settings' => [
+            'type' => 'article',
+            'group' => 'Settings',
+            'title' => 'Settings',
+            'summary' => 'Manage your account preferences.',
+            'body' => 'Open the settings page to update your profile.',
+        ],
+    ]);
+
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -116,7 +127,9 @@ it('authorizes and executes ProductHelpSearchTool for authenticated users', func
     $request = new Request(['query' => 'settings']);
     $output = (string) $tool->handle($request);
 
-    expect($output)->toContain('SETTINGS:');
+    expect($output)->toContain('Ajustes')
+        ->and($output)->toContain('Manage your account preferences.')
+        ->and($output)->toContain('topic=lnx.settings');
 });
 
 it('denies ProductHelpSearchTool execution if unauthenticated', function () {

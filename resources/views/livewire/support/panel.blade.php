@@ -1,6 +1,6 @@
 <div x-data="{
     preview: null,
-    open() { $wire.open({ screen: @js(request()->route()?->getName()), route_name: @js(request()->route()?->getName()), width: window.innerWidth, height: window.innerHeight, theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light' }) },
+    open(context = {}) { $wire.open({ screen: @js(request()->route()?->getName()), route_name: @js(request()->route()?->getName()), width: window.innerWidth, height: window.innerHeight, theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light', help_topic: context?.help_topic ?? null }) },
     async capture() {
         const panel = this.$refs.panel;
         let stream = null;
@@ -29,7 +29,7 @@
         const item = Array.from(event.clipboardData?.items || []).find(item => item.type.startsWith('image/'));
         if (item) { const file = item.getAsFile(); if (file) $wire.upload('image', file) }
     }
-}" x-on:support-open.window="open()" x-on:paste="paste($event)">
+}" x-on:support-open.window="open($event.detail)" x-on:paste="paste($event)">
     <div x-ref="panel">
         <flux:modal name="support-panel" wire:model.self="showPanel" class="max-w-xl">
             <form wire:submit="submit" class="space-y-5">

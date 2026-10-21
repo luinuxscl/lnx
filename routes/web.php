@@ -16,6 +16,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\Documents\Index as DocumentsIndex;
 use App\Livewire\Documents\Show as DocumentsShow;
 use App\Livewire\Emails\Index as EmailsIndex;
+use App\Livewire\Help\Index as HelpIndex;
 use App\Livewire\Knowledge\Bases as KnowledgeBases;
 use App\Livewire\Knowledge\Index;
 use App\Livewire\Knowledge\Show;
@@ -41,6 +42,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'label' => 'Dashboard',
         'icon' => 'squares-2x2',
         'audiences' => ['root', 'admin', 'user'],
+    ]);
+    Route::livewire('help', HelpIndex::class)->name('help.index')->menu([
+        'label' => 'Help center',
+        'icon' => 'lifebuoy',
+        'audiences' => ['root', 'admin', 'user'],
+        'region' => 'bottom',
     ]);
     Route::livewire('notifications', NotificationsIndex::class)->name('notifications.index');
     Route::livewire('chat/{conversation?}', AiChat::class)->name('chat')->menu([

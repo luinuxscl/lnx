@@ -38,10 +38,13 @@
             <flux:spacer />
 
             <flux:dropdown position="bottom" align="end">
-                <flux:button type="button" variant="ghost" size="sm" square icon="lifebuoy" :aria-label="__('Support')" :title="__('Support')" />
+                <flux:button type="button" variant="ghost" size="sm" square icon="lifebuoy" :aria-label="__('Help')" :title="__('Help')" />
                 <flux:menu>
-                    <flux:menu.item icon="plus" x-data x-on:click="$dispatch('support-open')">{{ __('Create request') }}</flux:menu.item>
-                    <flux:menu.item icon="list-bullet" :href="route('support.index', ['mine' => 1])" wire:navigate>{{ __('View my requests') }}</flux:menu.item>
+                    <flux:menu.item icon="book-open" :href="route('help.index')" wire:navigate>{{ __('Help center') }}</flux:menu.item>
+                    <flux:menu.item icon="question-mark-circle" :href="route('help.index', ['tab' => 'faq'])" wire:navigate>{{ __('FAQ') }}</flux:menu.item>
+                    <flux:menu.separator />
+                    <flux:menu.item icon="plus" x-data x-on:click="$dispatch('support-open')">{{ __('Contact support') }}</flux:menu.item>
+                    <flux:menu.item icon="list-bullet" :href="route('support.index', ['mine' => 1])" wire:navigate>{{ __('My requests') }}</flux:menu.item>
                 </flux:menu>
             </flux:dropdown>
             @if (auth()->user()->hasRole(\App\Enums\Role::Root))

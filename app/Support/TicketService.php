@@ -43,6 +43,7 @@ class TicketService
                 'blocking' => $data['blocking'] ?? null,
                 'screen' => $data['screen'] ?? null,
                 'route_name' => $data['route_name'] ?? null,
+                'help_topic' => $data['help_topic'] ?? null,
                 'app_version' => $data['app_version'] ?? config('app.version'),
                 'window_width' => $data['window_width'] ?? null,
                 'window_height' => $data['window_height'] ?? null,
