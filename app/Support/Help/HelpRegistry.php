@@ -40,7 +40,7 @@ class HelpRegistry
      * (e.g. `luz.primeros-pasos`) and declares its translations as keys, not
      * as resolved text, so the content follows the current locale.
      *
-     * @param  array<string, mixed>  $entries
+     * @param  array<array-key, mixed>  $entries
      *
      * @throws InvalidArgumentException when a declaration is incomplete or malformed
      */

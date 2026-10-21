@@ -34,7 +34,7 @@ return new class extends Migration
                 ->orderBy('position')
                 ->first();
 
-            $groupId = $group?->id ?? DB::table('navigation_groups')->insertGetId([
+            $groupId = $group->id ?? DB::table('navigation_groups')->insertGetId([
                 'navigation_menu_id' => $menuId,
                 'region' => 'bottom',
                 'label_key' => 'Help center',
