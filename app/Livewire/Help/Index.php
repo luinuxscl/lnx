@@ -3,7 +3,7 @@
 namespace App\Livewire\Help;
 
 use App\Models\User;
-use App\Support\Help\HelpRegistry;
+use App\Support\Help\HelpCatalog;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -54,7 +54,7 @@ class Index extends Component
 
         abort_unless($user instanceof User, 401);
 
-        $registry = app(HelpRegistry::class);
+        $registry = app(HelpCatalog::class);
         $all = $registry->all($user);
 
         $selected = $this->topic === '' ? null : $registry->find($this->topic, $user);

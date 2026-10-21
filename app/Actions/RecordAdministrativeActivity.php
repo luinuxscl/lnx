@@ -4,6 +4,8 @@ namespace App\Actions;
 
 use App\Enums\AdministrativeAction;
 use App\Models\AdministrativeActivity;
+use App\Models\HelpEntry;
+use App\Models\HelpGroup;
 use App\Models\NavigationGroup;
 use App\Models\NavigationItem;
 use App\Models\Setting;
@@ -19,6 +21,8 @@ class RecordAdministrativeActivity
         'setting' => ['site_title', 'site_tagline', 'meta_description', 'admin_email', 'footer_text', 'analytics_id', 'maintenance_mode', 'registration_mode', 'home_enabled', 'maintenance_message', 'logo_path', 'logo_dark_path', 'favicon_path', 'apple_touch_icon_path'],
         'navigation_group' => ['audience', 'label_key', 'label_es', 'label_en', 'icon', 'position', 'enabled'],
         'navigation_item' => ['audience', 'type', 'route_name', 'url', 'label_key', 'label_es', 'label_en', 'icon', 'position'],
+        'help_entry' => ['source', 'slug', 'type', 'title_key', 'summary_key', 'body_key', 'title_es', 'title_en', 'summary_es', 'summary_en', 'body_es', 'body_en', 'roles', 'position', 'route_name', 'enabled', 'overridden'],
+        'help_group' => ['source', 'group_key', 'position', 'enabled', 'overridden'],
     ];
 
     /**
@@ -33,6 +37,8 @@ class RecordAdministrativeActivity
             $resource instanceof Setting => 'setting',
             $resource instanceof NavigationGroup => 'navigation_group',
             $resource instanceof NavigationItem => 'navigation_item',
+            $resource instanceof HelpEntry => 'help_entry',
+            $resource instanceof HelpGroup => 'help_group',
             default => throw new \InvalidArgumentException('Unsupported administrative resource.'),
         };
 
@@ -47,7 +53,7 @@ class RecordAdministrativeActivity
             }
         }
 
-        if ($changes === [] && in_array($action, [AdministrativeAction::UserUpdated, AdministrativeAction::SettingsUpdated, AdministrativeAction::NavigationGroupUpdated, AdministrativeAction::NavigationItemUpdated], true)) {
+        if ($changes === [] && in_array($action, [AdministrativeAction::UserUpdated, AdministrativeAction::SettingsUpdated, AdministrativeAction::NavigationGroupUpdated, AdministrativeAction::NavigationItemUpdated, AdministrativeAction::HelpEntryUpdated, AdministrativeAction::HelpGroupUpdated], true)) {
             return null;
         }
 
