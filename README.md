@@ -806,6 +806,7 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 | Necesidad | Fuente o comando |
 | --- | --- |
 | Prioridades y próximo trabajo | [ROADMAP.md](ROADMAP.md); actualizar cuando cambien el estado de las issues, sus dependencias, bloqueos o prioridades acordadas |
+| Centro de ayuda (plan y etapas) | [CENTRO-AYUDA.md](CENTRO-AYUDA.md); decisiones, arquitectura, contrato de extensión, issues y orden para retomar la implementación |
 | Análisis del roadmap | skill `.ai/skills/analyze-roadmap/SKILL.md`; contrasta el roadmap con el tracker real y el estado de Git, detecta desalineaciones y propone el próximo trabajo |
 | Contrato de módulo | [CONTRATO-MODULO.md](CONTRATO-MODULO.md); qué puede declarar un paquete y el estándar de escritura por MCP (Etapa 10) |
 | Versiones PHP instaladas | `composer show --direct` |
