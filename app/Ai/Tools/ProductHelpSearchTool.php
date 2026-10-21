@@ -2,9 +2,11 @@
 
 namespace App\Ai\Tools;
 
+use App\Ai\Knowledge\HelpSearchService;
 use App\Models\User;
 use App\Support\Help\HelpCatalog;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Stringable;
@@ -34,6 +36,18 @@ class ProductHelpSearchTool implements Tool
 
         $query = trim((string) ($request['query'] ?? ''));
 
+        $semantic = app(HelpSearchService::class)->search($user, $query, 3);
+
+        if ($semantic !== []) {
+            return implode("\n\n", array_map(
+                fn (array $entry): string => $entry['title']."\n"
+                    .Str::limit($entry['content'], 300)."\n"
+                    .$entry['url'],
+                $semantic,
+            ));
+        }
+
+        // Textual fallback while the index is empty or still being built.
         $entries = array_slice(app(HelpCatalog::class)->search($query, $user), 0, 3);
 
         if ($entries === []) {

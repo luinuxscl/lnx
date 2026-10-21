@@ -6,6 +6,7 @@ use App\Enums\AdministrativeAction;
 use App\Models\HelpEntry;
 use App\Models\HelpGroup;
 use App\Models\User;
+use App\Support\Help\HelpKnowledgeSync;
 use App\Support\Help\HelpRegistry;
 use Illuminate\Support\Facades\DB;
 
@@ -71,6 +72,8 @@ class HelpSync
 
         $hidden = $this->hideOrphans(array_column($declared, 'slug'));
 
+        app(HelpKnowledgeSync::class)->syncAll();
+
         return ['created' => $created, 'updated' => $updated, 'hidden' => $hidden];
     }
 
@@ -99,6 +102,7 @@ class HelpSync
         ]);
 
         $this->record(AdministrativeAction::HelpEntryCreated, $row, [], $this->entrySnapshot($row), $actor);
+        app(HelpKnowledgeSync::class)->syncEntry($row->slug);
 
         return $row;
     }
@@ -127,6 +131,7 @@ class HelpSync
         ]);
 
         $this->record(AdministrativeAction::HelpEntryUpdated, $entry, $before, $this->entrySnapshot($entry));
+        app(HelpKnowledgeSync::class)->syncEntry($entry->slug);
     }
 
     /**
@@ -144,6 +149,7 @@ class HelpSync
         ]);
 
         $this->record(AdministrativeAction::HelpGroupUpdated, $group, $before, $this->groupSnapshot($group));
+        app(HelpKnowledgeSync::class)->syncAll();
     }
 
     /**

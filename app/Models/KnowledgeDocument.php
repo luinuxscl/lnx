@@ -15,6 +15,8 @@ use Illuminate\Support\Carbon;
  * @property int|null $knowledge_base_id
  * @property string $title
  * @property string $source_type
+ * @property string|null $help_slug
+ * @property string|null $locale
  * @property string|null $file_path
  * @property string $content
  * @property string $status
@@ -31,6 +33,8 @@ class KnowledgeDocument extends Model
         'knowledge_base_id',
         'title',
         'source_type',
+        'help_slug',
+        'locale',
         'file_path',
         'content',
         'status',

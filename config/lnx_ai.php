@@ -185,6 +185,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Help center search
+    |--------------------------------------------------------------------------
+    |
+    | Number of help articles injected into a chat prompt or returned by the
+    | help search tool. The content is indexed in the internal `product_help`
+    | knowledge base, one document per entry and locale.
+    |
+    */
+
+    'help' => [
+        'max_results' => (int) env('AI_HELP_MAX_RESULTS', 3),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Usage limits
     |--------------------------------------------------------------------------
     |
