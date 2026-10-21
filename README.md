@@ -641,6 +641,17 @@ El catálogo declarado se materializa en las tablas `help_groups` y `help_entrie
 
 `App\Support\Help\HelpCatalog` resuelve lo que se renderiza: combina el registro en memoria con las filas persistidas, así que una instalación sin sincronizar sigue mostrando la ayuda y una entrada oculta por root nunca aparece.
 
+### Búsqueda semántica y citas en el chat
+
+La ayuda publicada se indexa en la base reservada **`product_help`** (`is_system = true`) mediante `App\Support\Help\HelpKnowledgeSync`, que reutiliza el módulo Knowledge: un `KnowledgeDocument` por entrada y idioma (`es`/`en`), con fragmentos y embeddings generados por `KnowledgeIndexer`. La base de sistema no aparece en `/knowledge` ni se puede adjuntar a un chat, de modo que el contenido restringido nunca se recupera sin el filtro de roles.
+
+- **Disparadores.** La indexación se ejecuta al final de `help:sync`, al publicar o restaurar una entrada y al guardar, ocultar o publicar desde `/admin/help`. Los trabajos se encolan con `IndexKnowledgeDocumentJob`; un despliegue necesita un worker de cola para completar la indexación.
+- **Idempotencia.** Si el título y el contenido de un documento no cambian, no se vuelve a indexar. Las entradas ocultas o retiradas eliminan sus documentos de ayuda.
+- **Idioma y roles.** `App\Ai\Knowledge\HelpSearchService` busca solo en el idioma actual y restringe los documentos a los slugs visibles para la identidad **antes** de puntuar; después vuelve a validar cada resultado contra `HelpCatalog`. Un artículo restringido no aparece ni siquiera si el índice está desactualizado.
+- **Respaldo textual.** Si la IA está deshabilitada, falta la clave del proveedor o los fragmentos no tienen embeddings, la búsqueda usa la similitud por términos del motor Knowledge. `AI_HELP_MAX_RESULTS` limita los resultados (3 por defecto).
+- **Chat.** Cada mensaje consulta automáticamente la ayuda y combina esas fuentes con las bases RAG adjuntas. La respuesta recibe instrucciones para citar el título y la URL del artículo, y las citas de ayuda se guardan en `ai_messages.citations` y se muestran bajo la respuesta como enlaces profundos a `/help?topic=<slug>`.
+- **Herramienta.** `ProductHelpSearchTool` usa la misma búsqueda semántica y cae al catálogo textual si el índice aún no está disponible; respeta roles e idioma y devuelve el enlace profundo.
+
 ### Ayuda contextual y enlaces desde notificaciones
 
 `<x-help-topic slug="lnx.users-invitations" />` (`App\View\Components\HelpTopic`) renderiza un enlace al tema de ayuda (`/help?topic=<slug>`) con icono `lifebuoy`, etiqueta accesible «Leer la guía: <título>» y tooltip con el título del artículo. Se degrada a nada —sin error ni enlace roto— cuando no hay sesión, el slug no existe o la entrada está restringida para la identidad, de modo que una pantalla nunca se rompe por su enlace de ayuda. Está presente en configuración general, perfil, seguridad, apariencia, usuarios, invitaciones, soporte, chat, knowledge, documentos, paquetes y actividad; un paquete puede usarlo en sus propias vistas pasando el slug de una entrada que haya declarado.
@@ -792,11 +803,18 @@ lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`kn
 - El **prompt de sistema** y el **modelo** por conversación (`system_prompt`, `model`) solo pueden fijarlos root y admin; el usuario estándar consume la configuración permitida.
 - **Presets de asistente** (`ai_assistants`): agrupan prompt, modelo y bases por defecto con una audiencia. Una conversación puede referenciar un preset (`assistant_id`) y heredar su configuración, salvo override de bases.
 
+### Centro de ayuda en Knowledge
+
+- El centro de ayuda reutiliza este módulo sin crear un motor paralelo: `App\Support\Help\HelpKnowledgeSync` mantiene un documento por entrada publicada e idioma en la base de sistema `product_help`.
+- Esa base se excluye de la UI y de las bases adjuntables (`KnowledgeBase::scopeVisibleTo` e `isVisibleTo`), porque su contenido requiere el filtro por roles propio de la ayuda.
+- `App\Ai\Knowledge\HelpSearchService` usa `KnowledgeSearchService::rankChunks()` para compartir el mismo scoring vectorial y el mismo respaldo textual.
+
 ### Respuestas con citas verificables
 
 - Las respuestas generadas por el chat citan expresamente las fuentes recuperadas mediante etiquetas `[Fuente: Título (Fragmento #)]`.
 - Cuando las fuentes disponibles no contienen suficiente información para responder a la consulta, el asistente indica explícitamente la falta de sustento.
-- La herramienta `App\Ai\Tools\KnowledgeSearchTool` se adjunta al chat solo si el modelo resuelto declara la capability `tools`; el pre-fetch de fuentes funciona con independencia de las tools.
+- Las citas de artículos de ayuda se guardan en `ai_messages.citations` y se renderizan bajo la respuesta con un enlace a `/help?topic=<slug>`; no se guarda el cuerpo del artículo en la cita.
+- La herramienta `App\Ai\Tools\KnowledgeSearchTool` se adjunta al chat solo si el modelo resuelto declara la capability `tools`; el pre-fetch de fuentes funciona con independencia de las tools. `ProductHelpSearchTool` se adjunta con la misma condición para búsquedas de ayuda de seguimiento.
 
 ### Cuotas y registro de consumo
 

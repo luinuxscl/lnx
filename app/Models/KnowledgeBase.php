@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $description
  * @property KnowledgeAudience $audience
  * @property bool $is_active
+ * @property bool $is_system
  * @property int|null $created_by
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -34,6 +35,7 @@ class KnowledgeBase extends Model
         'description',
         'audience',
         'is_active',
+        'is_system',
         'created_by',
     ];
 
@@ -45,6 +47,7 @@ class KnowledgeBase extends Model
         return [
             'audience' => KnowledgeAudience::class,
             'is_active' => 'boolean',
+            'is_system' => 'boolean',
         ];
     }
 
@@ -107,6 +110,7 @@ class KnowledgeBase extends Model
         );
 
         return $query->where('is_active', true)
+            ->where('is_system', false)
             ->whereIn('audience', $allowedAudiences);
     }
 
@@ -115,6 +119,8 @@ class KnowledgeBase extends Model
      */
     public function isVisibleTo(User $user): bool
     {
-        return $this->is_active && $this->audience->allows($user);
+        return $this->is_active
+            && ! $this->is_system
+            && $this->audience->allows($user);
     }
 }
