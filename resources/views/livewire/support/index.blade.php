@@ -4,7 +4,11 @@
         :subtitle="__('Track your support requests here.')"
         icon="inbox"
         color="rose"
-    />
+   >
+        <x-slot:actions>
+            <x-help-topic slug="lnx.feedback-support" />
+        </x-slot:actions>
+    </x-lnx-ui::page-header>
     @if ($inbox)
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <flux:select wire:model.live="status" :label="__('Status')"><option value="">{{ __('All') }}</option>@foreach ($statuses as $value)<option value="{{ $value }}">{{ __(str_replace('_', ' ', ucfirst($value))) }}</option>@endforeach</flux:select>

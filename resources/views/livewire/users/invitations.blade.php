@@ -6,6 +6,7 @@
         color="blue"
     >
         <x-slot:actions>
+            <x-help-topic slug="lnx.users-invitations" />
             <flux:modal.trigger name="invite-user">
                 <flux:button variant="primary" icon="plus">{{ __('Invite user') }}</flux:button>
             </flux:modal.trigger>

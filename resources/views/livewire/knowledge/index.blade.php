@@ -6,6 +6,7 @@
         color="emerald"
     >
         <x-slot:actions>
+            <x-help-topic slug="lnx.knowledge" />
             @can('manageAny', \App\Models\KnowledgeBase::class)
                 <flux:button variant="subtle" icon="rectangle-stack" :href="route('knowledge.bases')" wire:navigate>
                     {{ __('Manage bases') }}

@@ -3,7 +3,11 @@
         :title="__('Interactive Chat')"
         icon="chat-bubble-left-right"
         color="violet"
-    />
+   >
+        <x-slot:actions>
+            <x-help-topic slug="lnx.chat" />
+        </x-slot:actions>
+    </x-lnx-ui::page-header>
 
     @if (!$isReady)
         <flux:callout variant="warning" icon="exclamation-triangle" class="mb-4">

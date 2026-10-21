@@ -4,6 +4,9 @@
     <flux:heading level="2" class="sr-only">{{ __('Appearance settings') }}</flux:heading>
 
     <x-settings.layout :heading="__('Appearance')" :subheading="__('Update the appearance settings for your account')">
+        <x-slot:help>
+            <x-help-topic slug="lnx.preferences" />
+        </x-slot:help>
 
         <flux:heading size="sm" class="mb-2">{{ __('Color scheme') }}</flux:heading>
         <flux:text class="mb-4">{{ __('Select between light, dark and system color schemes.') }}</flux:text>

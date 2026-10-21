@@ -4,7 +4,11 @@
         :subtitle="__('Administrative changes are recorded from the installation of this feature.')"
         icon="clock"
         color="violet"
-    />
+   >
+        <x-slot:actions>
+            <x-help-topic slug="lnx.activity" />
+        </x-slot:actions>
+    </x-lnx-ui::page-header>
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <flux:input wire:model.live.debounce.300ms="actor" :label="__('Actor')" :placeholder="__('Name, email or ID')" />

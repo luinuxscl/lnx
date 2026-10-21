@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\RoleChanged;
 use App\Notifications\SupportTicketUpdated;
 use App\Support\Appearance;
+use App\Support\Help\HelpCatalog;
 use App\Support\Notifications\NotificationTypeRegistry;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\View\View;
@@ -74,6 +75,34 @@ class Index extends Component
         }
 
         return $query->exists() ? route('support.show', $notification->data['ticket_id']) : null;
+    }
+
+    /**
+     * The help center entry related to a notification: the slug declared by the
+     * module that sent it, or the support guide for the kit's own ticket
+     * notifications. Null when the entry does not exist or is restricted.
+     */
+    public function helpLink(DatabaseNotification $notification): ?string
+    {
+        $user = auth()->user();
+
+        if (! $user instanceof User) {
+            return null;
+        }
+
+        $slug = app(NotificationTypeRegistry::class)->helpTopic($notification);
+
+        if ($slug === null && $notification->type === SupportTicketUpdated::class) {
+            $slug = 'lnx.feedback-support';
+        }
+
+        if ($slug === null) {
+            return null;
+        }
+
+        return app(HelpCatalog::class)->find($slug, $user) === null
+            ? null
+            : route('help.index', ['topic' => $slug]);
     }
 
     public function moduleLink(DatabaseNotification $notification): ?string

@@ -641,6 +641,24 @@ El catálogo declarado se materializa en las tablas `help_groups` y `help_entrie
 
 `App\Support\Help\HelpCatalog` resuelve lo que se renderiza: combina el registro en memoria con las filas persistidas, así que una instalación sin sincronizar sigue mostrando la ayuda y una entrada oculta por root nunca aparece.
 
+### Ayuda contextual y enlaces desde notificaciones
+
+`<x-help-topic slug="lnx.users-invitations" />` (`App\View\Components\HelpTopic`) renderiza un enlace al tema de ayuda (`/help?topic=<slug>`) con icono `lifebuoy`, etiqueta accesible «Leer la guía: <título>» y tooltip con el título del artículo. Se degrada a nada —sin error ni enlace roto— cuando no hay sesión, el slug no existe o la entrada está restringida para la identidad, de modo que una pantalla nunca se rompe por su enlace de ayuda. Está presente en configuración general, perfil, seguridad, apariencia, usuarios, invitaciones, soporte, chat, knowledge, documentos, paquetes y actividad; un paquete puede usarlo en sus propias vistas pasando el slug de una entrada que haya declarado.
+
+Las notificaciones también pueden enlazar su guía: el registro de tipos acepta una clave `help` opcional que recibe la notificación y devuelve el slug del tema.
+
+```php
+app(NotificationTypeRegistry::class)->register('luz', [
+    DocumentReadyNotification::class => [
+        'message' => fn (DatabaseNotification $notification): string => __('Document ready'),
+        'url' => fn (DatabaseNotification $notification): string => route('luz.documents.show', $notification->data['document_id']),
+        'help' => fn (DatabaseNotification $notification): string => 'luz.primeros-pasos',
+    ],
+]);
+```
+
+El centro de notificaciones muestra «Leer la guía» solo cuando el tema existe y la identidad puede leerlo; las notificaciones de soporte del kit enlazan a `lnx.feedback-support`.
+
 ## Feedback y soporte
 
 Todas las vistas autenticadas incluyen el menú **Ayuda** en la barra superior: botón con texto en escritorio e icono accesible en móvil. Ofrece **Centro de ayuda**, **FAQ**, **Contactar soporte** y **Mis solicitudes**. «Contactar soporte» abre un panel sobre la pantalla actual para enviar un problema, idea de mejora o consulta, con título, descripción y una indicación opcional de bloqueo. Al abrirlo se registran la ruta con nombre, fecha, usuario, versión de la aplicación si existe, dimensiones de ventana, idioma y tema. Si el panel se abre desde «¿No resolvió tu duda?» de un artículo, también se guarda el slug en `support_tickets.help_topic`; nunca se envía el cuerpo del artículo. No se leen parámetros de URL ni valores de formularios. La captura de pantalla requiere la acción y permiso del usuario, ofrece vista previa y puede descartarse; pegar o cargar una imagen es una alternativa. Se admiten PNG, JPEG y WebP hasta 5 MB. Los archivos se guardan en el disco privado `local` y se entregan únicamente mediante una ruta que comprueba el ticket y la visibilidad de la nota.

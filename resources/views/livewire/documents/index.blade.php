@@ -4,7 +4,11 @@
         :subtitle="__('Upload invoices or documents to automatically extract structured data using AI with human review.')"
         icon="document-text"
         color="cyan"
-    />
+   >
+        <x-slot:actions>
+            <x-help-topic slug="lnx.documents" />
+        </x-slot:actions>
+    </x-lnx-ui::page-header>
 
     @if (session('status'))
         <flux:badge color="lime" size="lg" class="w-full justify-start p-4">
