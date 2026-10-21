@@ -1,6 +1,6 @@
 # Centro de ayuda integrado
 
-> **Estado:** plan aprobado, sin implementación · **Etapa 14 abierta** el 2026-10-20 · **Referencia:** [#78](https://github.com/luinuxscl/lnx/issues/78)
+> **Estado:** fase 1 implementada, integrada y cerrada (2026-10-20) · **Etapas 15 y 16 abiertas** · **Referencia:** [#78](https://github.com/luinuxscl/lnx/issues/78)
 > Centraliza en una sola vista la documentación, las preguntas frecuentes y el acceso a soporte, y define cómo cada paquete de personalización aporta sus propias entradas.
 
 ---
@@ -108,16 +108,16 @@ El contenido propio se declara desde un provider de la app con Markdown bilingü
 
 | Fase | Issue | Entrega | Depende de |
 | --- | --- | --- | --- |
-| 14 | [#78](https://github.com/luinuxscl/lnx/issues/78) | `HelpRegistry`, validación, búsqueda, Markdown seguro y contrato §9 | — |
-| 14 | [#75](https://github.com/luinuxscl/lnx/issues/75) | Vista `/help` unificada, navegación, búsqueda y enlaces profundos | #78 |
-| 14 | [#77](https://github.com/luinuxscl/lnx/issues/77) | Header de ayuda, CTA de soporte con contexto y migración de `ProductHelpSearchTool` | #78, #75 |
-| 14 | [#82](https://github.com/luinuxscl/lnx/issues/82) | Guías y FAQ iniciales de lnx, bilingües | #78 |
+| 14 | [#78](https://github.com/luinuxscl/lnx/issues/78) (cerrada) | `HelpRegistry`, validación, búsqueda, Markdown seguro y contrato §9 | — |
+| 14 | [#75](https://github.com/luinuxscl/lnx/issues/75) (cerrada) | Vista `/help` unificada, navegación, búsqueda y enlaces profundos | #78 |
+| 14 | [#77](https://github.com/luinuxscl/lnx/issues/77) (cerrada) | Header de ayuda, CTA de soporte con contexto y migración de `ProductHelpSearchTool` | #78, #75 |
+| 14 | [#82](https://github.com/luinuxscl/lnx/issues/82) (cerrada) | Guías y FAQ iniciales de lnx, bilingües | #78 |
 | 15 | [#81](https://github.com/luinuxscl/lnx/issues/81) | Persistencia, `help:sync` idempotente, precedencia de root y auditoría | #78, #75 |
 | 15 | [#76](https://github.com/luinuxscl/lnx/issues/76) | Editor `/admin/help` para root | #81 |
 | 16 | [#80](https://github.com/luinuxscl/lnx/issues/80) | Búsqueda semántica con Knowledge y citas en el chat | #75, #81 |
 | 16 | [#79](https://github.com/luinuxscl/lnx/issues/79) | Ayuda contextual y enlaces profundos desde componentes y notificaciones | #75, #82 |
 
-**Orden de ejecución:** #78 → #75 → #77 → #82. La fase 15 no debe empezar hasta que la fase 14 esté integrada; la fase 16 depende de la 15 para indexar contenido editable.
+**Orden de ejecución:** #78 → #75 → #77 → #82, completado e integrado en `main` el 2026-10-20. La fase 15 puede empezar; la fase 16 depende de la 15 para indexar contenido editable.
 
 Los criterios de aceptación detallados viven en cada issue de GitHub; este documento conserva el orden, las dependencias y las decisiones.
 
@@ -131,7 +131,7 @@ Los criterios de aceptación detallados viven en cada issue de GitHub; este docu
 
 ## 7. Cómo retomar el trabajo
 
-1. Consultar el estado real en GitHub: `gh issue list --state open`.
+1. Consultar el estado real en GitHub: `gh issue list --state open` (fase 1 cerrada; quedan #81, #76, #80 y #79).
 2. Crear la rama desde `develop`: `git checkout develop && git pull && git checkout -b feature/help-center`.
 3. Implementar en el orden de la tabla, empezando por #78.
 4. Para cada issue, leer `.ai/rules/index.md` y las reglas aplicables antes de editar.
@@ -144,7 +144,7 @@ Los criterios de aceptación detallados viven en cada issue de GitHub; este docu
 - [x] Decisiones de audiencia, formato, edición e IA fijadas.
 - [x] Issues de las tres etapas creadas en GitHub con dependencias corregidas.
 - [x] Roadmap actualizado con las etapas 14 a 16.
-- [ ] Implementación de la fase 1 (issues #78, #75, #77 y #82).
+- [x] Implementación de la fase 1 (issues #78, #75, #77 y #82), integrada en `main` y cerrada el 2026-10-20.
 
 ## 9. Mantenimiento
 
