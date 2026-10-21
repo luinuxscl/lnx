@@ -151,6 +151,7 @@ class NavigationSeeder extends Seeder
                     ['route_name' => 'admin.navigation.index'],
                     ['route_name' => 'admin.packages.index'],
                     ['route_name' => 'admin.packages.lnx-ui'],
+                    ['route_name' => 'help.index'],
                     ['route_name' => 'chat'],
                     ['route_name' => 'knowledge.index'],
                     ['route_name' => 'documents.index'],
@@ -160,9 +161,14 @@ class NavigationSeeder extends Seeder
             NavigationAudience::Admin => [
                 ['label_key' => 'Administration', 'icon' => 'cog-6-tooth', 'items' => [
                     ['route_name' => 'admin.users.index'],
+                    ['route_name' => 'help.index'],
                 ]],
             ],
-            NavigationAudience::User => [],
+            NavigationAudience::User => [
+                ['label_key' => 'Help center', 'icon' => 'lifebuoy', 'items' => [
+                    ['route_name' => 'help.index'],
+                ]],
+            ],
         };
     }
 
