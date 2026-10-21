@@ -74,22 +74,48 @@ class HelpEntry extends Model
      */
     public function content(string $field): string
     {
-        if ($this->overridden) {
-            $locale = app()->getLocale() === 'en' ? 'en' : 'es';
-            $value = $this->getAttribute($field.'_'.$locale);
+        $locale = app()->getLocale() === 'en' ? 'en' : 'es';
+        $override = $this->overrideContent($field, $locale);
 
-            if (is_string($value) && $value !== '') {
-                return $value;
-            }
+        return $override ?? (string) $this->getAttribute($field.'_key');
+    }
 
-            $fallback = $this->getAttribute($field.'_'.($locale === 'en' ? 'es' : 'en'));
+    /**
+     * Resolve a content field to literal text for a specific locale.
+     *
+     * Unlike `content()`, this method runs the translation instead of leaving
+     * the key for the view, so the help knowledge indexer can store the text
+     * of every locale.
+     */
+    public function resolvedContent(string $field, string $locale): string
+    {
+        $locale = $locale === 'en' ? 'en' : 'es';
+        $override = $this->overrideContent($field, $locale);
 
-            if (is_string($fallback) && $fallback !== '') {
-                return $fallback;
-            }
+        if ($override !== null) {
+            return $override;
         }
 
-        return (string) $this->getAttribute($field.'_key');
+        $translated = trans((string) $this->getAttribute($field.'_key'), [], $locale);
+
+        return is_string($translated) ? $translated : (string) $this->getAttribute($field.'_key');
+    }
+
+    private function overrideContent(string $field, string $locale): ?string
+    {
+        if (! $this->overridden) {
+            return null;
+        }
+
+        $value = $this->getAttribute($field.'_'.$locale);
+
+        if (is_string($value) && $value !== '') {
+            return $value;
+        }
+
+        $fallback = $this->getAttribute($field.'_'.($locale === 'en' ? 'es' : 'en'));
+
+        return is_string($fallback) && $fallback !== '' ? $fallback : null;
     }
 
     /**

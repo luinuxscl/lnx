@@ -132,6 +132,25 @@
                                         </div>
                                     @else
                                         {!! nl2br(e($message->content)) !!}
+
+                                        @if (! empty($message->citations))
+                                            <div class="mt-3 border-t border-neutral-200 dark:border-neutral-700 pt-2">
+                                                <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                                                    {{ __('Help sources') }}
+                                                </p>
+                                                <ul class="mt-1 flex flex-col gap-1">
+                                                    @foreach ($message->citations as $citation)
+                                                        <li>
+                                                            <a href="{{ $citation['url'] ?? route('help.index') }}"
+                                                               class="text-xs text-accent hover:underline"
+                                                               title="{{ __('Open the help article') }}">
+                                                                {{ $citation['title'] ?? $citation['slug'] ?? __('Help center') }}
+                                                            </a>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endif
                                     @endif
                                 </div>
                             </div>

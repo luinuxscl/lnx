@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
  * @property string $content
  * @property int|null $tokens
  * @property string $status
+ * @property array<int, array<string, mixed>>|null $citations
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
@@ -29,7 +30,18 @@ class AiChatMessage extends Model
         'content',
         'tokens',
         'status',
+        'citations',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'citations' => 'array',
+        ];
+    }
 
     /**
      * @return BelongsTo<AiConversation, $this>

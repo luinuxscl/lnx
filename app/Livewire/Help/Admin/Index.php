@@ -9,6 +9,7 @@ use App\Enums\Role;
 use App\Models\HelpEntry;
 use App\Models\HelpGroup;
 use App\Support\Help\HelpCatalog;
+use App\Support\Help\HelpKnowledgeSync;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -138,6 +139,7 @@ class Index extends Component
         ]);
 
         $this->record(AdministrativeAction::HelpEntryUpdated, $entry, $before, $this->snapshot($entry));
+        app(HelpKnowledgeSync::class)->syncEntry($entry->slug);
         $this->closeEditor();
         Flux::toast(variant: 'success', text: __('Entry updated.'));
     }
@@ -157,6 +159,8 @@ class Index extends Component
             $before,
             ['enabled' => $entry->enabled, 'overridden' => $entry->overridden],
         );
+
+        app(HelpKnowledgeSync::class)->syncEntry($entry->slug);
     }
 
     public function restoreEntry(int $entryId): void
@@ -252,6 +256,7 @@ class Index extends Component
         $group->update(['enabled' => ! $group->enabled, 'overridden' => true]);
 
         $this->record(AdministrativeAction::HelpGroupUpdated, $group, $before, ['enabled' => $group->enabled, 'overridden' => $group->overridden]);
+        app(HelpKnowledgeSync::class)->syncAll();
     }
 
     public function restoreGroup(int $groupId): void

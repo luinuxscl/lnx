@@ -63,7 +63,6 @@ class KnowledgeSearchService
         }
 
         $limit ??= (int) config('lnx_ai.knowledge.max_chunks', 5);
-        $minSimilarity = (float) config('lnx_ai.knowledge.min_similarity', 0.15);
 
         // 1. Authorization-first: query ONLY accessible and indexed documents
         $documentQuery = KnowledgeDocument::query()
@@ -92,62 +91,58 @@ class KnowledgeSearchService
             ->with(['document' => fn ($q) => $q->select('id', 'title', 'user_id', 'status', 'withdrawn_at')])
             ->get();
 
-        if ($chunks->isEmpty()) {
+        return $this->rankChunks($chunks, $queryPrompt, $limit);
+    }
+
+    /**
+     * Rank a pre-authorized set of chunks against a query.
+     *
+     * The caller is responsible for resolving the chunks from documents the
+     * identity may read. This is the shared scoring engine used by the regular
+     * knowledge search and by the help center search, so both keep the same
+     * vector and textual fallback behavior.
+     *
+     * @param  Collection<int, KnowledgeChunk>  $chunks
+     * @return list<array{chunk_id: int, document_id: int, document_title: string, chunk_index: int, content: string, similarity: float}>
+     */
+    public function rankChunks(Collection $chunks, string $queryPrompt, ?int $limit = null): array
+    {
+        $queryPrompt = trim($queryPrompt);
+
+        if ($queryPrompt === '' || $chunks->isEmpty()) {
             return [];
         }
 
-        // 3. Attempt vector embedding search
+        $limit ??= (int) config('lnx_ai.knowledge.max_chunks', 5);
+        $minSimilarity = (float) config('lnx_ai.knowledge.min_similarity', 0.15);
+
         $queryEmbedding = $this->generateQueryEmbedding($queryPrompt);
-
         $results = [];
-        if (! empty($queryEmbedding)) {
-            foreach ($chunks as $chunk) {
-                // Ensure document is not withdrawn
-                if ($chunk->document->withdrawn_at !== null) {
-                    continue;
-                }
 
-                $similarity = 0.0;
-                if (is_array($chunk->embedding)) {
-                    $similarity = $this->cosineSimilarity($queryEmbedding, $chunk->embedding);
-                } else {
-                    $similarity = $this->keywordSimilarity($queryPrompt, $chunk->content);
-                }
-
-                if ($similarity >= $minSimilarity) {
-                    $results[] = [
-                        'chunk_id' => (int) $chunk->id,
-                        'document_id' => (int) $chunk->document_id,
-                        'document_title' => (string) $chunk->document->title,
-                        'chunk_index' => (int) $chunk->chunk_index,
-                        'content' => (string) $chunk->content,
-                        'similarity' => (float) round($similarity, 4),
-                    ];
-                }
+        foreach ($chunks as $chunk) {
+            if ($chunk->document === null || $chunk->document->withdrawn_at !== null) {
+                continue;
             }
-        } else {
-            // Fallback to keyword matching if embedding service is unavailable or turned off
-            foreach ($chunks as $chunk) {
-                if ($chunk->document->withdrawn_at !== null) {
-                    continue;
-                }
 
-                $similarity = $this->keywordSimilarity($queryPrompt, $chunk->content);
-                if ($similarity >= $minSimilarity) {
-                    $results[] = [
-                        'chunk_id' => (int) $chunk->id,
-                        'document_id' => (int) $chunk->document_id,
-                        'document_title' => (string) $chunk->document->title,
-                        'chunk_index' => (int) $chunk->chunk_index,
-                        'content' => (string) $chunk->content,
-                        'similarity' => (float) round($similarity, 4),
-                    ];
-                }
+            $similarity = ! empty($queryEmbedding) && is_array($chunk->embedding)
+                ? $this->cosineSimilarity($queryEmbedding, $chunk->embedding)
+                : $this->keywordSimilarity($queryPrompt, $chunk->content);
+
+            if ($similarity < $minSimilarity) {
+                continue;
             }
+
+            $results[] = [
+                'chunk_id' => (int) $chunk->id,
+                'document_id' => (int) $chunk->document_id,
+                'document_title' => (string) $chunk->document->title,
+                'chunk_index' => (int) $chunk->chunk_index,
+                'content' => (string) $chunk->content,
+                'similarity' => (float) round($similarity, 4),
+            ];
         }
 
-        // Sort by similarity score descending
-        usort($results, fn ($a, $b) => $b['similarity'] <=> $a['similarity']);
+        usort($results, fn (array $left, array $right): int => $right['similarity'] <=> $left['similarity']);
 
         return array_slice($results, 0, $limit);
     }

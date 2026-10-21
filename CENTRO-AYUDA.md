@@ -1,6 +1,6 @@
 # Centro de ayuda integrado
 
-> **Estado:** fases 1 y 15 implementadas y cerradas (2026-10-21) · **Etapa 16 en curso** ([#79](https://github.com/luinuxscl/lnx/issues/79) implementada) · **Referencia:** [#78](https://github.com/luinuxscl/lnx/issues/78)
+> **Estado:** fases 1, 15 y 16 implementadas y cerradas (2026-10-21) · **Referencia:** [#78](https://github.com/luinuxscl/lnx/issues/78)
 > Centraliza en una sola vista la documentación, las preguntas frecuentes y el acceso a soporte, y define cómo cada paquete de personalización aporta sus propias entradas.
 
 ---
@@ -117,6 +117,17 @@ El contenido propio se declara desde un provider de la app con Markdown bilingü
 - **Editor.** `/admin/help` (`admin.help.index`, solo `root`) lista por paquete, tipo y estado, con búsqueda y filtros; edita título, resumen y cuerpo en pestañas es/en; ajusta roles; reordena; oculta/publica; publica disponibles y restaura al valor del paquete.
 - **Lectura.** `HelpCatalog` combina el registro en memoria con las filas persistidas; `Help\Index` y `ProductHelpSearchTool` lo usan, así que la ayuda funciona aunque no se haya sincronizado todavía.
 
+### 4.7 Búsqueda semántica y citas (fase 16)
+
+La ayuda publicada se indexa en la base de sistema `product_help`, reutilizando Knowledge:
+
+- `App\Support\Help\HelpKnowledgeSync` crea la base (`is_system = true`) y un `KnowledgeDocument` por entrada e idioma (`es`/`en`), con título, resumen y cuerpo resueltos a texto.
+- La base no aparece en la UI de Knowledge ni se puede adjuntar a un chat; su contenido solo se consulta a través de `App\Ai\Knowledge\HelpSearchService`.
+- La indexación se dispara al final de `help:sync`, al publicar o restaurar y al guardar, ocultar o publicar desde `/admin/help`. Usa `IndexKnowledgeDocumentJob`; se necesita un worker de cola.
+- La sincronización es idempotente y elimina los documentos de entradas ocultas o retiradas.
+- La búsqueda filtra por idioma y por los slugs visibles para la identidad **antes** de puntuar, y vuelve a validar cada resultado contra `HelpCatalog` después. Si no hay embeddings o la IA está deshabilitada, usa la similitud textual del motor Knowledge.
+- El chat consulta la ayuda automáticamente en cada mensaje, cita el título y la URL del artículo y persiste las citas en `ai_messages.citations`; la vista las muestra como enlaces a `/help?topic=<slug>`.
+
 ## 5. Fases y issues
 
 | Fase | Issue | Entrega | Depende de |
@@ -127,10 +138,10 @@ El contenido propio se declara desde un provider de la app con Markdown bilingü
 | 14 | [#82](https://github.com/luinuxscl/lnx/issues/82) (cerrada) | Guías y FAQ iniciales de lnx, bilingües | #78 |
 | 15 | [#81](https://github.com/luinuxscl/lnx/issues/81) (cerrada) | Persistencia, `help:sync` idempotente, precedencia de root y auditoría | #78, #75 |
 | 15 | [#76](https://github.com/luinuxscl/lnx/issues/76) (cerrada) | Editor `/admin/help` para root | #81 |
-| 16 | [#80](https://github.com/luinuxscl/lnx/issues/80) | Búsqueda semántica con Knowledge y citas en el chat | #75, #81 |
-| 16 | [#79](https://github.com/luinuxscl/lnx/issues/79) (implementada) | Ayuda contextual y enlaces profundos desde componentes y notificaciones | #75, #82 |
+| 16 | [#79](https://github.com/luinuxscl/lnx/issues/79) (cerrada) | Ayuda contextual y enlaces profundos desde componentes y notificaciones | #75, #82 |
+| 16 | [#80](https://github.com/luinuxscl/lnx/issues/80) (cerrada) | Búsqueda semántica con Knowledge y citas en el chat | #75, #81 |
 
-**Orden de ejecución:** #78 → #75 → #77 → #82 (fase 14, integrada el 2026-10-20) → #81 → #76 (fase 15, integrada el 2026-10-21). La fase 16 ya puede empezar: indexa el contenido editable que dejó la fase 15.
+**Orden de ejecución:** #78 → #75 → #77 → #82 (fase 14, integrada el 2026-10-20) → #81 → #76 (fase 15, integrada el 2026-10-21) → #79 → #80 (fase 16, integrada el 2026-10-21).
 
 Los criterios de aceptación detallados viven en cada issue de GitHub; este documento conserva el orden, las dependencias y las decisiones.
 
@@ -144,7 +155,7 @@ Los criterios de aceptación detallados viven en cada issue de GitHub; este docu
 
 ## 7. Cómo retomar el trabajo
 
-1. Consultar el estado real en GitHub: `gh issue list --state open` (fases 14 y 15 cerradas; la fase 16 tiene #79 implementada y #80 pendiente).
+1. Consultar el estado real en GitHub: `gh issue list --state open` (fases 14, 15 y 16 cerradas).
 2. Crear la rama desde `develop`: `git checkout develop && git pull && git checkout -b feature/help-context`.
 3. Implementar en el orden de la tabla, empezando por la fase 16.
 4. Para cada issue, leer `.ai/rules/index.md` y las reglas aplicables antes de editar.
@@ -159,6 +170,7 @@ Los criterios de aceptación detallados viven en cada issue de GitHub; este docu
 - [x] Roadmap actualizado con las etapas 14 a 16.
 - [x] Implementación de la fase 1 (issues #78, #75, #77 y #82), integrada en `main` y cerrada el 2026-10-20.
 - [x] Implementación de la fase 15 (issues #81 y #76): persistencia, `help:sync`, precedencia de root, auditoría y editor `/admin/help`, integrada y cerrada el 2026-10-21.
+- [x] Implementación de la fase 16 (issues #79 y #80): ayuda contextual, búsqueda semántica en `product_help`, filtrado por idioma/roles y citas enlazadas en el chat, integrada y cerrada el 2026-10-21.
 
 ## 9. Mantenimiento
 
