@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Actions\SeedIdentity;
 use App\Support\DemoUsers;
 use Database\Seeders\DemoUserSeeder;
+use Database\Seeders\HelpSeeder;
 use Database\Seeders\NavigationSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Console\Command;
@@ -66,6 +67,7 @@ class LnxResetCommand extends Command
 
         $this->seed(RolePermissionSeeder::class);
         $this->seed(NavigationSeeder::class);
+        $this->seed(HelpSeeder::class);
 
         app(SeedIdentity::class)->handle($this);
 

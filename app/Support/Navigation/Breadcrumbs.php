@@ -37,6 +37,7 @@ class Breadcrumbs
         'admin.ai.' => ['label' => 'AI', 'route' => 'admin.ai.index'],
         'admin.packages.' => ['label' => 'Packages', 'route' => 'admin.packages.index'],
         'admin.navigation.' => ['label' => 'Navigation', 'route' => 'admin.navigation.index'],
+        'admin.help.' => ['label' => 'Help center', 'route' => 'admin.help.index'],
         'admin.emails.' => ['label' => 'Sent emails', 'route' => 'admin.emails.index'],
         'notifications.' => ['label' => 'Notifications', 'route' => 'notifications.index'],
         'chat' => ['label' => 'Chat', 'route' => 'chat'],

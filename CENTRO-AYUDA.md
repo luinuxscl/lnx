@@ -1,6 +1,6 @@
 # Centro de ayuda integrado
 
-> **Estado:** fase 1 implementada, integrada y cerrada (2026-10-20) · **Etapas 15 y 16 abiertas** · **Referencia:** [#78](https://github.com/luinuxscl/lnx/issues/78)
+> **Estado:** fases 1 y 15 implementadas, integradas y cerradas (2026-10-21) · **Etapa 16 abierta** · **Referencia:** [#78](https://github.com/luinuxscl/lnx/issues/78)
 > Centraliza en una sola vista la documentación, las preguntas frecuentes y el acceso a soporte, y define cómo cada paquete de personalización aporta sus propias entradas.
 
 ---
@@ -21,7 +21,7 @@ Cada paquete declara sus propias guías y FAQ sin tocar la app, siguiendo el pat
 | --- | --- |
 | Audiencia | Solo usuarios autenticados; no hay ayuda pública en la fase 1 |
 | Formato | Markdown renderizado en servidor |
-| Edición desde la UI | No en la fase 1; se evalúa en la etapa 15 |
+| Edición desde la UI | Solo `root`, en `/admin/help` (etapa 15, 2026-10-21) |
 | Búsqueda con IA | No en la fase 1; se evalúa en la etapa 16 |
 | Fuente del contenido | El paquete que posee la funcionalidad, versionado con su código |
 | Bilingüe | Sí, español por defecto e inglés, con claves de traducción |
@@ -104,6 +104,18 @@ Reglas del registro:
 
 El contenido propio se declara desde un provider de la app con Markdown bilingüe en `lang/es/help.php` y `lang/en/help.php`, o con archivos `resources/help/{es,en}/*.md` registrados desde ese provider. Cobertura mínima en [#82](https://github.com/luinuxscl/lnx/issues/82).
 
+### 4.6 Persistencia y ciclo editorial (fase 15)
+
+`help:sync` materializa lo declarado en `help_groups` y `help_entries`, siguiendo el modelo de `NavigationSync`.
+
+- **Precedencia: root > paquete > lnx.** Cada fila guarda las claves de traducción del paquete (`title_key`, `summary_key`, `body_key`), los roles y el orden. Un override de root (`overridden = true`) aporta textos es/en propios, roles, posición o visibilidad y nunca se pisa.
+- **Tres estados en la UI:** **Auto** (intacta), **Editado por root** (override) y **Disponible** (declarada sin fila todavía; se puede publicar desde el editor).
+- **Idempotencia.** Dos ejecuciones seguidas no duplican, no reordenan ni generan actividad nueva.
+- **Ocultar, nunca borrar.** Si la declaración desaparece, la fila se desactiva (`enabled = false`); la sincronización no la resucita.
+- **Auditoría.** Creaciones, ediciones, ocultamientos, reordenamientos, publicaciones y restauraciones se registran en Actividad administrativa con las acciones `help_entry_*` y `help_group_updated`.
+- **Editor.** `/admin/help` (`admin.help.index`, solo `root`) lista por paquete, tipo y estado, con búsqueda y filtros; edita título, resumen y cuerpo en pestañas es/en; ajusta roles; reordena; oculta/publica; publica disponibles y restaura al valor del paquete.
+- **Lectura.** `HelpCatalog` combina el registro en memoria con las filas persistidas; `Help\Index` y `ProductHelpSearchTool` lo usan, así que la ayuda funciona aunque no se haya sincronizado todavía.
+
 ## 5. Fases y issues
 
 | Fase | Issue | Entrega | Depende de |
@@ -112,12 +124,12 @@ El contenido propio se declara desde un provider de la app con Markdown bilingü
 | 14 | [#75](https://github.com/luinuxscl/lnx/issues/75) (cerrada) | Vista `/help` unificada, navegación, búsqueda y enlaces profundos | #78 |
 | 14 | [#77](https://github.com/luinuxscl/lnx/issues/77) (cerrada) | Header de ayuda, CTA de soporte con contexto y migración de `ProductHelpSearchTool` | #78, #75 |
 | 14 | [#82](https://github.com/luinuxscl/lnx/issues/82) (cerrada) | Guías y FAQ iniciales de lnx, bilingües | #78 |
-| 15 | [#81](https://github.com/luinuxscl/lnx/issues/81) | Persistencia, `help:sync` idempotente, precedencia de root y auditoría | #78, #75 |
-| 15 | [#76](https://github.com/luinuxscl/lnx/issues/76) | Editor `/admin/help` para root | #81 |
+| 15 | [#81](https://github.com/luinuxscl/lnx/issues/81) (cerrada) | Persistencia, `help:sync` idempotente, precedencia de root y auditoría | #78, #75 |
+| 15 | [#76](https://github.com/luinuxscl/lnx/issues/76) (cerrada) | Editor `/admin/help` para root | #81 |
 | 16 | [#80](https://github.com/luinuxscl/lnx/issues/80) | Búsqueda semántica con Knowledge y citas en el chat | #75, #81 |
 | 16 | [#79](https://github.com/luinuxscl/lnx/issues/79) | Ayuda contextual y enlaces profundos desde componentes y notificaciones | #75, #82 |
 
-**Orden de ejecución:** #78 → #75 → #77 → #82, completado e integrado en `main` el 2026-10-20. La fase 15 puede empezar; la fase 16 depende de la 15 para indexar contenido editable.
+**Orden de ejecución:** #78 → #75 → #77 → #82 (fase 14, integrada el 2026-10-20) → #81 → #76 (fase 15, integrada el 2026-10-21). La fase 16 ya puede empezar: indexa el contenido editable que dejó la fase 15.
 
 Los criterios de aceptación detallados viven en cada issue de GitHub; este documento conserva el orden, las dependencias y las decisiones.
 
@@ -131,12 +143,12 @@ Los criterios de aceptación detallados viven en cada issue de GitHub; este docu
 
 ## 7. Cómo retomar el trabajo
 
-1. Consultar el estado real en GitHub: `gh issue list --state open` (fase 1 cerrada; quedan #81, #76, #80 y #79).
-2. Crear la rama desde `develop`: `git checkout develop && git pull && git checkout -b feature/help-center`.
-3. Implementar en el orden de la tabla, empezando por #78.
+1. Consultar el estado real en GitHub: `gh issue list --state open` (fases 14 y 15 cerradas; quedan #80 y #79).
+2. Crear la rama desde `develop`: `git checkout develop && git pull && git checkout -b feature/help-context`.
+3. Implementar en el orden de la tabla, empezando por la fase 16.
 4. Para cada issue, leer `.ai/rules/index.md` y las reglas aplicables antes de editar.
 5. Verificar con `php artisan test --compact`, `vendor/bin/pint --dirty --format agent` y `composer types:check`.
-6. Actualizar `README.md`, `CONTRATO-MODULO.md` y este documento en el mismo PR cuando cambie el comportamiento.
+6. Actualizar `README.md`, `CONTRATO-MODULO.md` y este documento en el mismo PR cuando cambie el comportamiento. Tras desplegar la fase 15, ejecutar `php artisan migrate --force` y `php artisan help:sync` (o sembrar) para materializar el catálogo.
 7. Integrar en `develop` y luego en `main`; cerrar cada issue solo tras comprobar sus criterios sobre la implementación integrada.
 
 ## 8. Verificación del plan
@@ -145,6 +157,7 @@ Los criterios de aceptación detallados viven en cada issue de GitHub; este docu
 - [x] Issues de las tres etapas creadas en GitHub con dependencias corregidas.
 - [x] Roadmap actualizado con las etapas 14 a 16.
 - [x] Implementación de la fase 1 (issues #78, #75, #77 y #82), integrada en `main` y cerrada el 2026-10-20.
+- [x] Implementación de la fase 15 (issues #81 y #76): persistencia, `help:sync`, precedencia de root, auditoría y editor `/admin/help`, integrada y cerrada el 2026-10-21.
 
 ## 9. Mantenimiento
 

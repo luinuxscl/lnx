@@ -16,6 +16,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\Documents\Index as DocumentsIndex;
 use App\Livewire\Documents\Show as DocumentsShow;
 use App\Livewire\Emails\Index as EmailsIndex;
+use App\Livewire\Help\Admin\Index as HelpAdminIndex;
 use App\Livewire\Help\Index as HelpIndex;
 use App\Livewire\Knowledge\Bases as KnowledgeBases;
 use App\Livewire\Knowledge\Index;
@@ -174,6 +175,18 @@ Route::livewire('admin/navigation', NavigationIndex::class)
     ->menu([
         'label' => 'Navigation',
         'icon' => 'bars-3',
+        'group' => 'Administration',
+        'group_icon' => 'cog-6-tooth',
+        'audiences' => ['root'],
+        'roles' => ['root'],
+    ]);
+
+Route::livewire('admin/help', HelpAdminIndex::class)
+    ->middleware(['auth', 'role:'.Role::Root->value])
+    ->name('admin.help.index')
+    ->menu([
+        'label' => 'Help center',
+        'icon' => 'book-open',
         'group' => 'Administration',
         'group_icon' => 'cog-6-tooth',
         'audiences' => ['root'],

@@ -3,7 +3,7 @@
 namespace App\Ai\Tools;
 
 use App\Models\User;
-use App\Support\Help\HelpRegistry;
+use App\Support\Help\HelpCatalog;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
@@ -34,7 +34,7 @@ class ProductHelpSearchTool implements Tool
 
         $query = trim((string) ($request['query'] ?? ''));
 
-        $entries = array_slice(app(HelpRegistry::class)->search($query, $user), 0, 3);
+        $entries = array_slice(app(HelpCatalog::class)->search($query, $user), 0, 3);
 
         if ($entries === []) {
             return 'No help section matched: '.$query.'. Point the user to the help center at '

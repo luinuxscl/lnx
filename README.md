@@ -165,6 +165,7 @@ Route::livewire('reports', ReportsIndex::class)
 | `php artisan serve`     | Servidor local (puerto 8000)         |
 | `php artisan test`      | Ejecuta la suite de Pest             |
 | `php artisan navigation:sync` | Reconcilia el sidebar con las rutas etiquetadas |
+| `php artisan help:sync` | Materializa el centro de ayuda declarado por los paquetes sin pisar los cambios de root |
 | `vendor/bin/pint`       | Formatea el código PHP               |
 | `vendor/bin/phpstan`    | Análisis estático                    |
 | `php artisan lnx:reset` | Reinicia el entorno de desarrollo    |
@@ -208,7 +209,7 @@ Al desplegar, aplicar la migración `move_theme_from_users_to_settings_table` co
 
 ## Layout de la aplicación
 
-- **Menú agrupado en regiones con prioridad de root**: el sidebar divide las opciones en dos regiones separadas por `<flux:spacer />`, sobre el menú de usuario. La región **`main`** (`<flux:sidebar.nav>`) reúne las funcionalidades de la app derivada: `Dashboard` primero y, después, las rutas etiquetadas de la app. La región **`bottom`** es el conjunto curado por rol: para `root`, el grupo colapsable **Developer Mode** (`code-bracket`) con Soporte, Usuarios, Actividad, Ajustes, Checklist, IA, Uso de IA, Navegación, Packages (Installed packages + UI/UX components) y las IA del kit (Chat, RAG, Document AI); para `admin`, el grupo **Administración** (`Administration`, `cog-6-tooth`) con Usuarios y Centro de ayuda; el usuario estándar tiene el grupo **Centro de ayuda** (`Help center`, `lifebuoy`) con la entrada `/help`. Se omiten los ítems sin destino `Repository` y `Documentation`.
+- **Menú agrupado en regiones con prioridad de root**: el sidebar divide las opciones en dos regiones separadas por `<flux:spacer />`, sobre el menú de usuario. La región **`main`** (`<flux:sidebar.nav>`) reúne las funcionalidades de la app derivada: `Dashboard` primero y, después, las rutas etiquetadas de la app. La región **`bottom`** es el conjunto curado por rol: para `root`, el grupo colapsable **Developer Mode** (`code-bracket`) con Soporte, Usuarios, Actividad, Ajustes, Checklist, IA, Uso de IA, Navegación, Centro de ayuda (editor), Packages (Installed packages + UI/UX components) y las IA del kit (Chat, RAG, Document AI); para `admin`, el grupo **Administración** (`Administration`, `cog-6-tooth`) con Usuarios y Centro de ayuda; el usuario estándar tiene el grupo **Centro de ayuda** (`Help center`, `lifebuoy`) con la entrada `/help`. Se omiten los ítems sin destino `Repository` y `Documentation`.
 - **Sidebar colapsable** (desktop): el `<flux:sidebar collapsible>` se colapsa a barra de iconos. El estado se persiste en `localStorage['flux-sidebar-collapsed-desktop']` (gestionado por Flux). `resources/views/partials/head.blade.php` siembra el valor `true` en la primera visita, por lo que arranca **colapsado por defecto**; cada toggle posterior lo sobrescribe. En móvil conserva el overlay. Al colapsar en escritorio, los grupos desplegables (`<flux:sidebar.group>`) se convierten automáticamente en un flyout dropdown hover.
 - **Botón de colapso en el sidebar**: `<flux:sidebar.collapse>` en el header del sidebar (patrón oficial de Flux). Al colapsar, el logo se oculta al hacer hover y es sustituido por el botón de expansión; por eso el botón debe estar presente en desktop (no usar `lg:hidden`).
 - **Marca del sidebar**: junto al logo, `x-app-logo` muestra el título en negrita y, debajo en texto más pequeño, `tagline()` (configurado o el default `APP_TAGLINE`). Si no hay lema, solo se muestra el título; si falta el título configurado, se usa `APP_NAME`. Los textos largos se truncan para dejar disponible el botón de colapso.
@@ -625,7 +626,20 @@ El contenido se declara en `App\Support\Help\HelpRegistry` desde el `boot()` del
 
 La documentación de un package de customización (`source` distinto de `lnx`) aparece **siempre antes** que la del starterkit, sin importar su `order`. Dentro de cada source se respeta el `order` declarado y, en empate, el slug. La prioridad se aplica en el listado, la búsqueda y `ProductHelpSearchTool`, de modo que las guías propias de la app derivada prevalezcan sobre las genéricas del kit.
 
-Para añadir una guía propia: crea las claves `help.guides.<clave>.{title,summary,body}` en ambos idiomas y registra el slug `lnx.<clave>` en `HelpServiceProvider`; para una FAQ usa `help.faq.<clave>` y `type => 'faq'`. El cuerpo se renderiza con `Str::markdown` y `html_input: strip` / `allow_unsafe_links: false`, así que nunca se ejecuta HTML crudo ni se permiten enlaces inseguros. La fase 1 no persiste contenido ni ofrece edición desde la UI.
+Para añadir una guía propia: crea las claves `help.guides.<clave>.{title,summary,body}` en ambos idiomas y registra el slug `lnx.<clave>` en `HelpServiceProvider`; para una FAQ usa `help.faq.<clave>` y `type => 'faq'`. El cuerpo se renderiza con `Str::markdown` y `html_input: strip` / `allow_unsafe_links: false`, así que nunca se ejecuta HTML crudo ni se permiten enlaces inseguros.
+
+### Persistencia, `help:sync` y edición por root
+
+El catálogo declarado se materializa en las tablas `help_groups` y `help_entries` con `php artisan help:sync`, que también se ejecuta en `migrate --seed`, `db:seed` y `lnx:reset`. Sigue el modelo del sidebar: el paquete propone y root decide.
+
+- **Tres estados.** **Auto**: la entrada sigue intacta y se sincroniza con su paquete. **Editado por root** (`overridden`): root cambió textos es/en, roles, orden o visibilidad, y la sincronización no lo pisa. **Disponible**: el paquete la declara pero aún no existe en la base, por ejemplo tras actualizar un paquete antes de sincronizar.
+- **Precedencia y actualización.** Una fila `overridden` conserva sus textos y su visibilidad, mientras la sincronización sigue actualizando las claves de traducción del paquete para los campos que root no editó. Reordenar u ocultar marca `overridden`.
+- **Idempotencia.** Ejecutar `help:sync` dos veces no duplica, no reordena ni registra actividad nueva.
+- **Desaparición.** Si un paquete deja de declarar una entrada, la sincronización la **oculta** (`enabled = false`) y no la borra; una decisión previa de root no se resucita.
+- **Editor.** `/admin/help` (`admin.help.index`, solo `root`) lista por paquete, tipo y estado, con búsqueda y filtros. Permite editar título, resumen y cuerpo en pestañas es/en, ajustar roles, reordenar, ocultar/publicar, publicar entradas disponibles y «restaurar por defecto», que limpia el override y devuelve el valor del paquete.
+- **Auditoría.** Creaciones, ediciones, ocultamientos, reordenamientos, publicaciones y restauraciones se registran en Actividad administrativa.
+
+`App\Support\Help\HelpCatalog` resuelve lo que se renderiza: combina el registro en memoria con las filas persistidas, así que una instalación sin sincronizar sigue mostrando la ayuda y una entrada oculta por root nunca aparece.
 
 ## Feedback y soporte
 
@@ -694,7 +708,7 @@ lnx incluye un módulo de chat interactivo conversacional en `/chat` (`chat`) ac
 ### Contexto explícito de página y herramientas de lectura
 
 - El chat soporta recibir contexto explícito de página (`<page_context>`), sanitized en servidor sin enviar formularios ni datos sensibles.
-- Incluye la herramienta de lectura `App\Ai\Tools\ProductHelpSearchTool`: re-valida la autenticación en cada ejecución, consulta `HelpRegistry` con los roles del usuario y devuelve como máximo tres entradas con título, resumen y enlace al Centro de ayuda. Una entrada restringida nunca se filtra por el chat.
+- Incluye la herramienta de lectura `App\Ai\Tools\ProductHelpSearchTool`: re-valida la autenticación en cada ejecución, consulta `HelpCatalog` con los roles del usuario y devuelve como máximo tres entradas con título, resumen y enlace al Centro de ayuda. Una entrada restringida nunca se filtra por el chat.
 
 ### Extender en proyectos derivados
 

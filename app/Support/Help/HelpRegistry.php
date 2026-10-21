@@ -102,10 +102,20 @@ class HelpRegistry
      */
     public function all(User $user): array
     {
-        $entries = array_values(array_filter(
-            $this->entries,
-            fn (array $entry): bool => $this->isVisible($entry, $user),
+        return array_values(array_filter(
+            $this->declared(),
+            fn (array $entry): bool => $this->visible($entry, $user),
         ));
+    }
+
+    /**
+     * Every declared entry, without filtering by identity, in catalog order.
+     *
+     * @return list<array{source: string, slug: string, type: string, group: string, title: string, summary: string, body: string, roles: list<string>, order: int, route: string|null}>
+     */
+    public function declared(): array
+    {
+        $entries = array_values($this->entries);
 
         usort($entries, fn (array $left, array $right): int => $this->compare($left, $right));
 
@@ -140,7 +150,7 @@ class HelpRegistry
     {
         $entry = $this->entries[$slug] ?? null;
 
-        return $entry !== null && $this->isVisible($entry, $user) ? $entry : null;
+        return $entry !== null && $this->visible($entry, $user) ? $entry : null;
     }
 
     /**
@@ -208,7 +218,7 @@ class HelpRegistry
      *
      * @param  array{roles: list<string>}  $entry
      */
-    private function isVisible(array $entry, User $user): bool
+    public function visible(array $entry, User $user): bool
     {
         if ($user->hasRole(Role::Root)) {
             return true;
