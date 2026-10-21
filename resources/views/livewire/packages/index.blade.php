@@ -5,6 +5,7 @@
         icon="cube"
     >
         <x-slot:actions>
+            <x-help-topic slug="lnx.packages" />
             <flux:button
                 icon="arrow-path"
                 wire:click="checkForUpdates"

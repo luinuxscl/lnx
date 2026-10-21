@@ -3,7 +3,11 @@
         :title="__('General settings')"
         :subtitle="__('Manage the site identity, branding and advanced options.')"
         icon="cog-6-tooth"
-    />
+    >
+        <x-slot:actions>
+            <x-help-topic slug="lnx.general-settings" />
+        </x-slot:actions>
+    </x-lnx-ui::page-header>
 
     <form wire:submit="save" class="mt-6 w-full max-w-2xl space-y-8">
         <div class="space-y-6">

@@ -22,7 +22,7 @@ class NotificationTypeRegistry
     /**
      * Declared types, keyed by their notification class.
      *
-     * @var array<string, array{message: callable, url: callable|null, permission: string|null}>
+     * @var array<string, array{message: callable, url: callable|null, help: callable|null, permission: string|null}>
      */
     private array $types = [];
 
@@ -30,8 +30,9 @@ class NotificationTypeRegistry
      * Declare the notification types owned by a package.
      *
      * Each type is keyed by the notification class the package sends and
-     * declares a `message` callable (and optionally a `url` callable and a
-     * `permission` the identity must hold to get the link).
+     * declares a `message` callable (and optionally a `url` callable, a
+     * `help` callable that returns a help center slug, and a `permission` the
+     * identity must hold to get the link).
      *
      * @param  array<array-key, mixed>  $types
      *
@@ -59,6 +60,11 @@ class NotificationTypeRegistry
                 throw new InvalidArgumentException("Notification [{$class}] must declare a callable url or null.");
             }
 
+            $help = $definition['help'] ?? null;
+            if ($help !== null && ! is_callable($help)) {
+                throw new InvalidArgumentException("Notification [{$class}] must declare a callable help or null.");
+            }
+
             $permission = $definition['permission'] ?? null;
             if ($permission !== null && (! is_string($permission) || $permission === '')) {
                 throw new InvalidArgumentException("Notification [{$class}] must declare a non-empty permission or null.");
@@ -67,6 +73,7 @@ class NotificationTypeRegistry
             $this->types[$class] = [
                 'message' => $definition['message'],
                 'url' => $url,
+                'help' => $help,
                 'permission' => $permission,
             ];
         }
@@ -94,6 +101,24 @@ class NotificationTypeRegistry
         $message = call_user_func($type['message'], $notification);
 
         return is_string($message) ? $message : null;
+    }
+
+    /**
+     * The help center slug declared for a notification, or null when the type
+     * does not declare one. Visibility is checked by the caller, which renders
+     * the link only when the identity may read the entry.
+     */
+    public function helpTopic(DatabaseNotification $notification): ?string
+    {
+        $type = $this->types[$notification->type] ?? null;
+
+        if ($type === null || $type['help'] === null) {
+            return null;
+        }
+
+        $slug = call_user_func($type['help'], $notification);
+
+        return is_string($slug) && $slug !== '' ? $slug : null;
     }
 
     /**

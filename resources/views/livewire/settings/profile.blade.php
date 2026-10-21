@@ -4,6 +4,9 @@
     <flux:heading level="2" class="sr-only">{{ __('Profile settings') }}</flux:heading>
 
     <x-settings.layout :heading="__('Profile')" :subheading="__('Update your name')">
+        <x-slot:help>
+            <x-help-topic slug="lnx.profile-security" />
+        </x-slot:help>
         <div class="my-6 space-y-4">
             <flux:heading level="3">{{ __('Avatar') }}</flux:heading>
 

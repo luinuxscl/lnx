@@ -1,6 +1,6 @@
 # Centro de ayuda integrado
 
-> **Estado:** fases 1 y 15 implementadas, integradas y cerradas (2026-10-21) · **Etapa 16 abierta** · **Referencia:** [#78](https://github.com/luinuxscl/lnx/issues/78)
+> **Estado:** fases 1 y 15 implementadas y cerradas (2026-10-21) · **Etapa 16 en curso** ([#79](https://github.com/luinuxscl/lnx/issues/79) implementada) · **Referencia:** [#78](https://github.com/luinuxscl/lnx/issues/78)
 > Centraliza en una sola vista la documentación, las preguntas frecuentes y el acceso a soporte, y define cómo cada paquete de personalización aporta sus propias entradas.
 
 ---
@@ -99,6 +99,7 @@ Reglas del registro:
 - Cada artículo ofrece «¿No resolvió tu duda?», que abre el panel de soporte con el artículo como contexto.
 - El ticket registra el slug en una columna nullable `help_topic`; nunca se envía el cuerpo del artículo ni datos del formulario.
 - `ProductHelpSearchTool` consulta el registro, respeta roles y devuelve como máximo tres entradas con título, resumen y enlace.
+- Cada pantalla clave enlaza su guía con `<x-help-topic slug="..." />`, que no renderiza nada si el tema no existe o no es visible para la identidad. Las notificaciones declaran su tema con la clave `help` del registro de tipos y muestran «Leer la guía» solo si la entrada es legible.
 
 ### 4.5 Contenido de lnx
 
@@ -127,7 +128,7 @@ El contenido propio se declara desde un provider de la app con Markdown bilingü
 | 15 | [#81](https://github.com/luinuxscl/lnx/issues/81) (cerrada) | Persistencia, `help:sync` idempotente, precedencia de root y auditoría | #78, #75 |
 | 15 | [#76](https://github.com/luinuxscl/lnx/issues/76) (cerrada) | Editor `/admin/help` para root | #81 |
 | 16 | [#80](https://github.com/luinuxscl/lnx/issues/80) | Búsqueda semántica con Knowledge y citas en el chat | #75, #81 |
-| 16 | [#79](https://github.com/luinuxscl/lnx/issues/79) | Ayuda contextual y enlaces profundos desde componentes y notificaciones | #75, #82 |
+| 16 | [#79](https://github.com/luinuxscl/lnx/issues/79) (implementada) | Ayuda contextual y enlaces profundos desde componentes y notificaciones | #75, #82 |
 
 **Orden de ejecución:** #78 → #75 → #77 → #82 (fase 14, integrada el 2026-10-20) → #81 → #76 (fase 15, integrada el 2026-10-21). La fase 16 ya puede empezar: indexa el contenido editable que dejó la fase 15.
 
@@ -143,7 +144,7 @@ Los criterios de aceptación detallados viven en cada issue de GitHub; este docu
 
 ## 7. Cómo retomar el trabajo
 
-1. Consultar el estado real en GitHub: `gh issue list --state open` (fases 14 y 15 cerradas; quedan #80 y #79).
+1. Consultar el estado real en GitHub: `gh issue list --state open` (fases 14 y 15 cerradas; la fase 16 tiene #79 implementada y #80 pendiente).
 2. Crear la rama desde `develop`: `git checkout develop && git pull && git checkout -b feature/help-context`.
 3. Implementar en el orden de la tabla, empezando por la fase 16.
 4. Para cada issue, leer `.ai/rules/index.md` y las reglas aplicables antes de editar.

@@ -1,5 +1,9 @@
 <section class="w-full space-y-6">
-    <x-lnx-ui::page-header :title="__('Users')" icon="users" color="blue" />
+    <x-lnx-ui::page-header :title="__('Users')" icon="users" color="blue">
+        <x-slot:actions>
+            <x-help-topic slug="lnx.users-invitations" />
+        </x-slot:actions>
+    </x-lnx-ui::page-header>
 
     <div class="grid grid-cols-12 gap-4">
         <x-lnx-ui::stat-card

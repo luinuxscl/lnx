@@ -10,8 +10,16 @@
     <flux:separator class="md:hidden" />
 
     <div class="flex-1 self-stretch max-md:pt-6">
-        <flux:heading>{{ $heading ?? '' }}</flux:heading>
-        <flux:subheading>{{ $subheading ?? '' }}</flux:subheading>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <flux:heading>{{ $heading ?? '' }}</flux:heading>
+                <flux:subheading>{{ $subheading ?? '' }}</flux:subheading>
+            </div>
+
+            @isset($help)
+                {{ $help }}
+            @endisset
+        </div>
 
         <div class="mt-5 w-full max-w-lg">
             {{ $slot }}
