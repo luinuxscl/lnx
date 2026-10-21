@@ -279,6 +279,7 @@ public function boot(): void
 - **Slug obligatorio y propio.** Cada entrada se indexa por un slug con el prefijo del paquete (`luz.`). Un slug vacío, sin prefijo o duplicado lanza `InvalidArgumentException`.
 - **Campos obligatorios.** `type` (`article` o `faq`), `group`, `title`, `summary` y `body` son claves de traducción no vacías; `roles` es un array de valores de `App\Enums\Role`, `order` un entero y `route` una ruta nombrada existente o `null`.
 - **Visibilidad.** `root` ve todo lo declarado. El resto ve las entradas sin `roles` y las que coinciden con alguno de sus roles. Nada restringido aparece en el listado, la búsqueda, un enlace profundo ni en `ProductHelpSearchTool`.
+- **Prioridad de la customización.** Toda entrada de un `source` distinto de `lnx` se muestra **siempre por encima** del contenido del starterkit, con independencia de su `order`. Dentro de cada source se respeta `order` y, en empate, el slug. La regla aplica al listado, la búsqueda y `ProductHelpSearchTool`.
 - **Contenido localizado.** El cuerpo se resuelve al idioma actual y se renderiza con `Str::markdown(..., ['html_input' => 'strip', 'allow_unsafe_links' => false])`; nunca se ejecuta HTML crudo ni se permiten enlaces inseguros.
 - **Sin base de datos.** En la fase 1 el registro es en memoria y se alimenta en cada request; la persistencia y el editor de root llegan en la fase 15 del Centro de ayuda.
 - **Contenido del kit.** lnx declara sus propias guías desde `App\Providers\HelpServiceProvider` con Markdown bilingüe en `lang/es/help.php` y `lang/en/help.php`.

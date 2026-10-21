@@ -88,7 +88,8 @@ it('lets root read every declared entry', function () {
     $this->actingAs($root)->get(route('help.index'))
         ->assertOk()
         ->assertSee('Primeros pasos')
-        ->assertSee('Gestión de usuarios');
+        ->assertSee('Gestión de usuarios')
+        ->assertSeeInOrder(['demo.getting-started', 'lnx.getting-started']);
 
     $this->actingAs($root)->get(route('help.index', ['tab' => 'faq', 'topic' => 'demo.users']))
         ->assertOk()

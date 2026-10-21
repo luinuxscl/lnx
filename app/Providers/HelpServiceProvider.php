@@ -17,7 +17,7 @@ class HelpServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        app(HelpRegistry::class)->register('lnx', [
+        app(HelpRegistry::class)->register(HelpRegistry::STARTERKIT_SOURCE, [
             ...$this->guides(),
             ...$this->faqs(),
         ]);

@@ -144,6 +144,23 @@ it('filters by role, lets root see everything and sorts by order', function () {
         ->and($registry->find('demo.missing', $root))->toBeNull();
 });
 
+it('always ranks customization packages above the starterkit', function () {
+    $registry = new HelpRegistry;
+
+    $registry->register(HelpRegistry::STARTERKIT_SOURCE, [
+        'lnx.first' => helpEntry(['order' => 1]),
+        'lnx.second' => helpEntry(['order' => 2]),
+    ]);
+
+    $registry->register('luz', [
+        'luz.second' => helpEntry(['order' => 20]),
+        'luz.first' => helpEntry(['order' => 10]),
+    ]);
+
+    expect(array_column($registry->all(User::factory()->create()), 'slug'))
+        ->toBe(['luz.first', 'luz.second', 'lnx.first', 'lnx.second']);
+});
+
 it('searches the resolved title, summary and body case-insensitively and respects roles', function () {
     $registry = new HelpRegistry;
     registerDemoEntries($registry);
@@ -190,7 +207,10 @@ it('receives entries from a package provider during boot', function () {
     $root->assignRole(Role::Root);
 
     $entries = collect(app(HelpRegistry::class)->all($root));
+    $slugs = array_column($entries->all(), 'slug');
 
     expect($entries->firstWhere('slug', 'demo.getting-started'))->not->toBeNull()
-        ->and($entries->firstWhere('slug', 'demo.users')['roles'])->toBe(['admin']);
+        ->and($entries->firstWhere('slug', 'demo.users')['roles'])->toBe(['admin'])
+        ->and(array_slice($slugs, 0, 3))->toBe(['demo.getting-started', 'demo.users', 'demo.faq'])
+        ->and($slugs[3])->toBe('lnx.getting-started');
 });

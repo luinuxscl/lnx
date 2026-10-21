@@ -623,6 +623,8 @@ El detalle de una entrada usa `?topic=<slug>` (por ejemplo `/help?tab=faq&topic=
 
 El contenido se declara en `App\Support\Help\HelpRegistry` desde el `boot()` del provider de cada paquete. lnx publica sus 15 guías y 15 FAQ desde `App\Providers\HelpServiceProvider`, con Markdown bilingüe en `lang/es/help.php` y `lang/en/help.php`. Cada entrada declara `type` (`article` o `faq`), `group`, `title`, `summary`, `body`, `roles` (valores de `App\Enums\Role`; vacío = toda cuenta autenticada), `order` y una `route` opcional. `root` ve todo; el resto solo las entradas sin restricción o con alguno de sus roles. El contrato completo y el ejemplo de registro están en [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.8.
 
+La documentación de un package de customización (`source` distinto de `lnx`) aparece **siempre antes** que la del starterkit, sin importar su `order`. Dentro de cada source se respeta el `order` declarado y, en empate, el slug. La prioridad se aplica en el listado, la búsqueda y `ProductHelpSearchTool`, de modo que las guías propias de la app derivada prevalezcan sobre las genéricas del kit.
+
 Para añadir una guía propia: crea las claves `help.guides.<clave>.{title,summary,body}` en ambos idiomas y registra el slug `lnx.<clave>` en `HelpServiceProvider`; para una FAQ usa `help.faq.<clave>` y `type => 'faq'`. El cuerpo se renderiza con `Str::markdown` y `html_input: strip` / `allow_unsafe_links: false`, así que nunca se ejecuta HTML crudo ni se permiten enlaces inseguros. La fase 1 no persiste contenido ni ofrece edición desde la UI.
 
 ## Feedback y soporte

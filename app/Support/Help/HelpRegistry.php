@@ -21,6 +21,12 @@ class HelpRegistry
     public const TYPES = ['article', 'faq'];
 
     /**
+     * Source reserved for the starterkit's own content. Every other source is
+     * treated as a customization and always renders above it.
+     */
+    public const STARTERKIT_SOURCE = 'lnx';
+
+    /**
      * Declared entries, keyed by their slug.
      *
      * @var array<string, array{source: string, slug: string, type: string, group: string, title: string, summary: string, body: string, roles: list<string>, order: int, route: string|null}>
@@ -86,7 +92,11 @@ class HelpRegistry
     }
 
     /**
-     * Every entry the identity may read, ordered by their declared order.
+     * Every entry the identity may read.
+     *
+     * Customization packages always rank above the starterkit, regardless of
+     * their declared order. Within each source, entries keep their declared
+     * order and then sort by slug.
      *
      * @return list<array{source: string, slug: string, type: string, group: string, title: string, summary: string, body: string, roles: list<string>, order: int, route: string|null}>
      */
@@ -97,9 +107,28 @@ class HelpRegistry
             fn (array $entry): bool => $this->isVisible($entry, $user),
         ));
 
-        usort($entries, fn (array $left, array $right): int => [$left['order'], $left['slug']] <=> [$right['order'], $right['slug']]);
+        usort($entries, fn (array $left, array $right): int => $this->compare($left, $right));
 
         return $entries;
+    }
+
+    /**
+     * Sort customization entries before the starterkit's own content.
+     *
+     * @param  array{source: string, order: int, slug: string}  $left
+     * @param  array{source: string, order: int, slug: string}  $right
+     */
+    private function compare(array $left, array $right): int
+    {
+        return [
+            $left['source'] === self::STARTERKIT_SOURCE ? 1 : 0,
+            $left['order'],
+            $left['slug'],
+        ] <=> [
+            $right['source'] === self::STARTERKIT_SOURCE ? 1 : 0,
+            $right['order'],
+            $right['slug'],
+        ];
     }
 
     /**
