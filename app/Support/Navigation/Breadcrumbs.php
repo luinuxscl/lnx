@@ -25,6 +25,7 @@ class Breadcrumbs
      */
     private const SECTIONS = [
         'dashboard' => ['label' => 'Dashboard', 'route' => 'dashboard'],
+        'help' => ['label' => 'Help center', 'route' => 'help.index'],
         'admin.users.' => ['label' => 'Users', 'route' => 'admin.users.index'],
         'admin.settings.' => ['label' => 'Settings', 'route' => 'admin.settings.edit'],
         'settings.' => ['label' => 'Settings', 'route' => 'profile.edit'],

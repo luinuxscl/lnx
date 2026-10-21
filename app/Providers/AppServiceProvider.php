@@ -11,6 +11,7 @@ use App\Mail\RecordingMailManager;
 use App\Mcp\McpToolRegistry;
 use App\Models\User;
 use App\Support\DevRootCredentials;
+use App\Support\Help\HelpRegistry;
 use App\Support\Notifications\NotificationTypeRegistry;
 use App\Support\Packages\PackageRegistry;
 use App\Support\Permissions\PermissionRegistry;
@@ -38,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(AiApplicationRegistry::class);
         $this->app->singleton(OpenRouterStreamCosts::class);
         $this->app->singleton(StreamCostParser::class);
+        $this->app->singleton(HelpRegistry::class);
         $this->app->singleton(McpToolRegistry::class);
         $this->app->singleton(NotificationTypeRegistry::class);
         $this->app->singleton(PackageRegistry::class);

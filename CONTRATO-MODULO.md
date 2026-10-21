@@ -1,6 +1,6 @@
 # Contrato de módulo
 
-> **Estado:** implementado (8 de 8 puntos) · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)) y **Etapa 11** ([#53](https://github.com/luinuxscl/lnx/issues/53)) · **Última revisión:** 2026-10-14
+> **Estado:** implementado (9 de 9 puntos) · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)), **Etapa 11** ([#53](https://github.com/luinuxscl/lnx/issues/53)) y **Centro de ayuda** ([#78](https://github.com/luinuxscl/lnx/issues/78)) · **Última revisión:** 2026-10-20
 > Define **qué puede declarar un módulo (paquete Composer) en lnx** y **bajo qué reglas**. El contrato se deriva del módulo real que lo valida: **Luz** (`luinuxscl/luz`). Nada entra aquí que Luz no use.
 
 ---
@@ -36,6 +36,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | 6 | **Escritura por MCP declarable** | ✅ Implementado (§4) |
 | 7 | **Skills del módulo vía Boost** | ✅ Documentado (§3.3) |
 | 8 | **Identidad por defecto**: el paquete aporta sus defaults de marca con prioridad sobre el kit | ✅ Implementado (§3.7) |
+| 9 | **Documentación y FAQ**: el paquete publica guías y preguntas frecuentes en el Centro de ayuda, filtradas por rol | ✅ Implementado (§3.8) |
 
 ### 3.1 Permisos propios (implementado)
 
@@ -242,6 +243,46 @@ class LuzIdentitySeeder extends Seeder
 - **Ejecución.** `SeedIdentity` corre desde `DatabaseSeeder` (`migrate --seed`, `db:seed`) y desde `php artisan lnx:reset`, tras roles y navegación y antes de los datos demo.
 - **Assets.** El paquete es responsable de publicar sus logos/iconos en el disco `public` y pasar la ruta relativa; `Setting::logoUrl()` y compañía ya la resuelven.
 - **Idioma y zona horaria.** Se guardan en columnas propias de `settings` (`locale`, `timezone`), editables por root en **Configuración general**, y `ApplySiteSettings` las aplica a la request (el idioma del sitio es el fallback de `SetLocale`).
+
+### 3.8 Documentación y FAQ del módulo (implementado)
+
+Un paquete publica sus **guías y preguntas frecuentes** en el Centro de ayuda (`/help`) registrándolas en el `boot()` de su provider. El kit no muestra contenido por el simple hecho de que el paquete esté en `vendor/`: solo aparece lo declarado y solo para las identidades autorizadas.
+
+```php
+use App\Support\Help\HelpRegistry;
+
+public function boot(): void
+{
+    app(HelpRegistry::class)->register('luz', [
+        'luz.primeros-pasos' => [
+            'type' => 'article',                         // article | faq
+            'group' => 'luz::help.groups.getting_started',
+            'title' => 'luz::help.getting_started.title',
+            'summary' => 'luz::help.getting_started.summary',
+            'body' => 'luz::help.getting_started.body',   // Markdown traducido
+            'roles' => ['admin'],                         // vacío = toda identidad autenticada
+            'order' => 1,
+            'route' => 'luz.dashboard',                   // opcional: enlace «Ir a la función»
+        ],
+        'luz.faq-accesos' => [
+            'type' => 'faq',
+            'group' => 'luz::help.groups.faq',
+            'title' => 'luz::help.faq.access.title',
+            'summary' => 'luz::help.faq.access.summary',
+            'body' => 'luz::help.faq.access.body',
+            'order' => 2,
+        ],
+    ]);
+}
+```
+
+- **Slug obligatorio y propio.** Cada entrada se indexa por un slug con el prefijo del paquete (`luz.`). Un slug vacío, sin prefijo o duplicado lanza `InvalidArgumentException`.
+- **Campos obligatorios.** `type` (`article` o `faq`), `group`, `title`, `summary` y `body` son claves de traducción no vacías; `roles` es un array de valores de `App\Enums\Role`, `order` un entero y `route` una ruta nombrada existente o `null`.
+- **Visibilidad.** `root` ve todo lo declarado. El resto ve las entradas sin `roles` y las que coinciden con alguno de sus roles. Nada restringido aparece en el listado, la búsqueda, un enlace profundo ni en `ProductHelpSearchTool`.
+- **Prioridad de la customización.** Toda entrada de un `source` distinto de `lnx` se muestra **siempre por encima** del contenido del starterkit, con independencia de su `order`. Dentro de cada source se respeta `order` y, en empate, el slug. La regla aplica al listado, la búsqueda y `ProductHelpSearchTool`.
+- **Contenido localizado.** El cuerpo se resuelve al idioma actual y se renderiza con `Str::markdown(..., ['html_input' => 'strip', 'allow_unsafe_links' => false])`; nunca se ejecuta HTML crudo ni se permiten enlaces inseguros.
+- **Sin base de datos.** En la fase 1 el registro es en memoria y se alimenta en cada request; la persistencia y el editor de root llegan en la fase 15 del Centro de ayuda.
+- **Contenido del kit.** lnx declara sus propias guías desde `App\Providers\HelpServiceProvider` con Markdown bilingüe en `lang/es/help.php` y `lang/en/help.php`.
 
 ## 4. Escritura por MCP (implementado)
 

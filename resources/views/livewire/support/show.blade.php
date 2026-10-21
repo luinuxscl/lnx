@@ -9,7 +9,7 @@
             <flux:badge>{{ __(str_replace('_', ' ', ucfirst($ticket->status))) }}</flux:badge>
         </x-slot:meta>
     </x-lnx-ui::page-header>
-    <flux:card class="space-y-3"><flux:heading level="2">{{ __('Request') }}</flux:heading><flux:text class="whitespace-pre-wrap">{{ $ticket->description }}</flux:text><flux:text>{{ __('Type') }}: {{ __(ucfirst($ticket->type)) }} · {{ __('Screen') }}: {{ $ticket->screen ?: '—' }}</flux:text>@if ($ticket->resolution)<flux:callout><flux:callout.text>{{ __('Resolution') }}: {{ $ticket->resolution }}</flux:callout.text></flux:callout>@endif
+    <flux:card class="space-y-3"><flux:heading level="2">{{ __('Request') }}</flux:heading><flux:text class="whitespace-pre-wrap">{{ $ticket->description }}</flux:text><flux:text>{{ __('Type') }}: {{ __(ucfirst($ticket->type)) }} · {{ __('Screen') }}: {{ $ticket->screen ?: '—' }}</flux:text>@if ($root && $ticket->help_topic)<flux:text>{{ __('Help topic') }}: {{ $ticket->help_topic }}</flux:text>@endif @if ($ticket->resolution)<flux:callout><flux:callout.text>{{ __('Resolution') }}: {{ $ticket->resolution }}</flux:callout.text></flux:callout>@endif
         @foreach ($ticket->attachments as $attachment) @if (! $attachment->support_message_id)<a class="underline" href="{{ route('support.attachments.show', $attachment) }}" target="_blank">{{ $attachment->original_name }}</a>@endif @endforeach
     </flux:card>
     @if ($root)

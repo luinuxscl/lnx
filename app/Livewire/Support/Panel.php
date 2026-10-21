@@ -30,6 +30,8 @@ class Panel extends Component
 
     public ?string $routeName = null;
 
+    public ?string $helpTopic = null;
+
     public ?string $openedAt = null;
 
     public ?int $windowWidth = null;
@@ -58,6 +60,9 @@ class Panel extends Component
         $this->requestKey = (string) Str::uuid();
         $this->screen = Str::limit(strip_tags((string) ($context['screen'] ?? '')), 160, '');
         $this->routeName = Str::limit((string) ($context['route_name'] ?? ''), 160, '');
+        $this->helpTopic = is_string($context['help_topic'] ?? null)
+            ? Str::limit($context['help_topic'], 160, '')
+            : null;
         $this->openedAt = now()->toIso8601String();
         $this->windowWidth = isset($context['width']) ? min(65535, max(0, (int) $context['width'])) : null;
         $this->windowHeight = isset($context['height']) ? min(65535, max(0, (int) $context['height'])) : null;
@@ -116,6 +121,7 @@ class Panel extends Component
             ...$data,
             'screen' => $this->screen,
             'route_name' => $this->routeName,
+            'help_topic' => $this->helpTopic,
             'opened_at' => $this->openedAt,
             'window_width' => $this->windowWidth,
             'window_height' => $this->windowHeight,
@@ -123,7 +129,7 @@ class Panel extends Component
             'theme' => $this->theme,
             'app_version' => $this->appVersion,
         ], $this->image, $this->requestKey);
-        $this->reset(['showPanel', 'title', 'description', 'blocking', 'image', 'proposalTitle', 'proposalDescription']);
+        $this->reset(['showPanel', 'title', 'description', 'blocking', 'image', 'proposalTitle', 'proposalDescription', 'helpTopic']);
         $this->redirectRoute('support.show', $ticket, navigate: true);
     }
 

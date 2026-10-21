@@ -50,13 +50,14 @@ it('splits the root sidebar into main and bottom regions', function () {
     expect($developerItems)->toContain('Support')->toContain('Chat')->toContain('Installed packages');
 });
 
-it('gives admin a curated administration region and standard users none', function () {
+it('gives admin a curated administration region and standard users the help entry', function () {
     $admin = collect(app(MenuResolver::class)->resolve(regionUser(Role::Admin)));
     expect($admin->where('region', NavigationRegion::Bottom->value)->pluck('label')->all())
         ->toContain('Administration');
 
     $user = collect(app(MenuResolver::class)->resolve(regionUser()));
-    expect($user->where('region', NavigationRegion::Bottom->value))->toHaveCount(0);
+    expect($user->where('region', NavigationRegion::Bottom->value)->pluck('label')->all())
+        ->toContain('Help center');
 });
 
 it('never autopublishes a route tagged for the bottom region', function () {
