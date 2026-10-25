@@ -475,7 +475,7 @@ Las reglas vigentes (policies) se reutilizan en servidor en el descubrimiento y 
 | `search-users` | `root`/`admin` | Búsqueda de usuarios por nombre/correo y estado, con paginación (sin contraseñas, 2FA ni tokens). |
 | `get-administrative-activity` | `root` | Historial administrativo con filtros y paginación. |
 
-Además, un paquete puede declarar herramientas de **escritura** (ver [CONTRATO-MODULO.md](CONTRATO-MODULO.md) §4). No son parte de la lista fija: se registran con `App\Mcp\McpToolRegistry`, solo aparecen cuando `MCP_SERVER_ALLOW_WRITES=true` y la identidad tiene el permiso declarado en `#[WritesData]`, y con el interruptor apagado no se registran ni se anuncian.
+Además, un paquete puede declarar herramientas de **lectura** (extendiendo `App\Mcp\Tools\ReadOnlyTool`) y de **escritura** (ver [CONTRATO-MODULO.md](CONTRATO-MODULO.md) §4). No son parte de la lista fija: se registran con `App\Mcp\McpToolRegistry`; las lecturas se anuncian en `list-capabilities` solo para las identidades que pueden invocarlas, y las escrituras solo aparecen cuando `MCP_SERVER_ALLOW_WRITES=true` y la identidad tiene el permiso declarado en `#[WritesData]`. Con el interruptor de escritura apagado no se registran ni se anuncian.
 
 ### Auditoría y retención
 
