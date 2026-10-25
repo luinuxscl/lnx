@@ -35,6 +35,24 @@ abstract class ReadOnlyTool extends Tool
     abstract protected function perform(Request $request): Response|ResponseFactory;
 
     /**
+     * Whether the given user may invoke the tool.
+     */
+    public function allows(User $user): bool
+    {
+        return $this->authorize($user);
+    }
+
+    /**
+     * Register the tool only for identities that may invoke it.
+     */
+    public function shouldRegister(Request $request): bool
+    {
+        $user = $request->user();
+
+        return $user instanceof User && $this->allows($user);
+    }
+
+    /**
      * Authorize, execute and audit the tool invocation.
      */
     final public function handle(Request $request): Response|ResponseFactory

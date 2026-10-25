@@ -2,6 +2,7 @@
 
 namespace App\Mcp;
 
+use App\Mcp\Tools\ReadOnlyTool;
 use App\Mcp\Tools\WriteTool;
 use App\Models\AdministrativeActivity;
 use App\Models\Setting;
@@ -48,9 +49,47 @@ class Capabilities
     public static function availableTo(User $user): array
     {
         return array_values(array_filter(
-            [...self::all(), ...self::writeCapabilities($user)],
+            [...self::all(), ...self::readCapabilities($user), ...self::writeCapabilities($user)],
             fn (array $capability): bool => self::allows($user, $capability['name']),
         ));
+    }
+
+    /**
+     * The read capabilities declared by packages that this user may invoke.
+     *
+     * Package read tools are registered in {@see McpToolRegistry} like write
+     * tools. They are not part of the kit's static catalog, so discovery has to
+     * merge them for the connected identity.
+     *
+     * @return array<int, array{name: string, description: string, requirements: string}>
+     */
+    private static function readCapabilities(User $user): array
+    {
+        $capabilities = [];
+        $seen = array_column(self::all(), 'name');
+
+        foreach (app(McpToolRegistry::class)->all() as $class) {
+            $tool = app($class);
+
+            if (! $tool instanceof ReadOnlyTool || ! $tool->allows($user)) {
+                continue;
+            }
+
+            $name = $tool->name();
+
+            if (in_array($name, $seen, true)) {
+                continue;
+            }
+
+            $seen[] = $name;
+            $capabilities[] = [
+                'name' => $name,
+                'description' => $tool->description(),
+                'requirements' => 'declared module permission',
+            ];
+        }
+
+        return $capabilities;
     }
 
     /**
