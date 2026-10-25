@@ -3,7 +3,6 @@
 use App\Livewire\Settings\McpTokens;
 use App\Models\McpToken;
 use App\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\Livewire;
 
 it('renders the MCP access section on the security page', function () {
@@ -62,8 +61,9 @@ it('isolates tokens between users', function () {
     $other = User::factory()->create();
     $token = McpToken::factory()->for($owner)->create();
 
-    expect(fn () => Livewire::actingAs($other)->test(McpTokens::class)->call('confirmRevoke', $token->id))
-        ->toThrow(ModelNotFoundException::class);
+    Livewire::actingAs($other)->test(McpTokens::class)
+        ->call('confirmRevoke', $token->id)
+        ->assertNotFound();
 
     expect($token->fresh()->isRevoked())->toBeFalse();
 });

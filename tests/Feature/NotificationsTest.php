@@ -7,7 +7,6 @@ use App\Livewire\Users\Edit;
 use App\Models\User;
 use App\Notifications\RoleChanged;
 use Database\Seeders\RolePermissionSeeder;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -91,10 +90,13 @@ it('returns 404 for foreign or missing notification IDs even for root', function
     $root = User::factory()->create();
     $root->assignRole(Role::Root);
 
-    expect(fn () => Livewire::actingAs($root)->test(Index::class)->call('markAsRead', $notice->id))
-        ->toThrow(ModelNotFoundException::class);
-    expect(fn () => Livewire::actingAs($root)->test(Index::class)->call('markAsRead', '00000000-0000-0000-0000-000000000000'))
-        ->toThrow(ModelNotFoundException::class);
+    Livewire::actingAs($root)->test(Index::class)
+        ->call('markAsRead', $notice->id)
+        ->assertNotFound();
+
+    Livewire::actingAs($root)->test(Index::class)
+        ->call('markAsRead', '00000000-0000-0000-0000-000000000000')
+        ->assertNotFound();
 
     expect($notice->fresh()->read_at)->toBeNull();
 });
