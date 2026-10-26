@@ -1035,3 +1035,16 @@ resources/css/app.css             Tokens de Tailwind + theming Flux
 .kilo/agent/                      Sub-agentes de Kilo (ui-audit: auditoría visual de vistas con modelo económico de visión)
 tests/                            Suite de Pest
 ```
+
+## Contribuir
+
+Las contribuciones son bienvenidas bajo dos condiciones: firmar el
+[CLA](docs/CLA.md) en el primer pull request y respetar la frontera kit/producto
+(las capacidades genéricas van al kit; la lógica de negocio y el agente van al producto, bajo
+AGPL). Guía completa, entorno de pruebas y convención de commits:
+[CONTRIBUTING.md](CONTRIBUTING.md). Firmas registradas: [CONTRIBUTORS.md](CONTRIBUTORS.md).
+
+## Licencia
+
+MIT © Luis Sepúlveda. Ver [LICENSE](LICENSE). El kit es MIT; el producto construido sobre él se
+publica aparte bajo AGPL-3.0-or-later.
