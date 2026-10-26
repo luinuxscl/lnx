@@ -992,7 +992,7 @@ Los componentes presentacionales reutilizables viven en el paquete Composer priv
 
 En cada aplicación:
 
-- `composer.json`: repositorio VCS privado (`git@github.com:luinuxscl/lnx-ui.git`) y `composer require luinuxscl/lnx-ui`. Para desarrollo local en vivo, superpón temporalmente un repositorio `path` a `../lnx-ui`. El `LnxUiServiceProvider` se autodescubre (`extra.laravel.providers`); no hay que registrarlo a mano. CI y despliegue necesitan acceso al repositorio privado (deploy key o token).
+- `composer.json`: repositorio VCS público (`https://github.com/luinuxscl/lnx-ui.git`) y `composer require luinuxscl/lnx-ui`. Para desarrollo local en vivo, superpón temporalmente un repositorio `path` a `../lnx-ui`. El `LnxUiServiceProvider` se autodescubre (`extra.laravel.providers`); no hay que registrarlo a mano. Al ser un repositorio público, CI y despliegue no necesitan deploy key ni token.
 - `resources/css/app.css`: `@source '../../vendor/luinuxscl/lnx-ui/resources/views';`, porque Tailwind 4 no escanea `vendor/`.
 - Consumo con namespace: `<x-lnx-ui::trend-card ... />`.
 - Override de un componente: `resources/views/vendor/lnx-ui/components/*.blade.php`; Laravel lo resuelve antes que el paquete. `php artisan vendor:publish --tag=lnx-ui-views` publica todas las vistas para copiarlas.
