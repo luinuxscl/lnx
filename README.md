@@ -1,6 +1,23 @@
-# lnx — Base de desarrollo Laravel
+# lnx — base de desarrollo para Laravel
 
-Base de desarrollo personalizada construida sobre el **starter kit oficial de Laravel (Livewire)**. Incluye autenticación completa (Fortify + Passkeys + 2FA), settings y un sistema de theming configurable.
+[![Tests](https://github.com/luinuxscl/lnx/actions/workflows/tests.yml/badge.svg)](https://github.com/luinuxscl/lnx/actions/workflows/tests.yml)
+[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
+
+Base de desarrollo construida sobre el **starter kit oficial de Laravel (Livewire)**, pensada para
+levantar aplicaciones completas y montar módulos de producto encima. Incluye autenticación
+(Fortify + Passkeys + 2FA), permisos por rol, navegación gestionada, theming, APIs, MCP de lectura,
+IA con cuotas y consumo, y despliegue de fábrica.
+
+Es el **kit** de [LikePlatform](https://likeplatform.cl): la base con la que se construyen las
+aplicaciones y, sobre ellas, los módulos de producto.
+
+> **El kit es MIT. El producto es AGPL.**
+> Este repositorio es el kit: puedes usarlo, modificarlo y construir sobre él —incluso de forma
+> comercial— sin obligación de publicar tu aplicación. Los productos y módulos que viven encima
+> (el módulo CRM y su cáscara, y el agente del producto) se publican aparte bajo
+> AGPL-3.0-or-later. Las contribuciones externas requieren CLA.
+
+Mantenido por Like Innovación.
 
 ## Stack
 
@@ -353,7 +370,7 @@ class Patient extends Model implements AccessControlled
 
 ### Credenciales root de desarrollo y alerta de seguridad
 
-Para desarrollo, `.env.example` trae un root listo para usar (**Luis Sepulveda / luinuxscl@gmail.com / password**) para que `php artisan migrate --seed` deje la app operativa al instante. Esas credenciales **nunca** deben llegar a producción, y por eso existen tres capas de defensa:
+Para desarrollo, `.env.example` trae un root listo para usar (**Root / admin@example.com / password**) para que `php artisan migrate --seed` deje la app operativa al instante. Esas credenciales **nunca** deben llegar a producción, y por eso existen tres capas de defensa:
 
 1. **Bloqueo del seeder en producción**: si el entorno es `production` y `ROOT_USER_PASSWORD` sigue siendo el password de desarrollo (`App\Support\DevRootCredentials::PASSWORD`), `RolePermissionSeeder` lanza una excepción y no crea el usuario.
 2. **Log crítico**: con esas credenciales activas en producción, los comandos de consola registran un `Log::critical`; al seedear en local se emite además un warning en consola y en el log.

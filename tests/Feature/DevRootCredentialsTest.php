@@ -7,14 +7,14 @@ use Database\Seeders\RolePermissionSeeder;
 
 beforeEach(function () {
     config()->set('authorization.root_user.name', 'Luis Sepulveda');
-    config()->set('authorization.root_user.email', 'luinuxscl@gmail.com');
+    config()->set('authorization.root_user.email', 'root@example.com');
     config()->set('authorization.root_user.password', DevRootCredentials::PASSWORD);
 });
 
 it('seeds the development root user in non-production environments', function () {
     $this->seed(RolePermissionSeeder::class);
 
-    $root = User::where('email', 'luinuxscl@gmail.com')->first();
+    $root = User::where('email', 'root@example.com')->first();
 
     expect($root)->not->toBeNull()
         ->and($root->name)->toBe('Luis Sepulveda')
@@ -27,7 +27,7 @@ it('refuses to seed the development password in production', function () {
     expect(fn () => app(RolePermissionSeeder::class)->run())
         ->toThrow(RuntimeException::class);
 
-    expect(User::where('email', 'luinuxscl@gmail.com')->exists())->toBeFalse();
+    expect(User::where('email', 'root@example.com')->exists())->toBeFalse();
 });
 
 it('detects the development password while it is still in use', function () {
@@ -35,7 +35,7 @@ it('detects the development password while it is still in use', function () {
 
     expect(DevRootCredentials::isActive())->toBeTrue();
 
-    $root = User::where('email', 'luinuxscl@gmail.com')->firstOrFail();
+    $root = User::where('email', 'root@example.com')->firstOrFail();
     $root->update(['password' => 'a-strong-new-password']);
 
     expect(DevRootCredentials::isActive())->toBeFalse();
@@ -50,7 +50,7 @@ it('does not flag non-root users even with the development password', function (
 it('shows the warning banner to the root user with the development password', function () {
     $this->seed(RolePermissionSeeder::class);
 
-    $root = User::where('email', 'luinuxscl@gmail.com')->firstOrFail();
+    $root = User::where('email', 'root@example.com')->firstOrFail();
 
     $this->actingAs($root)
         ->get('/dashboard')
@@ -62,7 +62,7 @@ it('shows the warning banner to the root user with the development password', fu
 it('hides the warning banner once the root password is changed', function () {
     $this->seed(RolePermissionSeeder::class);
 
-    $root = User::where('email', 'luinuxscl@gmail.com')->firstOrFail();
+    $root = User::where('email', 'root@example.com')->firstOrFail();
     $root->update(['password' => 'a-strong-new-password']);
 
     $this->actingAs($root->fresh())

@@ -2734,7 +2734,7 @@
             "version": "v1.15.0",
             "source": {
                 "type": "git",
-                "url": "git@github.com:luinuxscl/lnx-ui.git",
+                "url": "https://github.com/luinuxscl/lnx-ui.git",
                 "reference": "12eb7e91184325e883a7f505b4b94441e6fbb15a"
             },
             "dist": {
