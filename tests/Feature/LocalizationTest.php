@@ -12,7 +12,7 @@ it('uses spanish as the default locale', function () {
 it('translates the home page into spanish by default', function () {
     $this->get(route('home'))
         ->assertOk()
-        ->assertSee('Bienvenido')
+        ->assertSee('<html lang="es">', false)
         ->assertSee('Iniciar sesión');
 });
 
@@ -27,7 +27,7 @@ it('translates subsequent requests into the selected locale', function () {
     $this->withSession(['locale' => 'en'])
         ->get(route('home'))
         ->assertOk()
-        ->assertSee('Welcome')
+        ->assertSee('<html lang="en">', false)
         ->assertSee('Log in');
 });
 
@@ -35,7 +35,7 @@ it('falls back to the default locale for unsupported session values', function (
     $this->withSession(['locale' => 'fr'])
         ->get(route('home'))
         ->assertOk()
-        ->assertSee('Bienvenido');
+        ->assertSee('<html lang="es">', false);
 });
 
 it('rejects unsupported locales', function () {

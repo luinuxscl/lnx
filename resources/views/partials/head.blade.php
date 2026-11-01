@@ -43,6 +43,20 @@
     @endif
 @endauth
 
+<script>
+    (() => {
+        if (window.localStorage.getItem('lnx.appearance-initialized') !== null) {
+            return;
+        }
+
+        if (window.localStorage.getItem('flux.appearance') === null) {
+            window.localStorage.setItem('flux.appearance', 'light');
+        }
+
+        window.localStorage.setItem('lnx.appearance-initialized', '1');
+    })();
+</script>
+
 @fluxAppearance
 
 <script>
@@ -56,7 +70,7 @@
         };
 
         const applyFluxAppearance = () => {
-            window.Flux?.applyAppearance?.(window.localStorage.getItem('flux.appearance') || 'system');
+            window.Flux?.applyAppearance?.(window.localStorage.getItem('flux.appearance') || 'light');
         };
 
         window.applyFluxTheme = applyFluxTheme;
