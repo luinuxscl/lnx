@@ -43,6 +43,14 @@ Las personalizaciones del proyecto se escriben en las rutas declaradas en `local
 
 ## Procedimiento paso a paso
 
+### Paso 0: Comprobar si el proyecto está al día con lnx
+
+```bash
+python3 scripts/update-agent-kit.py --source-kit <ruta-lnx> --check-version
+```
+
+Compara el `lnx_version` del manifiesto local con el del clon de lnx. Devuelve código 0 si está al día y 1 si está desactualizado o no registra versión. Ten en cuenta que este comando solo compara versiones: la actualización del kit agéntico no sincroniza el código de la aplicación, así que un proyecto puede estar al día en el kit agéntico y desactualizado en la base lnx.
+
 ### Paso 1: Comprobar compatibilidad de la actualización
 Ejecutar la comprobación de compatibilidad con la versión/fuente del kit:
 

@@ -2,6 +2,11 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.23.0] - 2026-11-01
+
+### Añadido
+- **Comprobación de la versión de lnx en proyectos derivados:** `scripts/update-agent-kit.py --check-version` compara el `lnx_version` del proyecto con el del clon de lnx y devuelve código 1 si está desactualizado o no registra versión. La skill `update-agent-kit` documenta el paso previo. Al aplicar una actualización, el manifiesto adopta el `kit_version` del kit pero **conserva** el `lnx_version` del proyecto, porque el kit agéntico no sincroniza el código de la aplicación.
+
 ## [1.22.0] - 2026-10-17
 
 ### Documentado
