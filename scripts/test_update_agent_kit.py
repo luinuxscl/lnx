@@ -67,6 +67,41 @@ class UpdateAgentKitTest(unittest.TestCase):
         errors = updater.check_compatibility(self.target_root, self.source_kit)
         self.assertTrue(any("Incompatibilidad de PHP" in error for error in errors))
 
+    def set_lnx_versions(self, target, source):
+        for root, value in ((self.target_root, target), (self.source_kit, source)):
+            manifest = updater.load_manifest(root)
+            manifest["lnx_version"] = value
+            self.write(root, ".ai/kit-manifest.json", json.dumps(manifest, indent=2))
+
+    def test_check_version_reports_project_up_to_date(self):
+        self.set_lnx_versions("1.0.0", "1.0.0")
+
+        current, lines = updater.check_version(self.target_root, self.source_kit)
+
+        self.assertTrue(current)
+        self.assertIn("al día", "\n".join(lines))
+
+    def test_check_version_reports_outdated_project(self):
+        self.set_lnx_versions("0.9.0", "1.0.0")
+
+        current, lines = updater.check_version(self.target_root, self.source_kit)
+
+        self.assertFalse(current)
+        self.assertIn("desactualizado (0.9.0 < 1.0.0)", "\n".join(lines))
+
+    def test_check_version_reports_missing_version(self):
+        self.set_lnx_versions(None, "1.0.0")
+
+        current, lines = updater.check_version(self.target_root, self.source_kit)
+
+        self.assertFalse(current)
+        self.assertIn("sin lnx_version", "\n".join(lines))
+
+    def test_parse_version_accepts_tag_prefix_and_rejects_incomplete_versions(self):
+        self.assertEqual((1, 2, 3), updater.parse_version("v1.2.3"))
+        self.assertIsNone(updater.parse_version("1.2"))
+        self.assertIsNone(updater.parse_version(None))
+
     def test_analyze_diffs_detects_additions_and_clean_state(self):
         diffs = updater.analyze_diffs(self.target_root, self.source_kit)
         self.assertEqual(1, len(diffs["ok"]))
@@ -128,6 +163,39 @@ class UpdateAgentKitTest(unittest.TestCase):
 
         # Verify new skill file restored/backup state intact
         self.assertEqual("1.0.0", updater.load_manifest(self.target_root)["kit_version"])
+
+    def test_apply_updates_agent_kit_version_but_keeps_project_lnx_version(self):
+        target_manifest = updater.load_manifest(self.target_root)
+        target_manifest["lnx_version"] = "0.9.0"
+        self.write(self.target_root, ".ai/kit-manifest.json", json.dumps(target_manifest, indent=2))
+
+        source_manifest = updater.load_manifest(self.source_kit)
+        source_manifest["kit_version"] = "1.1.0"
+        source_manifest["lnx_version"] = "1.0.0"
+        source_manifest["components"]["kit_maintained"].append(".ai/skills/new-skill/SKILL.md")
+        self.write(self.source_kit, ".ai/kit-manifest.json", json.dumps(source_manifest, indent=2))
+        self.write(self.source_kit, ".ai/skills/new-skill/SKILL.md", "---\nname: new-skill\ndescription: New skill\n---\n")
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(Path(__file__).with_name("update-agent-kit.py")),
+                "--root",
+                str(self.target_root),
+                "--source-kit",
+                str(self.source_kit),
+                "--apply",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(0, result.returncode)
+
+        manifest = updater.load_manifest(self.target_root)
+        self.assertEqual("1.1.0", manifest["kit_version"])
+        self.assertEqual("0.9.0", manifest["lnx_version"])
 
 
 if __name__ == "__main__":
