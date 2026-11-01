@@ -35,7 +35,7 @@ class Appearance
      */
     public static function defaultColorScheme(): string
     {
-        return 'system';
+        return 'light';
     }
 
     /**

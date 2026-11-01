@@ -27,7 +27,7 @@ it('renders the landing page for guests', function () {
         ->assertSee('Acme')
         ->assertSee('Build faster')
         ->assertSee('Log in')
-        ->assertSee('Register');
+        ->assertSee('Get started');
 });
 
 it('no longer shows the default Laravel template', function () {
@@ -47,6 +47,18 @@ it('shows the technology logos in the landing', function () {
         ->assertSee('PostgreSQL');
 });
 
+it('renders a single-view landing without header, locale or theme controls', function () {
+    $response = $this->get(route('home'))->assertOk();
+
+    $response
+        ->assertDontSee('<header', false)
+        ->assertDontSee('Toggle dark mode')
+        ->assertDontSee('name="locale"', false)
+        ->assertSee("window.localStorage.setItem('flux.appearance', 'light')", false);
+
+    expect($response->getContent())->not->toMatch('/<html[^>]*class="dark"/');
+});
+
 it('hides the register link when registration is invitation only', function () {
     Setting::factory()->create([
         'registration_mode' => 'invitation_only',
@@ -56,7 +68,7 @@ it('hides the register link when registration is invitation only', function () {
     $this->get(route('home'))
         ->assertOk()
         ->assertSee('Log in')
-        ->assertDontSee('Register');
+        ->assertDontSee('Get started');
 });
 
 it('is enabled by default when no settings row exists', function () {

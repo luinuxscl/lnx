@@ -7,7 +7,7 @@ it('applies the site locale to guest requests', function () {
 
     $this->get(route('home'))
         ->assertOk()
-        ->assertSee('Welcome')
+        ->assertSee('<html lang="en">', false)
         ->assertSee('Log in');
 });
 
@@ -22,7 +22,7 @@ it('applies the site timezone to the application configuration', function () {
 it('keeps the configured defaults when the settings row leaves them empty', function () {
     Setting::factory()->create(['locale' => null, 'timezone' => null]);
 
-    $this->get(route('home'))->assertOk()->assertSee('Bienvenido');
+    $this->get(route('home'))->assertOk()->assertSee('<html lang="es">', false);
 
     expect(config('app.locale'))->toBe('es')
         ->and(config('app.timezone'))->toBe('America/Santiago');

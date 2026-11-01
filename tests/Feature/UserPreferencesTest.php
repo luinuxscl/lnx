@@ -41,7 +41,7 @@ it('recovers the account locale on a fresh session', function () {
         ->withSession([])
         ->get(route('home'))
         ->assertOk()
-        ->assertSee('Welcome');
+        ->assertSee('<html lang="en">', false);
 });
 
 it('prefers the account locale over an old session value', function () {
@@ -51,14 +51,14 @@ it('prefers the account locale over an old session value', function () {
         ->withSession(['locale' => 'es'])
         ->get(route('home'))
         ->assertOk()
-        ->assertSee('Welcome');
+        ->assertSee('<html lang="en">', false);
 });
 
 it('keeps the session locale for guests', function () {
     $this->withSession(['locale' => 'en'])
         ->get(route('home'))
         ->assertOk()
-        ->assertSee('Welcome');
+        ->assertSee('<html lang="en">', false);
 });
 
 it('persists the locale on the account through the switcher', function () {
@@ -167,6 +167,7 @@ it('seeds the site theme but not the account color scheme for guests', function 
     $this->get(route('home'))
         ->assertOk()
         ->assertSee("localStorage.setItem('flux.theme', \"orange\")", false)
+        ->assertSee("window.localStorage.setItem('flux.appearance', 'light')", false)
         ->assertDontSee("localStorage.setItem('flux.appearance', \"", false);
 });
 
