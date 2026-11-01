@@ -51,6 +51,7 @@ done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_DIR="$(dirname "$SCRIPT_DIR")"
+KIT_VERSION="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("lnx_version","sin version"))' "$SOURCE_DIR/.ai/kit-manifest.json" 2>/dev/null || echo "sin version")"
 [[ -n "$TARGET" ]] || TARGET="$(dirname "$SOURCE_DIR")/$NAME"
 
 REPO_URL="https://github.com/${GITHUB_OWNER}/${NAME}"
@@ -129,7 +130,7 @@ fi
 
 cat <<EOF
 
-==> Proyecto creado: $TARGET
+==> Proyecto creado: $TARGET (lnx v$KIT_VERSION)
 
 Siguientes pasos:
   1. Crear el repositorio remoto:

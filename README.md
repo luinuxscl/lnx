@@ -59,6 +59,39 @@ El despliegue de referencia (Coolify + PostgreSQL + `Dockerfile`) usa:
 - `trustProxies(at: '*')` en `bootstrap/app.php` para detectar HTTPS tras Traefik.
 - El usuario de prueba del `DatabaseSeeder` solo se crea fuera de producción.
 
+## Versionado de lnx (SemVer)
+
+lnx publica releases con etiquetas anotadas `vX.Y.Z` sobre `main`. La versión vigente del kit se declara en `.ai/kit-manifest.json` como `lnx_version` y `scripts/new-project.sh` la copia a cada proyecto derivado; el campo `kit_version` sigue versionando únicamente el kit para agentes (`.ai/CHANGELOG.md`). El historial de releases del kit completo vive en [`CHANGELOG.md`](CHANGELOG.md).
+
+Criterio de salto:
+
+- **MAJOR:** cambios que obligan a migrar un proyecto derivado (salto de versión del stack, renombrado o eliminación de APIs, comandos o patrones del kit).
+- **MINOR:** funcionalidad nueva retrocompatible (pantallas, componentes, scripts, skills, comportamiento nuevo por defecto).
+- **PATCH:** correcciones y documentación sin cambios de comportamiento.
+
+### Saber si un proyecto derivado está al día
+
+Con un clon local de lnx actualizado:
+
+```bash
+python3 scripts/update-agent-kit.py --source-kit ~/Code/lnx --check-version
+```
+
+Compara el `lnx_version` del proyecto con el del clon, imprime el estado y devuelve código 1 si el proyecto está desactualizado o no registra versión (útil en CI). Alternativa manual:
+
+```bash
+python3 -c 'import json;print(json.load(open(".ai/kit-manifest.json"))["lnx_version"])'
+git -C ~/Code/lnx describe --tags --abbrev=0
+```
+
+Un proyecto sin `lnx_version` es anterior a este esquema y se considera desactualizado. Al adoptar una release del kit, actualiza `lnx_version` en su manifiesto.
+
+### Publicar una release
+
+1. Decide el salto según los cambios y actualiza `lnx_version` en `.ai/kit-manifest.json` (y `updated_at`).
+2. Añade la entrada correspondiente en `CHANGELOG.md` (y en `.ai/CHANGELOG.md` si cambió el kit para agentes).
+3. Commitea en `develop`, mergea `--no-ff` a `main` y publica: `git tag -a vX.Y.Z -m "lnx vX.Y.Z"`, `git push origin main`, `git push origin vX.Y.Z`.
+
 ## Identidad y valores por defecto
 
 lnx define su identidad por defecto en capas, de modo que una instalación nueva se ve como LNX sin configurar nada:

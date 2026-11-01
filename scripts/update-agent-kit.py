@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -59,6 +60,52 @@ def check_compatibility(target_root: Path, source_kit: Path) -> list[str]:
         errors.append(f"Incompatibilidad de Laravel: el proyecto requiere '{target_laravel}' y el kit requiere '{source_laravel}'")
 
     return errors
+
+
+def parse_version(value: object) -> tuple[int, int, int] | None:
+    """Parse a SemVer string such as 1.2.3 or v1.2.3 into a sortable tuple."""
+    if not isinstance(value, str):
+        return None
+
+    match = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)", value.strip())
+
+    if match is None:
+        return None
+
+    return tuple(int(part) for part in match.groups())
+
+
+def check_version(target_root: Path, source_kit: Path) -> tuple[bool, list[str]]:
+    """Compare the lnx base version recorded by the project with the source kit."""
+    target_version = load_manifest(target_root).get("lnx_version")
+    source_version = load_manifest(source_kit).get("lnx_version")
+
+    target_parsed = parse_version(target_version)
+    source_parsed = parse_version(source_version)
+
+    lines = [
+        f"    Proyecto: {target_version or 'sin lnx_version (anterior al esquema)'}",
+        f"    Kit:      {source_version or 'sin lnx_version'}",
+    ]
+
+    if target_version is None:
+        lines.append("    Estado:   desactualizado (el proyecto no registra lnx_version)")
+        return False, lines
+
+    if source_parsed is None or target_parsed is None:
+        lines.append("    Estado:   no se pudo comparar (versión con formato inválido)")
+        return False, lines
+
+    if target_parsed < source_parsed:
+        lines.append(f"    Estado:   desactualizado ({target_version} < {source_version})")
+        return False, lines
+
+    if target_parsed > source_parsed:
+        lines.append(f"    Estado:   el proyecto va por delante del clon ({target_version} > {source_version})")
+        return True, lines
+
+    lines.append("    Estado:   al día")
+    return True, lines
 
 
 def analyze_diffs(target_root: Path, source_kit: Path) -> dict[str, list[tuple[str, str]]]:
@@ -172,6 +219,7 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent, help="Ruta al proyecto destino")
     parser.add_argument("--source-kit", type=Path, default=Path(__file__).resolve().parent.parent, help="Ruta al kit fuente")
     parser.add_argument("--check-compat", action="store_true", help="Verificar compatibilidad entre el kit y el proyecto")
+    parser.add_argument("--check-version", action="store_true", help="Comparar la versión de lnx del proyecto con la del kit fuente")
     parser.add_argument("--preview", action="store_true", help="Previsualizar cambios sin aplicar")
     parser.add_argument("--apply", action="store_true", help="Aplicar actualización")
     parser.add_argument("--strategy", choices=["keep-local", "accept-kit"], default="keep-local", help="Estrategia en caso de archivos conflictivos")
@@ -193,6 +241,13 @@ def main() -> int:
             return 1
         print("Compatibilidad del kit: OK")
         return 0
+
+    if args.check_version:
+        current, lines = check_version(target_root, source_kit)
+        print("==> Versión de lnx")
+        print("\n".join(lines))
+
+        return 0 if current else 1
 
     diffs = analyze_diffs(target_root, source_kit)
 
@@ -245,8 +300,17 @@ def main() -> int:
             else:
                 print(f"Conservando personalización local para: {rel_file}")
 
-        # Update manifest
+        # Update manifest. The agent kit version follows the source kit, but the
+        # lnx base version is owned by the project: applying agent files does not
+        # sync the application code.
         source_manifest = load_manifest(source_kit)
+        target_manifest = load_manifest(target_root)
+
+        if "lnx_version" in target_manifest:
+            source_manifest["lnx_version"] = target_manifest["lnx_version"]
+        else:
+            source_manifest.pop("lnx_version", None)
+
         save_manifest(target_root, source_manifest)
         print(f"==> Actualización aplicada ({applied_count} archivos actualizados). Manifiesto guardado.")
 
