@@ -77,6 +77,12 @@ Con un clon local de lnx actualizado:
 python3 scripts/update-agent-kit.py --source-kit ~/Code/lnx --check-version
 ```
 
+Si el proyecto aún no tiene esta versión de `scripts/update-agent-kit.py` (porque viene de una release anterior), ejecuta el del clon de lnx indicando el proyecto:
+
+```bash
+python3 ~/Code/lnx/scripts/update-agent-kit.py --root ~/Code/<app> --source-kit ~/Code/lnx --check-version
+```
+
 Compara el `lnx_version` del proyecto con el del clon, imprime el estado y devuelve código 1 si el proyecto está desactualizado o no registra versión (útil en CI). Alternativa manual:
 
 ```bash
