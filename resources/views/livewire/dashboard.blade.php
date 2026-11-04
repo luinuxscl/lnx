@@ -69,21 +69,14 @@
 
             <div class="grid grid-cols-12 gap-4">
                 <x-lnx-ui::tool-card
-                    class="col-span-12 sm:col-span-6 xl:col-span-3"
-                    :title="__('Chat')"
-                    :description="__('Have interactive conversations with the AI assistant.')"
-                    icon="chat-bubble-left-right"
-                    :href="route('chat')"
-                />
-                <x-lnx-ui::tool-card
-                    class="col-span-12 sm:col-span-6 xl:col-span-3"
+                    class="col-span-12 sm:col-span-6"
                     :title="__('RAG')"
                     :description="__('Query your own knowledge base with cited answers.')"
                     icon="book-open"
                     :href="route('knowledge.index')"
                 />
                 <x-lnx-ui::tool-card
-                    class="col-span-12 sm:col-span-6 xl:col-span-3"
+                    class="col-span-12 sm:col-span-6"
                     :title="__('Document AI')"
                     :description="__('Extract structured data from documents.')"
                     icon="document-text"

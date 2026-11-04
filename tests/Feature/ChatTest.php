@@ -37,13 +37,10 @@ it('requires authentication to access the chat page', function () {
     $this->get(route('chat'))->assertRedirect(route('login'));
 });
 
-it('allows authenticated users to view the chat page', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user)
+it('redirects the retired chat route to the Sam panel', function () {
+    $this->actingAs(User::factory()->create())
         ->get(route('chat'))
-        ->assertOk()
-        ->assertSee('Chat interactivo');
+        ->assertRedirect(route('dashboard', ['sam' => 'open']));
 });
 
 it('enforces strict user isolation for conversations', function () {

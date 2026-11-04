@@ -1,6 +1,6 @@
 # Contrato de módulo
 
-> **Estado:** implementado (10 de 10 puntos; el punto 10 queda como runtime del kit, a la espera del paquete y del primer contributor real) · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)), **Etapa 11** ([#53](https://github.com/luinuxscl/lnx/issues/53)) y **Centro de ayuda** ([#78](https://github.com/luinuxscl/lnx/issues/78)) · **Última revisión:** 2026-11-03
+> **Estado:** implementado (10 de 10 puntos; el punto 10 queda a la espera del primer contributor real, con el paquete Sam ya implementado) · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)), **Etapa 11** ([#53](https://github.com/luinuxscl/lnx/issues/53)) y **Centro de ayuda** ([#78](https://github.com/luinuxscl/lnx/issues/78)) · **Última revisión:** 2026-11-03
 > Define **qué puede declarar un módulo (paquete Composer) en lnx** y **bajo qué reglas**. El contrato se deriva de módulos reales: los puntos implementados se validan con **Luz** (`luinuxscl/luz`) y el punto 10 se valida con el **CRM**. Nada entra aquí que un módulo real no use. El punto 10 (contribuciones al agente Sam) se diseñó el 2026-11-03 y aún no está implementado; su decisión vive en [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md).
 
 ---
@@ -446,7 +446,7 @@ Criterios de aceptación:
 - Un módulo sin contributor no cambia el comportamiento de Sam.
 - El contrato se cubre con un contributor falso en la suite del kit antes de conectar el CRM.
 
-> **Estado:** runtime implementado en `lnx` el 2026-11-03 (issue #84) y cubierto con un contributor, un perfil y una superficie falsos. La capacidad no se anuncia como disponible hasta que el paquete `luinuxscl/sam` (#85) y el primer contributor real pasen sus pruebas.
+> **Estado:** runtime implementado en `lnx` el 2026-11-03 (issue #84) y paquete `luinuxscl/sam` implementado (issue #85) con identidad, panel y tarjeta de propuesta. El runtime del kit está cubierto con contributor, perfil y superficie falsos; la suite del paquete corre en una app derivada. La capacidad no se anuncia como disponible hasta que el primer contributor real pase sus pruebas.
 
 ## 4. Escritura por MCP (implementado)
 

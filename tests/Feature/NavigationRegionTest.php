@@ -47,7 +47,7 @@ it('splits the root sidebar into main and bottom regions', function () {
     expect($bottom->pluck('label')->all())->toContain('Developer Mode');
 
     $developerItems = collect($bottom->first()['items'])->pluck('label');
-    expect($developerItems)->toContain('Support')->toContain('Chat')->toContain('Installed packages');
+    expect($developerItems)->toContain('Support')->toContain('Installed packages')->not->toContain('Chat');
 });
 
 it('gives admin a curated administration region and standard users the help entry', function () {
