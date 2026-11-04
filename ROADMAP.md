@@ -50,7 +50,7 @@ El 2026-11-03 se abrió la **Etapa 17: Sam como agente de plataforma**, con las 
 
 Sam deja de ser una pantalla del CRM y pasa a ser una capacidad de la plataforma. Decisión: [ADR 0001](docs/adr/0001-sam-agente-de-plataforma.md). El contrato para módulos vive en [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
 
-1. [#84 Runtime y contrato](https://github.com/luinuxscl/lnx/issues/84) — `SamRegistry`, `SamContributor`, DTOs, runtime, `profile`/`correlation_id` y pruebas con un contributor falso.
+1. [#84 Runtime y contrato](https://github.com/luinuxscl/lnx/issues/84) (cerrada, 2026-11-03) — `SamRegistry`, `SamContributor`, DTOs, runtime, `profile`/`correlation_id` y pruebas con un contributor falso.
 2. [#85 Paquete luinuxscl/sam](https://github.com/luinuxscl/lnx/issues/85) — identidad, declaración, panel, tarjeta de propuesta, `sam.use` y configuración.
 3. [lnx-ui #2 Componentes](https://github.com/luinuxscl/lnx-ui/issues/2) — panel, burbuja, propuesta, contexto y sugerencias.
 4. [crm #7 Contributor](https://github.com/luinuxscl/crm/issues/7) — `CrmSamContributor`, retirada de `/crm/sam` y `crm.use_sam`, importación del historial.
@@ -60,6 +60,7 @@ Criterio de cierre de la etapa: desde una pantalla del CRM, Sam abre con el cont
 
 ## Decisiones de secuencia
 
+- **Etapa 17, runtime y contrato implementados (2026-11-03):** [#84](https://github.com/luinuxscl/lnx/issues/84) queda implementada e integrada (PR [#86](https://github.com/luinuxscl/lnx/pull/86)). `App\Ai\Sam\*` aloja el registro (contributors, perfil y superficie), los DTOs, el runtime, las bases `SamReadTool`/`SamProposeTool`, la auditoría con `correlation_id`, las migraciones `ai_conversations.profile` y `ai_messages.correlation_id`, la cuota `sam.turn`, la redacción de `CONFIRM …` y el hook de superficie. Cubierto con contributor, perfil y superficie falsos (650 pruebas). La identidad y el panel siguen en #85; la capacidad no se anuncia hasta que #85 y el contributor real del CRM (#7) pasen sus pruebas.
 - **Sam es la prioridad (2026-11-03):** la Etapa 17 se abre antes de cualquier otro frente. El runtime y el contrato (#84) bloquean el paquete (#85), los componentes de `lnx-ui` (#2), el contributor del CRM (#7) y la integración en `crm-app` (#6). El resto de los planes se revisa y se reordena después de la primera rebanada verificada.
 - **Etapa 10 abierta (2026-10-10):** el sistema de módulos se consolida antes de sumar apps derivadas. La **escritura por MCP** queda **apagada por defecto** (`MCP_SERVER_ALLOW_WRITES=false`) y solo la obtienen los paquetes que la declaren explícitamente, con permisos por operación, idempotencia y auditoría con diff. Sin borrado ni sobrescritura de historial. El estándar completo vive en [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md).
 - **Etapa 10, primer punto implementado (2026-10-10):** el contrato de **permisos por paquete** (`CONTRATO-MODULO.md` §3.1) quedó implementado en lnx: un paquete declara sus permisos con `App\Support\Permissions\PermissionRegistry`, el comando `permissions:sync` los materializa de forma idempotente y los concede a `admin` (`root` los omite), y `RolePermissionSeeder` ejecuta el mismo sync. Con pruebas Pest y documentación; los puntos 2 y 5 siguen abiertos.
