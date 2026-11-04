@@ -75,7 +75,9 @@ it('redacts and detects confirmation phrases', function (): void {
     expect(SamRedactor::redact('Confirma con CONFIRM ABC12345 ahora'))
         ->toBe('Confirma con CONFIRM •••••••• ahora')
         ->and(SamRedactor::isConfirmationPhrase('  confirm ab12cd  '))->toBeTrue()
+        ->and(SamRedactor::isConfirmationPhrase('CONFIRM ABCDE'))->toBeFalse()
         ->and(SamRedactor::isConfirmationPhrase('CONFIRM'))->toBeFalse()
         ->and(SamRedactor::containsPhrase('texto CONFIRM ABC12345 texto'))->toBeTrue()
+        ->and(SamRedactor::containsPhrase('texto CONFIRM ABCDE texto'))->toBeFalse()
         ->and(SamRedactor::containsPhrase('texto sin frase'))->toBeFalse();
 });

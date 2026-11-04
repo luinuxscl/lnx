@@ -10,6 +10,7 @@ use App\Ai\Exceptions\ModelNotAllowedException;
 use App\Ai\Exceptions\UnsupportedCapabilityException;
 use App\Ai\Sam\Tools\SamProposeTool;
 use App\Ai\Sam\Tools\SamReadTool;
+use App\Ai\Sam\Tools\SamTool;
 use App\Models\AiChatMessage;
 use App\Models\AiConversation;
 use App\Models\User;
@@ -258,11 +259,12 @@ class SamRuntime
         }
 
         $tools = [];
+        $names = [];
 
         foreach ($this->registry->contributors() as $source => $contributor) {
             foreach ($contributor->readTools($actor) as $tool) {
                 if ($tool instanceof SamReadTool) {
-                    $tools[] = $tool->withSource($source);
+                    $this->addTool($tools, $names, $actor, $source, $tool);
                 } else {
                     $this->rejectTool($actor, $source, $tool);
                 }
@@ -270,7 +272,7 @@ class SamRuntime
 
             foreach ($contributor->proposeTools($actor) as $tool) {
                 if ($tool instanceof SamProposeTool) {
-                    $tools[] = $tool->withSource($source);
+                    $this->addTool($tools, $names, $actor, $source, $tool);
                 } else {
                     $this->rejectTool($actor, $source, $tool);
                 }
@@ -278,6 +280,29 @@ class SamRuntime
         }
 
         return $tools;
+    }
+
+    /**
+     * Add a tool, rejecting a name already exposed by another module.
+     *
+     * Provider tool names are global in a turn: two modules cannot declare the
+     * same one or the provider receives duplicate functions.
+     *
+     * @param  list<Tool>  $tools
+     * @param  array<string, true>  $names
+     */
+    private function addTool(array &$tools, array &$names, User $actor, string $source, SamTool $tool): void
+    {
+        $name = $tool->name();
+
+        if (isset($names[$name])) {
+            $this->rejectTool($actor, $source, $tool, 'duplicate_name');
+
+            return;
+        }
+
+        $names[$name] = true;
+        $tools[] = $tool->withSource($source);
     }
 
     /**
@@ -482,7 +507,7 @@ class SamRuntime
             ->delete();
     }
 
-    private function rejectTool(User $actor, string $source, mixed $tool): void
+    private function rejectTool(User $actor, string $source, mixed $tool, string $reason = 'not_declared'): void
     {
         $name = is_object($tool) ? $tool::class : get_debug_type($tool);
 
@@ -496,7 +521,7 @@ class SamRuntime
                 'channel' => 'sam',
                 'source' => $source,
                 'action' => 'tool_rejected',
-                'reason' => 'not_declared',
+                'reason' => $reason,
             ],
         );
     }
