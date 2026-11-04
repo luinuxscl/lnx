@@ -1,6 +1,6 @@
 # Roadmap de prioridades
 
-Última revisión: 2026-10-21. Priorización acordada con el mantenedor.
+Última revisión: 2026-11-03. Priorización acordada con el mantenedor.
 
 Este documento conserva el orden global de trabajo. GitHub es la fuente del estado y los criterios de aceptación de cada issue; los órdenes parciales escritos en ellas se concilian aquí. Las etapas no son compromisos de fecha. El esfuerzo es comparativo por alcance, no una estimación de duración.
 
@@ -19,6 +19,8 @@ La **Etapa 13: Bases de conocimiento y chat configurable** (2026-10-17) amplía 
 La revisión del **2026-10-20** confirmó que las etapas **1 a 13** están integradas en `main` y cerradas. Ese mismo día se abrió la **Etapa 14: Centro de ayuda integrado** y su **fase 1 quedó implementada, integrada y cerrada** ([#78](https://github.com/luinuxscl/lnx/issues/78), [#75](https://github.com/luinuxscl/lnx/issues/75), [#77](https://github.com/luinuxscl/lnx/issues/77) y [#82](https://github.com/luinuxscl/lnx/issues/82)); la **Etapa 15** se completó el 2026-10-21 y la **Etapa 16** quedó completada e integrada el 2026-10-21. El plan completo —decisiones, arquitectura, contrato de extensión, orden y criterios— vive en [`CENTRO-AYUDA.md`](CENTRO-AYUDA.md). Decisiones fijadas con el mantenedor: ayuda **solo autenticada**, contenido en **Markdown**, sin edición desde la UI ni búsqueda con IA en la fase 1. El trabajo del 2026-10-18 consolidó además el despliegue de las apps derivadas (build en GitHub Actions → GHCR → Coolify) y la imagen base compartida pública, ambos al margen del roadmap por no tener issue asociada.
 
 La **Etapa 16** quedó cerrada el 2026-10-21 con [#79 Ayuda contextual](https://github.com/luinuxscl/lnx/issues/79) y [#80 Búsqueda semántica y citas en el chat](https://github.com/luinuxscl/lnx/issues/80). El siguiente trabajo se prioriza con el mantenedor según la demanda de las apps derivadas.
+
+El 2026-11-03 se abrió la **Etapa 17: Sam como agente de plataforma**, con las issues [#84](https://github.com/luinuxscl/lnx/issues/84), [#85](https://github.com/luinuxscl/lnx/issues/85), [lnx-ui #2](https://github.com/luinuxscl/lnx-ui/issues/2), [crm #7](https://github.com/luinuxscl/crm/issues/7) y [crm-app #6](https://github.com/luinuxscl/crm-app/issues/6).
 
 ## Orden acordado
 
@@ -40,6 +42,19 @@ La **Etapa 16** quedó cerrada el 2026-10-21 con [#79 Ayuda contextual](https://
 | 14. Centro de ayuda integrado | [#78 HelpRegistry](https://github.com/luinuxscl/lnx/issues/78) → [#75 Vista `/help`](https://github.com/luinuxscl/lnx/issues/75) → [#77 Soporte y `ProductHelpSearchTool`](https://github.com/luinuxscl/lnx/issues/77) → [#82 Contenido inicial](https://github.com/luinuxscl/lnx/issues/82) (cerradas, 2026-10-20) | Unificar documentación, FAQ y soporte en `/help` (solo autenticado), con contenido Markdown bilingüe y registro extensible por paquetes. Sin edición UI ni IA en esta etapa. | Medio-Alto |
 | 15. Edición y sincronización del centro de ayuda | [#81 Persistencia y `help:sync`](https://github.com/luinuxscl/lnx/issues/81) → [#76 Editor `/admin/help`](https://github.com/luinuxscl/lnx/issues/76) (cerradas, 2026-10-21) | Materializar el catálogo en base de datos con precedencia de root (auto / editado / disponible), sincronización idempotente, auditoría y edición bilingüe desde la UI. | Medio |
 | 16. Ayuda contextual y búsqueda semántica | [#79 Ayuda contextual](https://github.com/luinuxscl/lnx/issues/79) → [#80 Búsqueda semántica con Knowledge](https://github.com/luinuxscl/lnx/issues/80) (cerradas, 2026-10-21) | Llevar la ayuda al punto de duda con un componente reutilizable y enlaces profundos, y añadir búsqueda semántica con citas en el chat reutilizando el módulo Knowledge. | Medio |
+| 17. Sam como agente de plataforma | [#84 Runtime y contrato](https://github.com/luinuxscl/lnx/issues/84) → [#85 Paquete luinuxscl/sam](https://github.com/luinuxscl/lnx/issues/85) → [lnx-ui #2 Componentes](https://github.com/luinuxscl/lnx-ui/issues/2) → [crm #7 Contributor](https://github.com/luinuxscl/crm/issues/7) → [crm-app #6 Integración](https://github.com/luinuxscl/crm-app/issues/6) | Convertir a Sam en el agente de la plataforma: runtime y contrato en el kit, identidad y superficie en un paquete AGPL, contribución de módulos y una superficie global integrada. | Muy alto |
+
+### Etapa 17 — Sam como agente de plataforma (abierta 2026-11-03)
+
+Sam deja de ser una pantalla del CRM y pasa a ser una capacidad de la plataforma. Decisión: [ADR 0001](docs/adr/0001-sam-agente-de-plataforma.md). El contrato para módulos vive en [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
+
+1. [#84 Runtime y contrato](https://github.com/luinuxscl/lnx/issues/84) — `SamRegistry`, `SamContributor`, DTOs, runtime, `profile`/`correlation_id` y pruebas con un contributor falso.
+2. [#85 Paquete luinuxscl/sam](https://github.com/luinuxscl/lnx/issues/85) — identidad, declaración, panel, tarjeta de propuesta, `sam.use` y configuración.
+3. [lnx-ui #2 Componentes](https://github.com/luinuxscl/lnx-ui/issues/2) — panel, burbuja, propuesta, contexto y sugerencias.
+4. [crm #7 Contributor](https://github.com/luinuxscl/crm/issues/7) — `CrmSamContributor`, retirada de `/crm/sam` y `crm.use_sam`, importación del historial.
+5. [crm-app #6 Integración](https://github.com/luinuxscl/crm-app/issues/6) — port del runtime, roles, migraciones y verificación.
+
+Criterio de cierre de la etapa: desde una pantalla del CRM, Sam abre con el contexto actual, responde con el alcance del actor, propone un borrador, se confirma inline con la frase y queda auditado; `/chat` y `/crm/sam` dejan de ser superficies de usuario. La etapa no se anuncia como terminada hasta que la suite de `lnx`, la del paquete Sam y la de `crm-app` pasen.
 
 ## Decisiones de secuencia
 
@@ -104,6 +119,8 @@ Al margen del roadmap, el 2026-10-17 se completaron cuatro trabajos de mantenimi
 El 2026-10-18 se cerró la mejora [#68 Garantizar breadcrumbs en todas las páginas](https://github.com/luinuxscl/lnx/issues/68): la raíz de sección se centraliza en `App\Support\Navigation\Breadcrumbs` (mapa de prefijos de ruta) y el layout `layouts.app` renderiza siempre la cadena (raíz → ancestros → página actual), colapsando los índices de sección a un único ítem raíz y admitiendo etiquetas dinámicas de la página actual; bilingüe, con regla en `.ai/rules/views.md` y pruebas Pest que verifican que ninguna página queda sin breadcrumbs.
 
 El **2026-10-18** se consolidó el despliegue de las apps derivadas, también sin issue asociada: [PR #69](https://github.com/luinuxscl/lnx/pull/69)/[#70](https://github.com/luinuxscl/lnx/pull/70) construyen las imágenes en GitHub Actions y publican la base compartida `ghcr.io/luinuxscl/lnx-php:8.5`; [PR #71](https://github.com/luinuxscl/lnx/pull/71)/[#72](https://github.com/luinuxscl/lnx/pull/72) documentan el modelo (build en GitHub, pull en Coolify) con números medidos y rollback en `DEPLOY.md`; [PR #73](https://github.com/luinuxscl/lnx/pull/73) lleva ese despliegue al kit (`scripts/new-project.sh` + `templates/docker-publish.yml`); y [PR #74](https://github.com/luinuxscl/lnx/pull/74) hace pública la imagen base para que la primera etapa del `Dockerfile` no recompile extensiones. Todos integrados en `develop` y `main`.
+
+La **Etapa 17** quedó abierta el 2026-11-03 con cinco issues: runtime y contrato en `lnx` ([#84](https://github.com/luinuxscl/lnx/issues/84)), paquete `luinuxscl/sam` ([#85](https://github.com/luinuxscl/lnx/issues/85)), componentes de `lnx-ui` ([#2](https://github.com/luinuxscl/lnx-ui/issues/2)), contributor del CRM ([#7](https://github.com/luinuxscl/crm/issues/7)) e integración en `crm-app` ([#6](https://github.com/luinuxscl/crm-app/issues/6)). El contrato de contribución está diseñado en `CONTRATO-MODULO.md` §3.9; la etapa no se anuncia como cerrada hasta que las suites de `lnx`, `sam` y `crm-app` pasen.
 
 ## Mantenimiento
 
