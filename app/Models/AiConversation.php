@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property string $id
  * @property int $user_id
+ * @property string $profile
  * @property string|null $title
  * @property string|null $model
  * @property string|null $system_context
@@ -26,6 +27,7 @@ class AiConversation extends Model
 
     protected $fillable = [
         'user_id',
+        'profile',
         'title',
         'model',
         'system_context',
