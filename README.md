@@ -822,7 +822,7 @@ app(SamRegistry::class)->registerSurface('sam', SamPanel::class);      // panel 
 
 ### Herramientas y auditoría
 
-- Solo se aceptan herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`: re-comprueban el permiso de superficie, capturan la denegación por autorización/validación y auditan cada invocación. Cualquier otro `Tool` se descarta y se audita como `tool_rejected`.
+- Solo se aceptan herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`: re-comprueban el interruptor y el permiso de superficie, capturan la denegación por autorización/validación y auditan cada invocación. Cualquier otro `Tool` se descarta y se audita como `tool_rejected` (`not_declared`); un nombre de herramienta repetido entre módulos se audita como `duplicate_name`.
 - No existen herramientas de confirmación, borrado, fusión ni envío. La confirmación es una acción humana que ejecuta el módulo.
 - La auditoría reutiliza `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`) y el `correlation_id` del turno; ese id también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events`. La vista de actividad del módulo puede reconstruir el ciclo completo.
 - `SamRuntime::confirm()` re-resuelve la propuesta por correlación, actor y `source`, comprueba vigencia y `canConfirm`, delega en `SamProposalPresenter::confirm()` y audita `confirmed`, `duplicate`, `failed` o `expired`. El kit nunca escribe por su cuenta.

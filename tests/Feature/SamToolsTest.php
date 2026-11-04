@@ -7,6 +7,7 @@ use App\Models\AiChatMessage;
 use App\Models\McpToolInvocation;
 use App\Models\User;
 use Laravel\Ai\Tools\Request;
+use Tests\Fixtures\Sam\DuplicateToolContributor;
 use Tests\Fixtures\Sam\FakeProposeTool;
 use Tests\Fixtures\Sam\FakeReadTool;
 use Tests\Fixtures\Sam\FakeSamContributor;
@@ -104,6 +105,44 @@ it('resolves only the kit read and proposal tools', function (): void {
         ->and($tools[0])->toBeInstanceOf(FakeReadTool::class)
         ->and($tools[1])->toBeInstanceOf(FakeProposeTool::class)
         ->and($tools[0]->source())->toBe('fake');
+});
+
+it('denies a tool while the agent is disabled', function (): void {
+    configureSam();
+    grantSamPermission();
+    config()->set('lnx_sam.enabled', false);
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $output = app(FakeReadTool::class)->withSource('fake')->handle(new Request(['query' => 'ada']));
+
+    $event = McpToolInvocation::query()->where('tool', 'fake_read')->latest('id')->first();
+
+    expect($output)->toContain('disabled')
+        ->and($event->status)->toBe('denied')
+        ->and($event->context['reason'])->toBe('disabled');
+});
+
+it('rejects duplicate tool names across contributors', function (): void {
+    configureSam();
+    grantSamPermission();
+
+    app(SamRegistry::class)->register('fake', FakeSamContributor::class);
+    app(SamRegistry::class)->register('other', DuplicateToolContributor::class);
+
+    $tools = app(SamRuntime::class)->toolsFor(User::factory()->create());
+
+    $event = McpToolInvocation::query()
+        ->where('tool', FakeReadTool::class)
+        ->latest('id')
+        ->first();
+
+    expect($tools)->toHaveCount(2)
+        ->and($event)->not->toBeNull()
+        ->and($event->status)->toBe('denied')
+        ->and($event->context['reason'])->toBe('duplicate_name')
+        ->and($event->context['source'])->toBe('other');
 });
 
 it('rejects and audits a tool that is not declared with the kit bases', function (): void {

@@ -18,7 +18,7 @@ final class SamRedactor
     public static function redact(string $text): string
     {
         return (string) preg_replace(
-            '/CONFIRM\s+[A-Z0-9]{4,32}/u',
+            '/CONFIRM\s+[A-Z0-9]{6,32}/u',
             self::PLACEHOLDER,
             $text,
         );
@@ -29,7 +29,7 @@ final class SamRedactor
      */
     public static function containsPhrase(string $text): bool
     {
-        return preg_match('/CONFIRM\s+[A-Z0-9]{4,32}/u', $text) === 1;
+        return preg_match('/CONFIRM\s+[A-Z0-9]{6,32}/u', $text) === 1;
     }
 
     /**
@@ -40,6 +40,6 @@ final class SamRedactor
      */
     public static function isConfirmationPhrase(string $text): bool
     {
-        return preg_match('/^\s*CONFIRM\s+[A-Z0-9]{4,32}\s*$/iu', $text) === 1;
+        return preg_match('/^\s*CONFIRM\s+[A-Z0-9]{6,32}\s*$/iu', $text) === 1;
     }
 }

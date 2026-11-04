@@ -33,7 +33,15 @@ abstract class SamReadTool extends SamTool
             return 'Authentication is required.';
         }
 
-        if (! app(SamAccess::class)->canUse($user)) {
+        $access = app(SamAccess::class);
+
+        if (! $access->enabled()) {
+            $this->audit($user, 'denied', null, ['reason' => 'disabled']);
+
+            return 'The agent is disabled.';
+        }
+
+        if (! $access->canUse($user)) {
             $this->audit($user, 'denied', null, ['reason' => 'forbidden']);
 
             return 'Permission denied: this identity cannot use the agent.';
