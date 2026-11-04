@@ -778,6 +778,8 @@ Define tu habilidad (por ejemplo una policy) y pásala en `ability`; coloca `<li
 
 ## Chat interactivo (conversacional, streaming y herramientas)
 
+> **Decisión 2026-11-03:** esta superficie se generaliza como **Sam**, el agente de la plataforma. El runtime y el contrato de contribución vivirán en el kit; la identidad y la superficie de Sam, en el paquete AGPL `luinuxscl/sam`. La implementación aún no está hecha: ver [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md) y [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
+
 lnx incluye un módulo de chat interactivo conversacional en `/chat` (`chat`) accesible para cualquier cuenta autenticada. Permite crear, seleccionar, continuar y eliminar conversaciones privadas con respuestas progresivas por streaming.
 
 ### Aislamiento y privacidad
@@ -914,7 +916,8 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 | Prioridades y próximo trabajo | [ROADMAP.md](ROADMAP.md); actualizar cuando cambien el estado de las issues, sus dependencias, bloqueos o prioridades acordadas |
 | Centro de ayuda (plan y etapas) | [CENTRO-AYUDA.md](CENTRO-AYUDA.md); decisiones, arquitectura, contrato de extensión, issues y orden para retomar la implementación |
 | Análisis del roadmap | skill `.ai/skills/analyze-roadmap/SKILL.md`; contrasta el roadmap con el tracker real y el estado de Git, detecta desalineaciones y propone el próximo trabajo |
-| Contrato de módulo | [CONTRATO-MODULO.md](CONTRATO-MODULO.md); qué puede declarar un paquete y el estándar de escritura por MCP (Etapa 10) |
+| Contrato de módulo | [CONTRATO-MODULO.md](CONTRATO-MODULO.md); qué puede declarar un paquete, el estándar de escritura por MCP (Etapa 10) y las contribuciones al agente (diseñado) |
+| Decisiones de plataforma | [docs/adr/](docs/adr/); el ADR 0001 define Sam como agente de plataforma |
 | Versiones PHP instaladas | `composer show --direct` |
 | Dependencias JS | `package.json` y `npm ls --depth=0` |
 | Módulos, rutas y estructura | `app/`, `routes/`, `resources/`; `php artisan route:list --except-vendor` |
