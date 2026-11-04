@@ -113,6 +113,11 @@
 
         <livewire:support.panel />
 
+        @php($samSurface = app(\App\Ai\Sam\SamRuntime::class)->surface())
+        @if ($samSurface)
+            @livewire($samSurface)
+        @endif
+
         @persist('toast')
             <flux:toast.group>
                 <flux:toast />

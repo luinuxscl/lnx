@@ -4,6 +4,12 @@ Todas las releases notables del kit **lnx** se documentan en este archivo. El de
 
 El kit sigue [SemVer](https://semver.org/lang/es/) y cada release se publica con una etiqueta anotada `vX.Y.Z` sobre `main`. La versión vigente se declara en `.ai/kit-manifest.json` como `lnx_version` y se copia a cada proyecto creado con `scripts/new-project.sh`.
 
+## [No publicado]
+
+### Añadido
+
+- **Sam: runtime y contrato de agente de plataforma (#84).** `App\Ai\Sam\*`: `SamRegistry` (contributors, perfil y superficie), `SamContributor`, `SamProfile`, DTOs (`SamContext`, `SamProposal`, `SamProposalResult`, `SamProposalPresenter`), `SamRuntime`, `SamInstructions`, `SamAgent`, `SamTurn` y `SamRedactor`. El runtime compone instrucciones, resuelve solo lecturas y propuestas (bases `SamReadTool`/`SamProposeTool`), aplica la cuota `sam.turn`, persiste `ai_conversations.profile = sam` y `ai_messages.correlation_id`, audita en `mcp_tool_invocations` con correlación, redacta la frase `CONFIRM …` y delega la confirmación en el módulo. Incluye el hook de superficie en el layout (`SAM_ENABLED`, permiso y componente registrado), `config/lnx_sam.php`, `.env.example` y el comando `sam:prune-conversations`. La identidad y el panel quedan en el paquete `luinuxscl/sam` (#85).
+
 ## [1.0.0] - 2026-11-01
 
 Primera release bajo el esquema SemVer del kit completo.
