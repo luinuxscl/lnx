@@ -92,7 +92,7 @@ it('shows the curated administration group to admin and developer mode to root',
         ->assertOk()
         ->assertSee('Developer Mode')
         ->assertSee('Soporte')
-        ->assertSee('Chat')
+        ->assertDontSee('Chat')
         ->assertSee(route('admin.settings.edit'));
 });
 

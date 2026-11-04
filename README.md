@@ -777,11 +777,13 @@ Cada llamada usa la aplicación `text_assistant`, así que aplican la allowlist,
 
 Define tu habilidad (por ejemplo una policy) y pásala en `ability`; coloca `<livewire:ai.text-assistant wire:model="tuCampo" ability="tu-habilidad" />` donde estaba tu campo de texto. El componente reutiliza `App\Ai\Agents\TextAssistantAgent` y `App\Ai\TextAssistant`; para variantes nuevas declara su propia aplicación y límites y pásalos al gateway.
 
-## Chat interactivo (conversacional, streaming y herramientas)
+## Chat interactivo (heredado; superficie retirada)
 
-> **Decisión 2026-11-03:** esta superficie se generaliza como **Sam**, el agente de la plataforma. El runtime y el contrato de contribución ya viven en el kit (`App\Ai\Sam\*`, issue #84); la identidad y la superficie de Sam, en el paquete AGPL `luinuxscl/sam`, aún pendiente. Ver [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md) y [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
+> **Decisión 2026-11-03:** esta superficie se generaliza como **Sam**, el agente de la plataforma. El runtime y el contrato de contribución viven en el kit (`App\Ai\Sam\*`, issue #84); la identidad y la superficie, en el paquete AGPL `luinuxscl/sam` (#85). Ver [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md) y [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
 
-lnx incluye un módulo de chat interactivo conversacional en `/chat` (`chat`) accesible para cualquier cuenta autenticada. Permite crear, seleccionar, continuar y eliminar conversaciones privadas con respuestas progresivas por streaming.
+La ruta `/chat` (`chat`) ya **no es una superficie de usuario**: sale de la navegación y redirige a `dashboard?sam=open`, donde el paquete Sam abre su panel global si está habilitado. El componente Livewire `App\Livewire\Ai\Chat`, `ChatService`, `ChatAgent` y sus conversaciones se conservan como datos y base de streaming hasta la limpieza mayor que retire el código heredado; los enlaces antiguos no se rompen.
+
+El resto de esta sección documenta ese componente heredado.
 
 ### Aislamiento y privacidad
 
@@ -876,7 +878,7 @@ lnx incluye un módulo de extracción de datos de documentos con IA en `/documen
 
 ## Base de Conocimiento e Integración RAG (Consultar conocimiento propio)
 
-lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`knowledge.index`, `knowledge.show`) integrado con el chat interactivo contextual (`/chat`). Permite incorporar manuales, guías o catálogos, dividirlos en fragmentos (chunks), generar embeddings vectoriales mediante OpenRouter y responder preguntas con referencias verificables.
+lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`knowledge.index`, `knowledge.show`) integrado con el agente de plataforma Sam. Permite incorporar manuales, guías o catálogos, dividirlos en fragmentos (chunks), generar embeddings vectoriales mediante OpenRouter y responder preguntas con referencias verificables.
 
 ### Bases de conocimiento y audiencia
 
@@ -934,7 +936,7 @@ lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`kn
 
 1. Crear una base en `/knowledge/bases` con la audiencia deseada y cargar un manual técnico o procedimiento en `/knowledge` dentro de esa base.
 2. Verificación de que la indexación genere fragmentos coherentes.
-3. Adjuntar la base a una conversación en `/chat` y comprobar que la respuesta incluya citas precisas a la fuente.
+3. Adjuntar la base a una conversación: la UI de adjuntos del panel de Sam llega con su integración; mientras tanto, verifica el flujo con la suite de RAG y comprueba que la respuesta incluya citas precisas a la fuente.
 4. Probar una conversación sin bases y comprobar que no se inyectan fuentes.
 5. Probar con una pregunta ajena al corpus comprobando que el asistente informe que las fuentes no sustentan la respuesta.
 6. Probar una base con audiencia `admin` desde un usuario estándar y verificar que no recupera fragmentos.

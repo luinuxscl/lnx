@@ -8,7 +8,6 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\SupportAttachmentController;
 use App\Livewire\Activity\Index as ActivityIndex;
-use App\Livewire\Ai\Chat as AiChat;
 use App\Livewire\Ai\Status as AiStatus;
 use App\Livewire\Ai\TextAssistantDemo as AiTextAssistantDemo;
 use App\Livewire\Ai\Usage as AiUsage;
@@ -51,14 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'region' => 'bottom',
     ]);
     Route::livewire('notifications', NotificationsIndex::class)->name('notifications.index');
-    Route::livewire('chat/{conversation?}', AiChat::class)->name('chat')->menu([
-        'label' => 'Chat',
-        'icon' => 'chat-bubble-left-right',
-        'group' => 'AI Tools',
-        'group_icon' => 'sparkles',
-        'audiences' => ['root'],
-        'region' => 'bottom',
-    ]);
+    Route::get('chat/{conversation?}', fn () => redirect()->route('dashboard', ['sam' => 'open']))->name('chat');
     Route::livewire('knowledge', Index::class)->name('knowledge.index')->menu([
         'label' => 'RAG',
         'icon' => 'book-open',

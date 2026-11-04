@@ -59,7 +59,7 @@ it('resolves the root menu with developer mode and kit ai tools', function () {
     expect($labels)->toContain('Support');
     expect($labels)->toContain('Users');
     expect($labels)->toContain('UI/UX components');
-    expect($labels)->toContain('Chat');
+    expect($labels)->not->toContain('Chat');
     expect(collect($groups)->pluck('label')->all())->toContain('Developer Mode');
 });
 

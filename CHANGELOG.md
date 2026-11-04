@@ -10,6 +10,10 @@ El kit sigue [SemVer](https://semver.org/lang/es/) y cada release se publica con
 
 - **Sam: runtime y contrato de agente de plataforma (#84).** `App\Ai\Sam\*`: `SamRegistry` (contributors, perfil y superficie), `SamContributor`, `SamProfile`, DTOs (`SamContext`, `SamProposal`, `SamProposalResult`, `SamProposalPresenter`), `SamRuntime`, `SamInstructions`, `SamAgent`, `SamTurn` y `SamRedactor`. El runtime compone instrucciones, resuelve solo lecturas y propuestas (bases `SamReadTool`/`SamProposeTool`), aplica la cuota `sam.turn`, persiste `ai_conversations.profile = sam` y `ai_messages.correlation_id`, audita en `mcp_tool_invocations` con correlación, redacta la frase `CONFIRM …` y delega la confirmación en el módulo. Incluye el hook de superficie en el layout (`SAM_ENABLED`, permiso y componente registrado), `config/lnx_sam.php`, `.env.example` y el comando `sam:prune-conversations`. La identidad y el panel quedan en el paquete `luinuxscl/sam` (#85).
 
+### Cambiado
+
+- **`/chat` deja de ser una superficie de usuario (#85).** La ruta sale de la navegación y redirige a `dashboard?sam=open`, donde el panel global del paquete `luinuxscl/sam` se abre si `SAM_ENABLED` y el actor tiene `sam.use`. Se retiran la tarjeta del dashboard y la entrada del `NavigationSeeder`; en instalaciones existentes, `navigation:sync` oculta el ítem huérfano. El componente, el servicio y las conversaciones heredadas se conservan hasta la limpieza mayor. Este cambio es incompatible: la próxima release del kit debe ser MAJOR.
+
 ### Corregido
 
 - **Endurecimiento del runtime de Sam.** Las bases `SamReadTool`/`SamProposeTool` re-comprueban `SAM_ENABLED` (denegación auditada como `disabled`), el runtime rechaza nombres de herramienta duplicados entre módulos (`duplicate_name`) y la redacción de `CONFIRM …` exige un token de 6 o más caracteres para evitar falsos positivos.
