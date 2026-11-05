@@ -342,13 +342,14 @@ interface SamContributor
 - **`context` es contexto de pantalla, no un volcado.** Devuelve un `SamContext` con `source`, `resource`, `id`, `label`, `route` y `filters`. No incluye valores de formulario, tokens, hashes ni texto libre del registro. El runtime lo sanea otra vez antes de enviarlo al proveedor.
 - **`rowContext` es el contexto de una fila enfocada.** El navegador envía solo `resource` e `id`; el módulo resuelve la etiqueta, los filtros y el permiso otra vez, y responde `null` cuando el registro queda fuera del alcance del actor. Un `id` falsificado nunca se convierte en el registro de otra identidad. El panel lo invoca al pulsar el disparador de la fila (`sam-focus-row`) y vuelve al contexto de ruta en la siguiente navegación.
 - **`signals` son observaciones deterministas.** El módulo las calcula en SQL, acotadas al alcance y con un `count()`/`exists()` sobre columnas indexadas: nunca recorren el dataset completo. Cada `SamSignal` lleva un `name` estable, un `value` acotado y una `evidence` opcional con el enlace donde la persona puede comprobarla. El runtime las adjunta al contexto (`screen_context.signals`) y una frase del prompt indica al modelo que son ciertas y que no debe inventar otras.
+- **`brief` e `insight` son la lectura determinista del registro.** Un módulo que quiera explicar la ficha en foco implementa también `SamBriefPresenter` (`brief()` e `insight()`). Ambos devuelven `SamBrief`/`SamInsight` compuestos por el módulo a partir de sus propias señales: observaciones ya redactadas y acciones que apuntan a pantallas existentes (`SamAction`), sin ejecutar nada. El runtime no inventa texto: si el módulo devuelve `null` (registro fuera de alcance o sin fila en foco), el panel no muestra brief. `SamRuntime::briefFor()` solo transporta el DTO; la narrativa del modelo, cuando exista, se añade encima y el fallback determinista sigue siendo útil sin proveedor.
 - **`suggestions` respeta permisos y alcance.** Son arranques de conversación, no promesas: no ofrecen una capacidad que el actor no pueda ejecutar.
 - **`proposals` es opcional.** Si el módulo propone escrituras, implementa `SamProposalPresenter` para que el runtime pueda pintar sus borradores y delegar la confirmación.
 - **Bases de herramienta obligatorias.** El runtime solo acepta herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`. Ambas re-comprueban `SAM_ENABLED` y el permiso de superficie, capturan autorización/validación y auditan la invocación; cualquier otro `Tool` se descarta y queda auditado como `tool_rejected` (`reason: not_declared`). Los nombres de herramienta son globales en el turno: un nombre ya expuesto se rechaza con `reason: duplicate_name`. Así el runtime no puede ejecutar confirmación, borrado, fusión ni envío aunque un módulo los declare por error.
 - **Auditoría común.** Cada lectura, propuesta y confirmación se registra en `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`, `tool_rejected`) y el `correlation_id` del turno, que también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events` por la misma correlación. La auditoría de ciclo de vida del borrador sigue siendo del módulo.
 - **Persistencia y aislamiento.** Varias conversaciones `profile = sam` por actor: el runtime las crea (`startConversation()`), las lista (`conversations()`) y permite elegir el hilo de cada turno (`send()` con `AiConversation`); sin hilo elegido se usa el más reciente, creado en la primera interacción. Cada mensaje del actor guarda el `SamContext` saneado del turno en `ai_messages.context` y el título se deriva del primer mensaje sin llamar al modelo (`SAM_TITLE_CHARS`). `deleteConversation()` borra un hilo y `forgetAll()` todos los del actor, siempre con auditoría de conteos y nunca del contenido. El historial se acota con `SAM_MAX_CONTEXT_MESSAGES` y se purga con `sam:prune-conversations` según `SAM_RETENTION_DAYS`. El runtime nunca lee ni escribe la conversación de otra identidad: un id ajeno se trata como inexistente.
 - **Confirmación con frase.** El módulo genera y valida la frase; el runtime re-resuelve la propuesta por correlación, actor y `source`, comprueba `canConfirm` y la caducidad, delega en `SamProposalPresenter::confirm()` y audita el resultado (`confirmed`, `duplicate`, `failed`, `expired`). La frase se redacta antes de persistir cualquier respuesta y un mensaje que sea solo la frase no se guarda como turno.
-- **API del runtime.** `SamRuntime` expone `enabled()`, `ready()`, `canUse()`, `surface()`, `conversations()`, `conversationFor()`, `findConversation()`, `findForActor()`, `startConversation()`, `messages()`, `send()`, `deleteConversation()`, `forgetAll()`, `toolsFor()`, `contextFor()`, `suggestions()`, `proposals()` y `confirm()`. La cuota se aplica con la aplicación `sam.turn` (declarada por el paquete con `AiApplicationRegistry`; sin declaración, aplica el límite por defecto).
+- **API del runtime.** `SamRuntime` expone `enabled()`, `ready()`, `canUse()`, `surface()`, `conversations()`, `conversationFor()`, `findConversation()`, `findForActor()`, `startConversation()`, `messages()`, `send()`, `deleteConversation()`, `forgetAll()`, `toolsFor()`, `contextFor()`, `contextForRow()`, `briefFor()`, `suggestions()`, `proposals()` y `confirm()`. La cuota se aplica con la aplicación `sam.turn` (declarada por el paquete con `AiApplicationRegistry`; sin declaración, aplica el límite por defecto).
 
 DTOs compartidos:
 
@@ -415,6 +416,17 @@ interface SamProposalPresenter
     public function confirm(SamProposal $proposal, User $actor, string $phrase): SamProposalResult;
 }
 ```
+
+```php
+interface SamBriefPresenter
+{
+    public function brief(User $actor, SamContext $context): ?SamBrief;
+
+    public function insight(User $actor, SamContext $context): ?SamInsight;
+}
+```
+
+`SamBriefPresenter` **no ejecuta nada**: compone observaciones y acciones ya aprobadas y responde `null` cuando el actor no puede ver el registro.
 
 `SamProposalPresenter` **delega en la acción de confirmación del módulo**; nunca escribe directo. El runtime comprueba el actor y la vigencia antes de llamarlo, y trata `duplicate`, `failed` y `expired` sin presentarlos como éxito.
 

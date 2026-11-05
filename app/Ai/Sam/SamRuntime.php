@@ -520,6 +520,35 @@ class SamRuntime
     }
 
     /**
+     * Deterministic brief of the record in focus, composed by its module.
+     *
+     * The runtime only carries it: the module computes the observations and
+     * the actions from its own signals, resolves the record again with the
+     * actor's permissions and answers null when it is out of reach or when the
+     * screen has no record in focus.
+     */
+    public function briefFor(User $actor, ?SamContext $context = null): ?SamBrief
+    {
+        if ($context === null || ! $this->canUse($actor)) {
+            return null;
+        }
+
+        foreach ($this->registry->contributors() as $contributor) {
+            if (! $contributor instanceof SamBriefPresenter) {
+                continue;
+            }
+
+            $brief = $contributor->brief($actor, $context);
+
+            if ($brief instanceof SamBrief) {
+                return $brief;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Conversation starters that respect the actor's permissions.
      *
      * @return list<string>
