@@ -8,6 +8,7 @@ use App\Models\AiChatMessage;
 use App\Models\AiConversation;
 use App\Models\AiUsageEvent;
 use App\Models\User;
+use Laravel\Ai\Exceptions\InsufficientCreditsException;
 use Tests\Fixtures\Sam\FakeSamContributor;
 
 beforeEach(function (): void {
@@ -204,4 +205,19 @@ it('prunes messages older than the retention period', function (): void {
     $runtime->send($user, 'Nuevo');
 
     expect(AiChatMessage::query()->whereKey($old->getKey())->exists())->toBeFalse();
+});
+
+it('reports exhausted provider credits as its own error', function (): void {
+    configureSam();
+    grantSamPermission();
+
+    SamAgent::fake(fn () => throw InsufficientCreditsException::forProvider('openrouter'));
+
+    $user = User::factory()->create();
+
+    $reply = app(SamRuntime::class)->send($user, 'Hola');
+
+    expect($reply->succeeded())->toBeFalse()
+        ->and($reply->error)->toBe('credits')
+        ->and($reply->correlationId)->not->toBeNull();
 });
