@@ -341,9 +341,9 @@ interface SamContributor
 - **`proposals` es opcional.** Si el módulo propone escrituras, implementa `SamProposalPresenter` para que el runtime pueda pintar sus borradores y delegar la confirmación.
 - **Bases de herramienta obligatorias.** El runtime solo acepta herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`. Ambas re-comprueban `SAM_ENABLED` y el permiso de superficie, capturan autorización/validación y auditan la invocación; cualquier otro `Tool` se descarta y queda auditado como `tool_rejected` (`reason: not_declared`). Los nombres de herramienta son globales en el turno: un nombre ya expuesto se rechaza con `reason: duplicate_name`. Así el runtime no puede ejecutar confirmación, borrado, fusión ni envío aunque un módulo los declare por error.
 - **Auditoría común.** Cada lectura, propuesta y confirmación se registra en `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`, `tool_rejected`) y el `correlation_id` del turno, que también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events` por la misma correlación. La auditoría de ciclo de vida del borrador sigue siendo del módulo.
-- **Persistencia y aislamiento.** Una conversación `profile = sam` por actor, creada en la primera interacción; el historial se acota con `SAM_MAX_CONTEXT_MESSAGES` y se purga con `sam:prune-conversations` según `SAM_RETENTION_DAYS`. El runtime nunca lee ni escribe la conversación de otra identidad.
+- **Persistencia y aislamiento.** Varias conversaciones `profile = sam` por actor: el runtime las crea (`startConversation()`), las lista (`conversations()`) y permite elegir el hilo de cada turno (`send()` con `AiConversation`); sin hilo elegido se usa el más reciente, creado en la primera interacción. Cada mensaje del actor guarda el `SamContext` saneado del turno en `ai_messages.context` y el título se deriva del primer mensaje sin llamar al modelo (`SAM_TITLE_CHARS`). `deleteConversation()` borra un hilo y `forgetAll()` todos los del actor, siempre con auditoría de conteos y nunca del contenido. El historial se acota con `SAM_MAX_CONTEXT_MESSAGES` y se purga con `sam:prune-conversations` según `SAM_RETENTION_DAYS`. El runtime nunca lee ni escribe la conversación de otra identidad: un id ajeno se trata como inexistente.
 - **Confirmación con frase.** El módulo genera y valida la frase; el runtime re-resuelve la propuesta por correlación, actor y `source`, comprueba `canConfirm` y la caducidad, delega en `SamProposalPresenter::confirm()` y audita el resultado (`confirmed`, `duplicate`, `failed`, `expired`). La frase se redacta antes de persistir cualquier respuesta y un mensaje que sea solo la frase no se guarda como turno.
-- **API del runtime.** `SamRuntime` expone `enabled()`, `ready()`, `canUse()`, `surface()`, `conversationFor()`, `messages()`, `send()`, `toolsFor()`, `contextFor()`, `suggestions()`, `proposals()` y `confirm()`. La cuota se aplica con la aplicación `sam.turn` (declarada por el paquete con `AiApplicationRegistry`; sin declaración, aplica el límite por defecto).
+- **API del runtime.** `SamRuntime` expone `enabled()`, `ready()`, `canUse()`, `surface()`, `conversations()`, `conversationFor()`, `findConversation()`, `findForActor()`, `startConversation()`, `messages()`, `send()`, `deleteConversation()`, `forgetAll()`, `toolsFor()`, `contextFor()`, `suggestions()`, `proposals()` y `confirm()`. La cuota se aplica con la aplicación `sam.turn` (declarada por el paquete con `AiApplicationRegistry`; sin declaración, aplica el límite por defecto).
 
 DTOs compartidos:
 
@@ -435,18 +435,20 @@ Entorno (configuración del paquete Sam):
 | `SAM_APPLICATION` | `sam.turn` | Aplicación de IA usada para la cuota y el consumo del turno |
 | `SAM_MAX_OUTPUT_TOKENS` | `1200` | Tope de salida por turno |
 | `SAM_TIMEOUT` | `45` | Timeout del turno en segundos |
+| `SAM_TITLE_CHARS` | `60` | Caracteres del título determinista derivado del primer mensaje |
 
 Criterios de aceptación:
 
 - Un contributor registrado solo aporta conocimiento y herramientas a identidades autorizadas; un usuario sin `sam.use` no abre el panel.
 - Una herramienta de lectura fuera del alcance del actor devuelve una negativa clara y queda auditada; una de propuesta devuelve un borrador y **no** escribe.
 - La confirmación inline ejecuta la acción del módulo con la frase; una segunda confirmación se rechaza y la frase no aparece en el historial.
-- La conversación está aislada por actor y por instancia.
-- La auditoría reconstruye lectura, propuesta y confirmación con la misma correlación.
+- Los hilos están aislados por actor y por instancia: listar, seleccionar, leer y borrar una conversación ajena no devuelve ni elimina nada, y «olvidar todo» solo afecta al actor.
+- El mensaje del actor conserva su contexto saneado y el título del hilo se deriva del primer mensaje sin llamar al modelo.
+- La auditoría reconstruye lectura, propuesta y confirmación con la misma correlación, y registra el borrado de hilos por conteos.
 - Un módulo sin contributor no cambia el comportamiento de Sam.
 - El contrato se cubre con un contributor falso en la suite del kit antes de conectar el CRM.
 
-> **Estado:** runtime implementado en `lnx` el 2026-11-03 (issue #84) y paquete `luinuxscl/sam` implementado (issue #85) con identidad, panel y tarjeta de propuesta. El runtime del kit está cubierto con contributor, perfil y superficie falsos; la suite del paquete corre en una app derivada. La capacidad no se anuncia como disponible hasta que el primer contributor real pase sus pruebas.
+> **Estado:** runtime implementado en `lnx` el 2026-11-03 (issue #84), paquete `luinuxscl/sam` implementado (issue #85) con identidad, panel y tarjeta de propuesta, y conversaciones múltiples con contexto por mensaje implementadas el 2026-11-04 (issue #88, portadas a `crm-app`). El runtime del kit está cubierto con contributor, perfil y superficie falsos; la suite del paquete corre en una app derivada. La capacidad no se anuncia como disponible hasta que el primer contributor real pase sus pruebas.
 
 ## 4. Escritura por MCP (implementado)
 

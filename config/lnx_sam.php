@@ -62,6 +62,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Conversation title
+    |--------------------------------------------------------------------------
+    |
+    | Characters kept in the deterministic title of a new thread, derived from
+    | its first message without calling the model.
+    |
+    */
+
+    'title_chars' => (int) env('SAM_TITLE_CHARS', 60),
+
+    /*
+    |--------------------------------------------------------------------------
     | Retention
     |--------------------------------------------------------------------------
     |

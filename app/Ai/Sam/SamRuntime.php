@@ -84,6 +84,11 @@ class SamRuntime
         return max(0, (int) config('lnx_sam.retention_days', 0));
     }
 
+    public function titleChars(): int
+    {
+        return max(1, (int) config('lnx_sam.title_chars', SamTitle::MAX_CHARS));
+    }
+
     /**
      * The component that mounts the global panel, when it must be shown.
      */
@@ -99,7 +104,24 @@ class SamRuntime
     }
 
     /**
-     * Find the Sam conversation of an actor without creating it.
+     * Threads of the actor, newest first, with their message count and last message.
+     *
+     * @return Collection<int, AiConversation>
+     */
+    public function conversations(User $actor): Collection
+    {
+        return AiConversation::query()
+            ->where('user_id', $actor->getKey())
+            ->where('profile', self::PROFILE)
+            ->withCount('messages')
+            ->with('latestMessage')
+            ->orderByDesc('updated_at')
+            ->orderByDesc('created_at')
+            ->get();
+    }
+
+    /**
+     * Most recent Sam conversation of an actor, without creating it.
      */
     public function findConversation(User $actor): ?AiConversation
     {
@@ -107,41 +129,63 @@ class SamRuntime
             ->where('user_id', $actor->getKey())
             ->where('profile', self::PROFILE)
             ->orderByDesc('updated_at')
+            ->orderByDesc('created_at')
             ->first();
     }
 
     /**
-     * The single Sam conversation of an actor, created on first use.
+     * One Sam conversation of the actor, or null when it is not theirs.
+     */
+    public function findForActor(User $actor, string $conversationId): ?AiConversation
+    {
+        $conversationId = trim($conversationId);
+
+        if ($conversationId === '') {
+            return null;
+        }
+
+        return AiConversation::query()
+            ->whereKey($conversationId)
+            ->where('user_id', $actor->getKey())
+            ->where('profile', self::PROFILE)
+            ->first();
+    }
+
+    /**
+     * The conversation a turn lands on when the caller does not pick one,
+     * created on first use.
      */
     public function conversationFor(User $actor): AiConversation
     {
         return DB::transaction(function () use ($actor): AiConversation {
             User::query()->whereKey($actor->getKey())->lockForUpdate()->first();
 
-            $conversation = AiConversation::query()
-                ->where('user_id', $actor->getKey())
-                ->where('profile', self::PROFILE)
-                ->orderByDesc('updated_at')
-                ->first();
-
-            return $conversation ?? AiConversation::create([
-                'user_id' => $actor->getKey(),
-                'title' => __('Sam'),
-                'profile' => self::PROFILE,
-            ]);
+            return $this->findConversation($actor) ?? $this->startConversation($actor);
         });
     }
 
     /**
-     * Messages of the actor's Sam conversation, oldest first.
+     * Open an empty thread. Its title is derived from the first message.
+     */
+    public function startConversation(User $actor): AiConversation
+    {
+        return AiConversation::create([
+            'user_id' => $actor->getKey(),
+            'title' => null,
+            'profile' => self::PROFILE,
+        ]);
+    }
+
+    /**
+     * Messages of one conversation of the actor, oldest first.
      *
      * @return Collection<int, AiChatMessage>
      */
-    public function messages(User $actor): Collection
+    public function messages(User $actor, ?AiConversation $conversation = null): Collection
     {
-        $conversation = $this->findConversation($actor);
+        $conversation ??= $this->findConversation($actor);
 
-        if ($conversation === null) {
+        if ($conversation === null || ! $this->owns($actor, $conversation)) {
             return new Collection;
         }
 
@@ -152,10 +196,88 @@ class SamRuntime
     }
 
     /**
-     * Run one turn.
+     * Delete one conversation of the actor with its messages.
+     *
+     * A conversation of another identity is never deleted: the runtime answers
+     * `false` and audits nothing, so a forged id cannot probe the store.
      */
-    public function send(User $actor, string $message, ?SamContext $context = null): SamReply
+    public function deleteConversation(User $actor, AiConversation|string $conversation): bool
     {
+        if (! $this->canUse($actor)) {
+            return false;
+        }
+
+        $conversation = $conversation instanceof AiConversation
+            ? $this->findForActor($actor, (string) $conversation->getKey())
+            : $this->findForActor($actor, $conversation);
+
+        if ($conversation === null) {
+            return false;
+        }
+
+        $counts = DB::transaction(function () use ($conversation): array {
+            $messages = $conversation->messages()->count();
+            $conversation->messages()->delete();
+            $conversation->delete();
+
+            return ['conversations' => 1, 'messages' => $messages];
+        });
+
+        $this->auditLifecycle($actor, 'delete_conversation', $counts);
+
+        return true;
+    }
+
+    /**
+     * Forget every Sam conversation of the actor.
+     *
+     * The audit log is kept: it records that the threads were deleted and how
+     * many messages went with them, never their content.
+     */
+    public function forgetAll(User $actor): int
+    {
+        if (! $this->canUse($actor)) {
+            return 0;
+        }
+
+        $counts = DB::transaction(function () use ($actor): array {
+            $conversationIds = AiConversation::query()
+                ->where('user_id', $actor->getKey())
+                ->where('profile', self::PROFILE)
+                ->select('id');
+
+            $messages = AiChatMessage::query()
+                ->whereIn('conversation_id', $conversationIds)
+                ->count();
+
+            AiChatMessage::query()
+                ->whereIn('conversation_id', $conversationIds)
+                ->delete();
+
+            $conversations = AiConversation::query()
+                ->where('user_id', $actor->getKey())
+                ->where('profile', self::PROFILE)
+                ->delete();
+
+            return ['conversations' => $conversations, 'messages' => $messages];
+        });
+
+        if ($counts['conversations'] > 0) {
+            $this->auditLifecycle($actor, 'forget_all', $counts);
+        }
+
+        return $counts['conversations'];
+    }
+
+    /**
+     * Run one turn, on the selected conversation or on the actor's latest one.
+     */
+    public function send(
+        User $actor,
+        string $message,
+        ?SamContext $context = null,
+        ?AiConversation $conversation = null,
+    ): SamReply {
         $message = trim($message);
 
         if ($message === '') {
@@ -184,7 +306,11 @@ class SamRuntime
             return SamReply::failed('confirmation_phrase');
         }
 
-        $conversation = $this->conversationFor($actor);
+        if ($conversation !== null && ! $this->owns($actor, $conversation)) {
+            return SamReply::failed('not_found');
+        }
+
+        $conversation ??= $this->conversationFor($actor);
         $correlationId = SamTurn::start((string) Str::uuid());
 
         $history = $this->contextMessages($conversation);
@@ -198,7 +324,16 @@ class SamRuntime
             'content' => SamRedactor::redact($message),
             'status' => 'completed',
             'correlation_id' => $correlationId,
+            'context' => $context?->sanitized(),
         ]);
+
+        if (trim((string) $conversation->title) === '') {
+            $title = SamTitle::from($message, $this->titleChars());
+
+            if ($title !== null) {
+                $conversation->forceFill(['title' => $title])->save();
+            }
+        }
 
         $tools = $this->toolsFor($actor);
 
@@ -454,6 +589,15 @@ class SamRuntime
     }
 
     /**
+     * Whether the conversation belongs to the actor's Sam profile.
+     */
+    private function owns(User $actor, AiConversation $conversation): bool
+    {
+        return (string) $conversation->user_id === (string) $actor->getKey()
+            && $conversation->profile === self::PROFILE;
+    }
+
+    /**
      * Previous turns, bounded by configuration and oldest first.
      *
      * @return list<Message>
@@ -555,5 +699,25 @@ class SamRuntime
             $exception instanceof UnsupportedCapabilityException => 'tools_unsupported',
             default => 'failed',
         };
+    }
+
+    /**
+     * Audit the deletion of threads: counts only, never message content.
+     *
+     * @param  array<string, int>  $counts
+     */
+    private function auditLifecycle(User $actor, string $action, array $counts): void
+    {
+        app(RecordMcpInvocation::class)->handle(
+            $actor,
+            'sam_conversations',
+            'completed',
+            SamTurn::correlationId(),
+            null,
+            array_merge([
+                'channel' => 'sam',
+                'action' => $action,
+            ], $counts),
+        );
     }
 }
