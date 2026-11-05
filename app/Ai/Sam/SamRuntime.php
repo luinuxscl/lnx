@@ -381,6 +381,60 @@ class SamRuntime
     }
 
     /**
+     * Regenerate the last turn of a thread from its own prompt.
+     *
+     * The person asked for the same thing again: the pair of the turn is
+     * replaced and the model is called once more under a new correlation, so
+     * the history keeps one answer per prompt and the audit keeps both
+     * attempts. Only the last turn of the thread can be regenerated.
+     */
+    public function retry(User $actor, ?AiConversation $conversation, string $correlationId): SamReply
+    {
+        $correlationId = trim($correlationId);
+
+        if ($correlationId === '' || ! $this->canUse($actor)) {
+            return SamReply::failed('not_found');
+        }
+
+        if (! $this->enabled()) {
+            return SamReply::failed('disabled');
+        }
+
+        if (! $this->ready()) {
+            return SamReply::failed('not_configured');
+        }
+
+        $conversation ??= $this->findConversation($actor);
+
+        if ($conversation === null || ! $this->owns($actor, $conversation)) {
+            return SamReply::failed('not_found');
+        }
+
+        $messages = $conversation->messages()
+            ->where('correlation_id', $correlationId)
+            ->orderBy('id')
+            ->get();
+
+        $prompt = $messages->firstWhere('role', 'user');
+
+        if (! $prompt instanceof AiChatMessage) {
+            return SamReply::failed('not_found');
+        }
+
+        $lastId = $conversation->messages()->max('id');
+
+        if ($messages->last() === null || (string) $messages->last()->getKey() !== (string) $lastId) {
+            return SamReply::failed('not_last_turn');
+        }
+
+        $context = $this->storedContext($prompt->context);
+
+        $conversation->messages()->where('correlation_id', $correlationId)->delete();
+
+        return $this->send($actor, (string) $prompt->content, $context, $conversation);
+    }
+
+    /**
      * Read and proposal tools the actor may use in this turn.
      *
      * Only the kit bases are accepted: any other tool is rejected and audited,
@@ -549,6 +603,37 @@ class SamRuntime
     }
 
     /**
+     * What the agent read or proposed during one turn, carried from its module.
+     *
+     * The runtime only transports it: the module reads its own audit for the
+     * correlation of the turn and answers null when the actor cannot see it.
+     * The trace is never sent to the provider and never reveals a record the
+     * actor could not open.
+     */
+    public function traceFor(User $actor, ?string $correlationId): ?SamTurnTrace
+    {
+        $correlationId = is_string($correlationId) ? trim($correlationId) : '';
+
+        if ($correlationId === '' || ! $this->canUse($actor)) {
+            return null;
+        }
+
+        foreach ($this->registry->contributors() as $contributor) {
+            if (! $contributor instanceof SamTracePresenter) {
+                continue;
+            }
+
+            $trace = $contributor->trace($actor, $correlationId);
+
+            if ($trace instanceof SamTurnTrace) {
+                return $trace;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Conversation starters that respect the actor's permissions.
      *
      * @return list<string>
@@ -694,6 +779,52 @@ class SamRuntime
      *
      * @return list<Message>
      */
+    /**
+     * Rebuild the context stored with a message of the thread.
+     *
+     * The stored context is a sanitized snapshot: scalar identifiers and
+     * bounded filters only, so hydrating it again cannot reintroduce a field
+     * the runtime would not have sent in the first place.
+     */
+    private function storedContext(mixed $context): ?SamContext
+    {
+        if (! is_array($context) || ! is_string($context['source'] ?? null) || trim($context['source']) === '') {
+            return null;
+        }
+
+        $signals = [];
+
+        foreach (is_array($context['signals'] ?? null) ? $context['signals'] : [] as $signal) {
+            if (! is_array($signal) || ! is_string($signal['name'] ?? null) || trim($signal['name']) === '') {
+                continue;
+            }
+
+            $value = $signal['value'] ?? null;
+
+            if (! is_string($value) && ! is_int($value) && ! is_bool($value)) {
+                continue;
+            }
+
+            $signals[] = new SamSignal(
+                $signal['name'],
+                $value,
+                is_string($signal['evidence'] ?? null) ? $signal['evidence'] : null,
+            );
+        }
+
+        $id = $context['id'] ?? null;
+
+        return new SamContext(
+            source: $context['source'],
+            resource: is_string($context['resource'] ?? null) ? $context['resource'] : null,
+            id: is_string($id) ? $id : (is_int($id) ? (string) $id : null),
+            label: is_string($context['label'] ?? null) ? $context['label'] : null,
+            route: is_string($context['route'] ?? null) ? $context['route'] : null,
+            filters: is_array($context['filters'] ?? null) ? $context['filters'] : [],
+            signals: $signals,
+        );
+    }
+
     private function contextMessages(AiConversation $conversation): array
     {
         $messages = $conversation->messages()

@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Actions\RecordMcpInvocation;
 use App\Actions\RecordMcpWrite;
+use App\Ai\Sam\SamTurn;
 use App\Mcp\Attributes\WritesData;
 use App\Models\McpWriteOperation;
 use App\Models\User;
@@ -267,6 +268,10 @@ abstract class WriteTool extends Tool
     {
         $correlationId = request()->attributes->get('mcp.correlation_id');
 
-        return is_string($correlationId) ? $correlationId : (string) Str::uuid();
+        if (is_string($correlationId) && $correlationId !== '') {
+            return $correlationId;
+        }
+
+        return SamTurn::current() ?? (string) Str::uuid();
     }
 }

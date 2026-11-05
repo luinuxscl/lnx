@@ -221,3 +221,64 @@ it('reports exhausted provider credits as its own error', function (): void {
         ->and($reply->error)->toBe('credits')
         ->and($reply->correlationId)->not->toBeNull();
 });
+
+it('regenerates the last turn from its own prompt under a new correlation', function (): void {
+    configureSam();
+    grantSamPermission();
+    registerFakeSam();
+    SamAgent::fake(['Primera respuesta', 'Segunda respuesta']);
+
+    $user = User::factory()->create();
+    $runtime = app(SamRuntime::class);
+
+    $first = $runtime->send($user, 'Hola', new SamContext('fake', 'contact', '1', 'Ada'));
+    $regenerated = $runtime->retry($user, $runtime->findConversation($user), (string) $first->correlationId);
+
+    $messages = $runtime->messages($user);
+
+    expect($regenerated->succeeded())->toBeTrue()
+        ->and($regenerated->text)->toContain('Segunda respuesta')
+        ->and($regenerated->correlationId)->not->toBe($first->correlationId)
+        ->and($messages)->toHaveCount(2)
+        ->and($messages->first()->role)->toBe('user')
+        ->and($messages->first()->content)->toBe('Hola')
+        ->and($messages->first()->context['resource'])->toBe('contact')
+        ->and($messages->last()->correlation_id)->toBe($regenerated->correlationId);
+});
+
+it('regenerates only the last turn of the thread', function (): void {
+    configureSam();
+    grantSamPermission();
+    registerFakeSam();
+    SamAgent::fake(['uno', 'dos', 'tres']);
+
+    $user = User::factory()->create();
+    $runtime = app(SamRuntime::class);
+
+    $first = $runtime->send($user, 'Primera');
+    $runtime->send($user, 'Segunda');
+
+    $reply = $runtime->retry($user, $runtime->findConversation($user), (string) $first->correlationId);
+
+    expect($reply->succeeded())->toBeFalse()
+        ->and($reply->error)->toBe('not_last_turn')
+        ->and($runtime->messages($user))->toHaveCount(4);
+});
+
+it('answers not found when the turn does not belong to the thread', function (): void {
+    configureSam();
+    grantSamPermission();
+    registerFakeSam();
+    SamAgent::fake(['ok']);
+
+    $user = User::factory()->create();
+    $runtime = app(SamRuntime::class);
+
+    $reply = $runtime->send($user, 'Hola');
+    $other = $runtime->retry($user, $runtime->findConversation($user), '33333333-3333-3333-3333-333333333333');
+
+    expect($reply->succeeded())->toBeTrue()
+        ->and($other->succeeded())->toBeFalse()
+        ->and($other->error)->toBe('not_found')
+        ->and($runtime->messages($user))->toHaveCount(2);
+});
