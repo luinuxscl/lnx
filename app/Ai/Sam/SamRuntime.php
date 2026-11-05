@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
+use Laravel\Ai\Exceptions\InsufficientCreditsException;
 use Laravel\Ai\Messages\Message;
 use Throwable;
 
@@ -694,6 +695,7 @@ class SamRuntime
     {
         return match (true) {
             $exception instanceof AiQuotaExceededException => 'quota',
+            $exception instanceof InsufficientCreditsException => 'credits',
             $exception instanceof AiNotConfiguredException => 'not_configured',
             $exception instanceof ModelNotAllowedException => 'not_configured',
             $exception instanceof UnsupportedCapabilityException => 'tools_unsupported',
