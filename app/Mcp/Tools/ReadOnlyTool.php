@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Actions\RecordMcpInvocation;
+use App\Ai\Sam\SamTurn;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -106,6 +107,10 @@ abstract class ReadOnlyTool extends Tool
     {
         $correlationId = request()->attributes->get('mcp.correlation_id');
 
-        return is_string($correlationId) ? $correlationId : (string) Str::uuid();
+        if (is_string($correlationId) && $correlationId !== '') {
+            return $correlationId;
+        }
+
+        return SamTurn::current() ?? (string) Str::uuid();
     }
 }

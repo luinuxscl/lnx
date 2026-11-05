@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
  * @property string $id
  * @property int $user_id
+ * @property string $profile
  * @property string|null $title
  * @property string|null $model
  * @property string|null $system_context
@@ -26,6 +28,7 @@ class AiConversation extends Model
 
     protected $fillable = [
         'user_id',
+        'profile',
         'title',
         'model',
         'system_context',
@@ -55,6 +58,16 @@ class AiConversation extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(AiChatMessage::class, 'conversation_id');
+    }
+
+    /**
+     * Last message of the thread, used by the conversation list.
+     *
+     * @return HasOne<AiChatMessage, $this>
+     */
+    public function latestMessage(): HasOne
+    {
+        return $this->hasOne(AiChatMessage::class, 'conversation_id')->latestOfMany();
     }
 
     /**

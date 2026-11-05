@@ -142,7 +142,7 @@ test('root sees administration and app tool cards instead of metric summaries', 
         ->assertSee('Configura la identidad, la marca y las opciones del sitio.')
         ->assertSee('Verifica que la instalación esté configurada por completo.')
         ->assertSee('Revisa el estado y la configuración del proveedor de IA.')
-        ->assertSee('Mantén conversaciones interactivas con el asistente de IA.')
+        ->assertDontSee('Mantén conversaciones interactivas con el asistente de IA.')
         ->assertSee('Consulta tu propia base de conocimiento con respuestas citadas.')
         ->assertSee('Extrae datos estructurados de documentos.')
         ->assertDontSee('Usuarios totales')

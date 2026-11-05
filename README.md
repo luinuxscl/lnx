@@ -222,6 +222,7 @@ Route::livewire('reports', ReportsIndex::class)
 | `php artisan test`      | Ejecuta la suite de Pest             |
 | `php artisan navigation:sync` | Reconcilia el sidebar con las rutas etiquetadas |
 | `php artisan help:sync` | Materializa el centro de ayuda declarado por los paquetes sin pisar los cambios de root |
+| `php artisan sam:prune-conversations` | Purga el historial de Sam según `SAM_RETENTION_DAYS` |
 | `vendor/bin/pint`       | Formatea el código PHP               |
 | `vendor/bin/phpstan`    | Análisis estático                    |
 | `php artisan lnx:reset` | Reinicia el entorno de desarrollo    |
@@ -776,9 +777,13 @@ Cada llamada usa la aplicación `text_assistant`, así que aplican la allowlist,
 
 Define tu habilidad (por ejemplo una policy) y pásala en `ability`; coloca `<livewire:ai.text-assistant wire:model="tuCampo" ability="tu-habilidad" />` donde estaba tu campo de texto. El componente reutiliza `App\Ai\Agents\TextAssistantAgent` y `App\Ai\TextAssistant`; para variantes nuevas declara su propia aplicación y límites y pásalos al gateway.
 
-## Chat interactivo (conversacional, streaming y herramientas)
+## Chat interactivo (heredado; superficie retirada)
 
-lnx incluye un módulo de chat interactivo conversacional en `/chat` (`chat`) accesible para cualquier cuenta autenticada. Permite crear, seleccionar, continuar y eliminar conversaciones privadas con respuestas progresivas por streaming.
+> **Decisión 2026-11-03:** esta superficie se generaliza como **Sam**, el agente de la plataforma. El runtime y el contrato de contribución viven en el kit (`App\Ai\Sam\*`, issue #84); la identidad y la superficie, en el paquete AGPL `luinuxscl/sam` (#85). Ver [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md) y [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
+
+La ruta `/chat` (`chat`) ya **no es una superficie de usuario**: sale de la navegación y redirige a `dashboard?sam=open`, donde el paquete Sam abre su panel global si está habilitado. El componente Livewire `App\Livewire\Ai\Chat`, `ChatService`, `ChatAgent` y sus conversaciones se conservan como datos y base de streaming hasta la limpieza mayor que retire el código heredado; los enlaces antiguos no se rompen.
+
+El resto de esta sección documenta ese componente heredado.
 
 ### Aislamiento y privacidad
 
@@ -798,6 +803,66 @@ lnx incluye un módulo de chat interactivo conversacional en `/chat` (`chat`) ac
 ### Extender en proyectos derivados
 
 - Para añadir una herramienta de lectura personalizada, crea una clase que implemente `Laravel\Ai\Contracts\Tool`, re-valida `$user->can(...)` dentro de `handle()` y pásala a `ChatService::sendMessage($user, $conv, $prompt, $context, [$miHerramienta])` o configúrala en `ChatAgent::tools()`.
+
+## Sam: runtime y contrato de agente
+
+El kit aloja el **runtime** del agente de la plataforma y el **contrato** con el que los módulos contribuyen conocimiento y operaciones. La identidad (nombre, declaración, persona) y el panel global son producto: los aporta el paquete AGPL `luinuxscl/sam` (#85). El runtime vive en `App\Ai\Sam\*` y no conoce la marca ni el dominio de ningún módulo. Decisión: [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md); contrato completo: [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
+
+### Registro y declaración
+
+Un paquete declara, en el `boot()` de su provider:
+
+```php
+use App\Ai\Sam\SamRegistry;
+
+app(SamRegistry::class)->register('crm', CrmSamContributor::class);   // conocimiento y herramientas
+app(SamRegistry::class)->registerProfile('sam', SamProfile::class);    // identidad del agente
+app(SamRegistry::class)->registerSurface('sam', SamPanel::class);      // panel global (Livewire)
+```
+
+`SamRegistry` valida el prefijo del `source`, la interfaz y la clase; es idempotente (gana la última declaración). Un `SamContributor` declara `knowledge()`, `readTools()`, `proposeTools()`, `context()`, `suggestions()` y `proposals()`. El layout monta la superficie registrada solo si `SAM_ENABLED`, el actor tiene el permiso y hay superficie; el kit no implementa el panel.
+
+### Herramientas y auditoría
+
+- Solo se aceptan herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`: re-comprueban el interruptor y el permiso de superficie, capturan la denegación por autorización/validación y auditan cada invocación. Cualquier otro `Tool` se descarta y se audita como `tool_rejected` (`not_declared`); un nombre de herramienta repetido entre módulos se audita como `duplicate_name`.
+- No existen herramientas de confirmación, borrado, fusión ni envío. La confirmación es una acción humana que ejecuta el módulo.
+- La auditoría reutiliza `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`) y el `correlation_id` del turno; ese id también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events`. La vista de actividad del módulo puede reconstruir el ciclo completo.
+- `SamRuntime::confirm()` re-resuelve la propuesta por correlación, actor y `source`, comprueba vigencia y `canConfirm`, delega en `SamProposalPresenter::confirm()` y audita `confirmed`, `duplicate`, `failed` o `expired`. El kit nunca escribe por su cuenta.
+
+### Persistencia, cuota y redacción
+
+- Una conversación `profile = sam` por actor; el historial se acota con `SAM_MAX_CONTEXT_MESSAGES`. Migraciones: `ai_conversations.profile` y `ai_messages.correlation_id`.
+- Cada turno pasa por `AiGateway::prompt()` con la aplicación `sam.turn`: la cuota se aplica con la declaración del paquete en `AiApplicationRegistry` (o el límite por defecto) y el consumo queda en `ai_usage_events`.
+- La frase `CONFIRM …` se redacta antes de persistir una respuesta y un mensaje que sea solo la frase no se guarda como turno. La genera y valida el módulo.
+
+### Configuración
+
+| Variable | Por defecto | Para qué |
+| --- | --- | --- |
+| `SAM_ENABLED` | `false` | Enciende el runtime; sin esto no se publica la superficie |
+| `SAM_PERMISSION` | `sam.use` | Permiso de superficie; los módulos conservan los suyos |
+| `SAM_APPLICATION` | `sam.turn` | Aplicación de IA para cuota y consumo |
+| `SAM_MAX_INPUT_CHARS` | `2000` | Tope de entrada por turno |
+| `SAM_MAX_CONTEXT_MESSAGES` | `20` | Turnos previos enviados como contexto |
+| `SAM_MAX_OUTPUT_TOKENS` | `1200` | Tope de salida por turno |
+| `SAM_TIMEOUT` | `45` | Timeout del turno en segundos |
+| `SAM_RETENTION_DAYS` | `0` | Retención del historial; `0` no purga |
+| `SAM_BRIEF_APPLICATION` | `sam.brief` | Aplicación de IA para la cuota de la narrativa |
+| `SAM_BRIEF_TIMEOUT` | `4` | Timeout de la narrativa en segundos |
+| `SAM_BRIEF_MAX_TOKENS` | `900` | Tope de salida de la narrativa |
+| `SAM_BRIEF_CACHE_TTL` | `3600` | Caché saneada de la narrativa, en segundos |
+
+La retención se aplica con `php artisan sam:prune-conversations` (programado a diario). Sin `SAM_ENABLED=true`, AI configurada y un modelo con capacidad `tools`, el runtime responde `disabled` o `not_configured` y no llama al proveedor.
+
+### Brief, streaming y preferencias
+
+- `SamRuntime::narrateBrief()` pide al modelo una narrativa corta del brief con verificación de grounding, timeout, caché saneada y una aplicación de cuota propia (`sam.brief`), separada del turno. El fallback determinista del módulo se pinta siempre primero y nunca se bloquea por el modelo.
+- `send()` y `retry()` aceptan un callback de streaming que entrega deltas de texto y el nombre de la tool en uso; nunca sus argumentos ni resultados. Las citas de la respuesta se guardan en `ai_messages.citations`.
+- El runtime lee las preferencias del actor desde el presentador que registre el producto con `SamRegistry::registerPreferences()` y añade la sección `[Preferencias de la persona]` a las instrucciones del turno.
+
+### Estado
+
+El runtime está cubierto por la suite con un contributor, un perfil y una superficie falsos. La capacidad no se anuncia como disponible hasta que el paquete `luinuxscl/sam` (#85) y el primer contributor real (CRM #7) pasen sus pruebas.
 
 ## Extracción de documentos con IA y revisión
 
@@ -823,7 +888,7 @@ lnx incluye un módulo de extracción de datos de documentos con IA en `/documen
 
 ## Base de Conocimiento e Integración RAG (Consultar conocimiento propio)
 
-lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`knowledge.index`, `knowledge.show`) integrado con el chat interactivo contextual (`/chat`). Permite incorporar manuales, guías o catálogos, dividirlos en fragmentos (chunks), generar embeddings vectoriales mediante OpenRouter y responder preguntas con referencias verificables.
+lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`knowledge.index`, `knowledge.show`) integrado con el agente de plataforma Sam. Permite incorporar manuales, guías o catálogos, dividirlos en fragmentos (chunks), generar embeddings vectoriales mediante OpenRouter y responder preguntas con referencias verificables.
 
 ### Bases de conocimiento y audiencia
 
@@ -881,7 +946,7 @@ lnx incluye un módulo RAG (Retrieval-Augmented Generation) en `/knowledge` (`kn
 
 1. Crear una base en `/knowledge/bases` con la audiencia deseada y cargar un manual técnico o procedimiento en `/knowledge` dentro de esa base.
 2. Verificación de que la indexación genere fragmentos coherentes.
-3. Adjuntar la base a una conversación en `/chat` y comprobar que la respuesta incluya citas precisas a la fuente.
+3. Adjuntar la base a una conversación: la UI de adjuntos del panel de Sam llega con su integración; mientras tanto, verifica el flujo con la suite de RAG y comprueba que la respuesta incluya citas precisas a la fuente.
 4. Probar una conversación sin bases y comprobar que no se inyectan fuentes.
 5. Probar con una pregunta ajena al corpus comprobando que el asistente informe que las fuentes no sustentan la respuesta.
 6. Probar una base con audiencia `admin` desde un usuario estándar y verificar que no recupera fragmentos.
@@ -914,7 +979,8 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 | Prioridades y próximo trabajo | [ROADMAP.md](ROADMAP.md); actualizar cuando cambien el estado de las issues, sus dependencias, bloqueos o prioridades acordadas |
 | Centro de ayuda (plan y etapas) | [CENTRO-AYUDA.md](CENTRO-AYUDA.md); decisiones, arquitectura, contrato de extensión, issues y orden para retomar la implementación |
 | Análisis del roadmap | skill `.ai/skills/analyze-roadmap/SKILL.md`; contrasta el roadmap con el tracker real y el estado de Git, detecta desalineaciones y propone el próximo trabajo |
-| Contrato de módulo | [CONTRATO-MODULO.md](CONTRATO-MODULO.md); qué puede declarar un paquete y el estándar de escritura por MCP (Etapa 10) |
+| Contrato de módulo | [CONTRATO-MODULO.md](CONTRATO-MODULO.md); qué puede declarar un paquete, el estándar de escritura por MCP (Etapa 10) y las contribuciones al agente (diseñado) |
+| Decisiones de plataforma | [docs/adr/](docs/adr/); el ADR 0001 define Sam como agente de plataforma |
 | Versiones PHP instaladas | `composer show --direct` |
 | Dependencias JS | `package.json` y `npm ls --depth=0` |
 | Módulos, rutas y estructura | `app/`, `routes/`, `resources/`; `php artisan route:list --except-vendor` |

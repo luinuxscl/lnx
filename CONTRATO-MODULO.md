@@ -1,7 +1,7 @@
 # Contrato de módulo
 
-> **Estado:** implementado (9 de 9 puntos) · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)), **Etapa 11** ([#53](https://github.com/luinuxscl/lnx/issues/53)) y **Centro de ayuda** ([#78](https://github.com/luinuxscl/lnx/issues/78)) · **Última revisión:** 2026-10-20
-> Define **qué puede declarar un módulo (paquete Composer) en lnx** y **bajo qué reglas**. El contrato se deriva del módulo real que lo valida: **Luz** (`luinuxscl/luz`). Nada entra aquí que Luz no use.
+> **Estado:** implementado (10 de 10 puntos; el punto 10 queda a la espera del primer contributor real, con el paquete Sam ya implementado) · **Etapa 10** ([#39](https://github.com/luinuxscl/lnx/issues/39)), **Etapa 11** ([#53](https://github.com/luinuxscl/lnx/issues/53)) y **Centro de ayuda** ([#78](https://github.com/luinuxscl/lnx/issues/78)) · **Última revisión:** 2026-11-03
+> Define **qué puede declarar un módulo (paquete Composer) en lnx** y **bajo qué reglas**. El contrato se deriva de módulos reales: los puntos implementados se validan con **Luz** (`luinuxscl/luz`) y el punto 10 se valida con el **CRM**. Nada entra aquí que un módulo real no use. El punto 10 (contribuciones al agente Sam) se diseñó el 2026-11-03 y aún no está implementado; su decisión vive en [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md).
 
 ---
 
@@ -13,7 +13,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 - La app es una **cáscara**: identidad, `.env`, dominio y `composer require <owner>/<modulo>`.
 - Regla de diseño antes de agregar algo al kit: *¿esto sirve a toda app derivada?* Si no, va al módulo.
 
-## 2. Lo que un paquete ya puede declarar hoy
+## 2. Lo que un paquete puede declarar
 
 | Capacidad | Cómo | Estado |
 | --- | --- | --- |
@@ -23,6 +23,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | Menú del sidebar | Macro `->menu([...])` + `php artisan navigation:sync` (autopublicación y precedencia de root) | ✅ |
 | Identidad por defecto | `App\Support\Settings\IdentitySeederRegistry` en el `boot()` del provider, con prioridad sobre el kit | ✅ |
 | Skills para agentes | `resources/boost/skills/<skill>/SKILL.md`; Boost las distribuye | ✅ |
+| Contribuciones al agente (Sam) | Registro `SamRegistry` + `SamContributor` (§3.9) | 🟢 runtime implementado |
 
 ## 3. El contrato (puntos y estado)
 
@@ -37,6 +38,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | 7 | **Skills del módulo vía Boost** | ✅ Documentado (§3.3) |
 | 8 | **Identidad por defecto**: el paquete aporta sus defaults de marca con prioridad sobre el kit | ✅ Implementado (§3.7) |
 | 9 | **Documentación y FAQ**: el paquete publica guías y preguntas frecuentes en el Centro de ayuda, filtradas por rol | ✅ Implementado (§3.8) |
+| 10 | **Contribuciones al agente (Sam)**: el paquete declara conocimiento, lecturas, propuestas, contexto y sugerencias para Sam | 🟢 Runtime implementado (§3.9) |
 
 ### 3.1 Permisos propios (implementado)
 
@@ -286,6 +288,196 @@ public function boot(): void
 - **Ayuda contextual.** El paquete usa `<x-help-topic slug="luz.primeros-pasos" />` en sus pantallas para enlazar al tema; si el slug no existe o el usuario no puede verlo, el componente no renderiza nada. En el registro de tipos de notificación (`App\Support\Notifications\NotificationTypeRegistry`) la clave opcional `help` declara un callable que devuelve el slug del tema; el centro de notificaciones solo muestra el enlace si la entrada es visible para la identidad.
 - **Búsqueda semántica.** El paquete **no declara nada adicional**: sus entradas publicadas se indexan automáticamente en la base de sistema `product_help`, un documento por entrada e idioma, al ejecutar `help:sync` o al guardar desde `/admin/help`. La búsqueda respeta el idioma actual y vuelve a comprobar los roles de la entrada antes de devolverla; el chat cita el título y enlaza a `/help?topic=<slug>`. La indexación usa `IndexKnowledgeDocumentJob`, por lo que requiere un worker de cola.
 
+### 3.9 Contribuciones al agente (Sam) (runtime implementado)
+
+El kit aloja el **runtime del agente** y un paquete de producto —`luinuxscl/sam`, AGPL-3.0-or-later— aporta su identidad y su superficie. Un módulo no construye su propio chat: declara **qué sabe Sam de su dominio y qué operaciones puede ejecutar**. Nada se expone por estar el paquete en `vendor/`; la declaración es explícita y se valida.
+
+```php
+use App\Ai\Sam\SamRegistry;
+
+public function boot(): void
+{
+    app(SamRegistry::class)->register('crm', CrmSamContributor::class);
+    app(SamRegistry::class)->registerProfile('sam', SamProfile::class);
+    app(SamRegistry::class)->registerSurface('sam', SamPanel::class);
+}
+```
+
+- **`registerProfile`** declara la identidad del agente (`SamProfile`: nombre, declaración literal e instrucciones). Sin perfil, el runtime solo aplica las reglas de plataforma.
+- **`registerSurface`** declara el componente Livewire del panel global. El layout lo monta solo si `SAM_ENABLED`, el actor tiene el permiso de superficie y hay una superficie registrada; el kit no implementa el panel.
+
+Un `SamContributor` declara:
+
+```php
+namespace App\Ai\Sam;
+
+use App\Models\User;
+use Carbon\CarbonInterface;
+use Illuminate\Http\Request;
+use Laravel\Ai\Contracts\Tool;
+
+interface SamContributor
+{
+    public function source(): string;                 // 'crm'
+    public function label(): string;                  // 'CRM'
+    public function knowledge(User $actor): ?string;  // dominio, vocabulario, alcance
+    /** @return list<Tool> */
+    public function readTools(User $actor): array;
+    /** @return list<Tool> */
+    public function proposeTools(User $actor): array;
+    public function context(Request $request): ?SamContext;
+    public function rowContext(User $actor, string $resource, string $id, array $filters = []): ?SamContext;
+    /** @return list<SamSignal> */
+    public function signals(User $actor, SamContext $context): array;
+    /** @return list<string> */
+    public function suggestions(User $actor, ?SamContext $context): array;
+    public function proposals(): ?SamProposalPresenter;
+}
+```
+
+- **`source` obligatorio y con prefijo.** El `source` del registro debe coincidir con `SamContributor::source()` y con el prefijo del paquete (`crm`); si no coinciden, si el `source` está vacío o si la clase no implementa la interfaz, se lanza `InvalidArgumentException`. Registrar dos veces el mismo `source` es idempotente: gana la última declaración.
+- **`knowledge` es instrucción, no contenido público.** Se inserta en el prompt del sistema, nunca se muestra al usuario. Debe ser determinista, sin secretos, sin datos de registros y sin prometer capacidades fuera del alcance del módulo. El runtime la combina con la identidad de Sam y con el Centro de ayuda indexado.
+- **`readTools` y `proposeTools` se autorizan por actor.** Cada herramienta vuelve a comprobar `$user->can(...)` dentro de `handle()` y filtra con `accessibleTo()`/policies. Una herramienta de lectura no puede consultar por fuera del alcance; una de propuesta no puede escribir: delega en la acción de dominio del módulo y devuelve un borrador.
+- **Sin herramientas de confirmación, borrado, fusión ni envío.** El runtime no las acepta. La confirmación es una acción humana que ejecuta el módulo; Sam solo la solicita.
+- **`context` es contexto de pantalla, no un volcado.** Devuelve un `SamContext` con `source`, `resource`, `id`, `label`, `route` y `filters`. No incluye valores de formulario, tokens, hashes ni texto libre del registro. El runtime lo sanea otra vez antes de enviarlo al proveedor.
+- **`rowContext` es el contexto de una fila enfocada.** El navegador envía solo `resource` e `id`; el módulo resuelve la etiqueta, los filtros y el permiso otra vez, y responde `null` cuando el registro queda fuera del alcance del actor. Un `id` falsificado nunca se convierte en el registro de otra identidad. El panel lo invoca al pulsar el disparador de la fila (`sam-focus-row`) y vuelve al contexto de ruta en la siguiente navegación.
+- **`signals` son observaciones deterministas.** El módulo las calcula en SQL, acotadas al alcance y con un `count()`/`exists()` sobre columnas indexadas: nunca recorren el dataset completo. Cada `SamSignal` lleva un `name` estable, un `value` acotado y una `evidence` opcional con el enlace donde la persona puede comprobarla. El runtime las adjunta al contexto (`screen_context.signals`) y una frase del prompt indica al modelo que son ciertas y que no debe inventar otras.
+- **`brief` e `insight` son la lectura determinista del registro.** Un módulo que quiera explicar la ficha en foco implementa también `SamBriefPresenter` (`brief()` e `insight()`). Ambos devuelven `SamBrief`/`SamInsight` compuestos por el módulo a partir de sus propias señales: observaciones ya redactadas y acciones que apuntan a pantallas existentes (`SamAction`), sin ejecutar nada. El runtime no inventa texto: si el módulo devuelve `null` (registro fuera de alcance o sin fila en foco), el panel no muestra brief. `SamRuntime::briefFor()` solo transporta el DTO; la narrativa del modelo, cuando exista, se añade encima y el fallback determinista sigue siendo útil sin proveedor.
+- **`suggestions` respeta permisos y alcance.** Son arranques de conversación, no promesas: no ofrecen una capacidad que el actor no pueda ejecutar.
+- **`proposals` es opcional.** Si el módulo propone escrituras, implementa `SamProposalPresenter` para que el runtime pueda pintar sus borradores y delegar la confirmación.
+- **Bases de herramienta obligatorias.** El runtime solo acepta herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`. Ambas re-comprueban `SAM_ENABLED` y el permiso de superficie, capturan autorización/validación y auditan la invocación; cualquier otro `Tool` se descarta y queda auditado como `tool_rejected` (`reason: not_declared`). Los nombres de herramienta son globales en el turno: un nombre ya expuesto se rechaza con `reason: duplicate_name`. Así el runtime no puede ejecutar confirmación, borrado, fusión ni envío aunque un módulo los declare por error.
+- **Auditoría común.** Cada lectura, propuesta y confirmación se registra en `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`, `tool_rejected`) y el `correlation_id` del turno, que también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events` por la misma correlación. La auditoría de ciclo de vida del borrador sigue siendo del módulo.
+- **Persistencia y aislamiento.** Varias conversaciones `profile = sam` por actor: el runtime las crea (`startConversation()`), las lista (`conversations()`) y permite elegir el hilo de cada turno (`send()` con `AiConversation`); sin hilo elegido se usa el más reciente, creado en la primera interacción. Cada mensaje del actor guarda el `SamContext` saneado del turno en `ai_messages.context` y el título se deriva del primer mensaje sin llamar al modelo (`SAM_TITLE_CHARS`). `deleteConversation()` borra un hilo y `forgetAll()` todos los del actor, siempre con auditoría de conteos y nunca del contenido. El historial se acota con `SAM_MAX_CONTEXT_MESSAGES` y se purga con `sam:prune-conversations` según `SAM_RETENTION_DAYS`. El runtime nunca lee ni escribe la conversación de otra identidad: un id ajeno se trata como inexistente.
+- **Confirmación con frase.** El módulo genera y valida la frase; el runtime re-resuelve la propuesta por correlación, actor y `source`, comprueba `canConfirm` y la caducidad, delega en `SamProposalPresenter::confirm()` y audita el resultado (`confirmed`, `duplicate`, `failed`, `expired`). La frase se redacta antes de persistir cualquier respuesta y un mensaje que sea solo la frase no se guarda como turno.
+- **API del runtime.** `SamRuntime` expone `enabled()`, `ready()`, `canUse()`, `surface()`, `conversations()`, `conversationFor()`, `findConversation()`, `findForActor()`, `startConversation()`, `messages()`, `send()`, `deleteConversation()`, `forgetAll()`, `toolsFor()`, `contextFor()`, `contextForRow()`, `briefFor()`, `suggestions()`, `proposals()` y `confirm()`. La cuota se aplica con la aplicación `sam.turn` (declarada por el paquete con `AiApplicationRegistry`; sin declaración, aplica el límite por defecto).
+
+DTOs compartidos:
+
+```php
+final class SamContext
+{
+    /**
+     * @param  array<string, mixed>  $filters
+     * @param  list<SamSignal>  $signals
+     */
+    public function __construct(
+        public readonly string $source,
+        public readonly ?string $resource = null,
+        public readonly ?string $id = null,
+        public readonly ?string $label = null,
+        public readonly ?string $route = null,
+        public readonly array $filters = [],
+        public readonly array $signals = [],
+    ) {}
+}
+
+final class SamSignal
+{
+    public function __construct(
+        public readonly string $name,
+        public readonly string|int|bool $value,
+        public readonly ?string $evidence = null,
+    ) {}
+}
+
+final class SamProposal
+{
+    /**
+     * @param  list<array{field: string, label: string, old: string, new: string}>  $changes
+     */
+    public function __construct(
+        public readonly string $source,
+        public readonly string $id,
+        public readonly string $correlationId,
+        public readonly string $title,
+        public readonly string $summary,
+        public readonly array $changes,
+        public readonly string $status,
+        public readonly ?CarbonInterface $expiresAt,
+        public readonly ?string $recordUrl,
+        public readonly bool $canConfirm,
+    ) {}
+}
+
+final class SamProposalResult
+{
+    public function __construct(
+        public readonly string $status,   // confirmed | duplicate | failed | expired
+        public readonly string $message,
+        public readonly ?string $recordUrl = null,
+    ) {}
+}
+
+interface SamProposalPresenter
+{
+    /** @return list<SamProposal> */
+    public function forCorrelation(string $correlationId, User $actor): array;
+
+    public function confirm(SamProposal $proposal, User $actor, string $phrase): SamProposalResult;
+}
+```
+
+```php
+interface SamBriefPresenter
+{
+    public function brief(User $actor, SamContext $context): ?SamBrief;
+
+    public function insight(User $actor, SamContext $context): ?SamInsight;
+}
+```
+
+`SamBriefPresenter` **no ejecuta nada**: compone observaciones y acciones ya aprobadas y responde `null` cuando el actor no puede ver el registro.
+
+`SamProposalPresenter` **delega en la acción de confirmación del módulo**; nunca escribe directo. El runtime comprueba el actor y la vigencia antes de llamarlo, y trata `duplicate`, `failed` y `expired` sin presentarlos como éxito.
+
+Responsabilidades del runtime del kit:
+
+| Responsabilidad | Regla |
+| --- | --- |
+| Componer instrucciones | Identidad de Sam + reglas de plataforma + `knowledge` de los módulos instalados y autorizados + contexto de pantalla + ayuda indexada |
+| Resolver herramientas | Solo lecturas y propuestas del registro, autorizadas por actor; sin confirmación, borrado, fusión ni envío |
+| Cuotas y consumo | Aplicación `sam.turn` declarada por el paquete Sam; el `AiGateway` aplica la cuota y registra el consumo |
+| Persistencia | `ai_conversations.profile = sam`; `ai_messages.correlation_id`; retención configurable |
+| Redacción | La frase `CONFIRM …` no se persiste; se redacta antes de guardar una respuesta |
+| Auditoría | Lectura, propuesta y confirmación con actor, correlación, modelo y resultado; visible para el actor |
+| Confirmación | Solo la acción del módulo ejecuta; el runtime no escribe ni confirma por su cuenta |
+| Aislamiento | Un actor nunca ve conversaciones, borradores ni propuestas de otra identidad; una instancia no comparte datos con otra |
+| Interruptores | `SAM_ENABLED` apagado por defecto; modo solo lectura y tope de gasto mediante la cuota de IA |
+
+Superficie:
+
+- El panel es **global**: header, atajo de teclado y panel lateral persistente. Los módulos no crean su propio chat.
+- El módulo puede declarar `context()` y usar `<x-sam-trigger :context="...">` de `lnx-ui` para abrir el panel con el registro o los filtros de la pantalla.
+- Las propuestas se muestran como tarjetas inline con diff, estado, caducidad y el campo de frase. La confirmación llama a `SamProposalPresenter::confirm()`.
+- `/chat` deja de ser una superficie de usuario; el paquete Sam ocupa su lugar. La ruta puede redirigir al panel durante una transición.
+
+Entorno (configuración del paquete Sam):
+
+| Variable | Por defecto | Para qué |
+| --- | --- | --- |
+| `SAM_ENABLED` | `false` | Enciende el agente; sin esto, el panel no se publica |
+| `SAM_MAX_INPUT_CHARS` | `2000` | Tope de entrada por turno |
+| `SAM_MAX_CONTEXT_MESSAGES` | `20` | Turnos previos que se envían como contexto |
+| `SAM_RETENTION_DAYS` | `0` | Retención del historial; `0` no purga |
+| `SAM_PERMISSION` | `sam.use` | Permiso de superficie; los módulos conservan los suyos |
+| `SAM_APPLICATION` | `sam.turn` | Aplicación de IA usada para la cuota y el consumo del turno |
+| `SAM_MAX_OUTPUT_TOKENS` | `1200` | Tope de salida por turno |
+| `SAM_TIMEOUT` | `45` | Timeout del turno en segundos |
+| `SAM_TITLE_CHARS` | `60` | Caracteres del título determinista derivado del primer mensaje |
+
+Criterios de aceptación:
+
+- Un contributor registrado solo aporta conocimiento y herramientas a identidades autorizadas; un usuario sin `sam.use` no abre el panel.
+- Una herramienta de lectura fuera del alcance del actor devuelve una negativa clara y queda auditada; una de propuesta devuelve un borrador y **no** escribe.
+- La confirmación inline ejecuta la acción del módulo con la frase; una segunda confirmación se rechaza y la frase no aparece en el historial.
+- Los hilos están aislados por actor y por instancia: listar, seleccionar, leer y borrar una conversación ajena no devuelve ni elimina nada, y «olvidar todo» solo afecta al actor.
+- El mensaje del actor conserva su contexto saneado y el título del hilo se deriva del primer mensaje sin llamar al modelo.
+- La auditoría reconstruye lectura, propuesta y confirmación con la misma correlación, y registra el borrado de hilos por conteos.
+- Un módulo sin contributor no cambia el comportamiento de Sam.
+- El contrato se cubre con un contributor falso en la suite del kit antes de conectar el CRM.
+
+> **Estado:** runtime implementado en `lnx` el 2026-11-03 (issue #84), paquete `luinuxscl/sam` implementado (issue #85) con identidad, panel y tarjeta de propuesta, y conversaciones múltiples con contexto por mensaje implementadas el 2026-11-04 (issue #88, portadas a `crm-app`). El runtime del kit está cubierto con contributor, perfil y superficie falsos; la suite del paquete corre en una app derivada. La capacidad no se anuncia como disponible hasta que el primer contributor real pase sus pruebas.
+
 ## 4. Escritura por MCP (implementado)
 
 ### 4.1 Principios
@@ -367,7 +559,7 @@ class UploadDocumentTool extends WriteTool
 
 ## 5. Cómo se valida
 
-Cada punto del contrato se valida con **Luz**, el primer módulo. Un punto que Luz no use no entra. Al cerrar la etapa: `CONTRATO-MODULO.md`, el ROADMAP y el CHANGELOG del kit quedan actualizados, y [`references/packages.md`](.ai/skills/implement-feature/references/packages.md) de la skill del kit refleja el contrato vigente. La referencia ya existe y resume las capacidades declarables; se actualiza con cada punto que se cierre.
+Cada punto del contrato se valida con un módulo real. Los puntos implementados se validan con **Luz**, el primer módulo; el punto 10 (contribuciones al agente) se valida con el **CRM**. Un punto que ningún módulo real use no entra. Al cerrar la etapa: `CONTRATO-MODULO.md`, el ROADMAP y el CHANGELOG del kit quedan actualizados, y [`references/packages.md`](.ai/skills/implement-feature/references/packages.md) de la skill del kit refleja el contrato vigente. La referencia ya existe y resume las capacidades declarables; se actualiza con cada punto que se cierre.
 
 ## 6. Versionado
 

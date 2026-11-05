@@ -1,6 +1,13 @@
 <?php
 
+use App\Ai\Sam\SamRegistry;
+use App\Ai\Sam\SamTurn;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
+use Tests\Fixtures\Sam\FakeProposeTool;
+use Tests\Fixtures\Sam\FakeReadTool;
+use Tests\Fixtures\Sam\FakeSamContributor;
 use Tests\TestCase;
 
 /*
@@ -47,4 +54,53 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Configure a ready AI provider for the Sam runtime.
+ */
+function configureSam(string $model = 'test/sam-model'): void
+{
+    config()->set('lnx_sam.enabled', true);
+    config()->set('lnx_ai.enabled', true);
+    config()->set('lnx_ai.provider', 'openrouter');
+    config()->set('lnx_ai.default_model', $model);
+    config()->set('lnx_ai.allowed_models', [
+        $model => [
+            'tools' => true,
+            'structured' => false,
+            'streaming' => true,
+            'context' => 128000,
+        ],
+    ]);
+    config()->set('ai.providers.openrouter.key', 'test-key');
+    config()->set('lnx_ai.limits.user', ['window' => 'hour', 'requests' => 0, 'tokens' => 0]);
+    config()->set('lnx_ai.limits.default', ['window' => 'hour', 'requests' => 0, 'tokens' => 0]);
+}
+
+/**
+ * Grant the surface permission to every identity for the current test.
+ */
+function grantSamPermission(): void
+{
+    Gate::define('sam.use', fn (User $user): bool => true);
+}
+
+/**
+ * Reset the Sam registry and the shared fixture state between cases.
+ */
+function resetSamFixtures(): void
+{
+    FakeReadTool::$denies = false;
+    FakeReadTool::$calls = 0;
+    FakeProposeTool::$calls = 0;
+    FakeSamContributor::$withPresenter = false;
+    FakeSamContributor::$withPlainTool = false;
+    FakeSamContributor::$knowledge = 'Dominio falso con contactos y empresas.';
+    FakeSamContributor::$context = null;
+    FakeSamContributor::$rowContext = null;
+    FakeSamContributor::$signals = [];
+
+    app(SamRegistry::class)->flush();
+    SamTurn::clear();
 }

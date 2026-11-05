@@ -4,6 +4,23 @@ Todas las releases notables del kit **lnx** se documentan en este archivo. El de
 
 El kit sigue [SemVer](https://semver.org/lang/es/) y cada release se publica con una etiqueta anotada `vX.Y.Z` sobre `main`. La versión vigente se declara en `.ai/kit-manifest.json` como `lnx_version` y se copia a cada proyecto creado con `scripts/new-project.sh`.
 
+## [No publicado]
+
+### Añadido
+
+- **Sam: contexto de fila y señales deterministas.** `SamContributor` gana `rowContext(User, resource, id, filters)` —el navegador solo nombra el recurso y el id; el módulo resuelve etiqueta, filtros y permiso, y responde `null` fuera de alcance— y `signals(User, SamContext)`, que devuelve `SamSignal` (`name`, `value`, `evidence`). `SamContext` transporta `signals` y `SamRuntime::contextForRow()` los adjunta también al contexto de ruta; el prompt avisa de que están calculadas y no se inventan. `SamSignal` nuevo en `App\Ai\Sam`.
+- **Sam: saldo del proveedor con mensaje propio.** `SamRuntime` mapea `Laravel\Ai\Exceptions\InsufficientCreditsException` a `credits` en lugar de `failed`, para que el panel distinga «se agotó el saldo de la cuenta del proveedor» de un fallo genérico; el paquete `sam` traduce `errors.credits` y la vista cae en el mensaje genérico cuando la clave no existe.
+- **Sam: conversaciones múltiples por perfil (#88).** `SamRuntime` deja de tener un hilo único por actor: `conversations()`, `startConversation()`, `findForActor()`, `messages(User, ?AiConversation)` y `send()` con conversación seleccionada; `deleteConversation()` y `forgetAll()` borran hilos del actor y auditan solo conteos en `mcp_tool_invocations` (`sam_conversations`, `action: delete_conversation|forget_all`), sin guardar nunca el contenido. `ai_messages` gana `context` con el `SamContext` saneado del turno y el título se deriva del primer mensaje de forma determinista (`SamTitle`, `SAM_TITLE_CHARS`, sin modelo). `sam:prune-conversations` purga además conversaciones vacías más antiguas que la retención. La conversación única existente se conserva con su historial.
+- **Sam: runtime y contrato de agente de plataforma (#84).** `App\Ai\Sam\*`: `SamRegistry` (contributors, perfil y superficie), `SamContributor`, `SamProfile`, DTOs (`SamContext`, `SamProposal`, `SamProposalResult`, `SamProposalPresenter`), `SamRuntime`, `SamInstructions`, `SamAgent`, `SamTurn` y `SamRedactor`. El runtime compone instrucciones, resuelve solo lecturas y propuestas (bases `SamReadTool`/`SamProposeTool`), aplica la cuota `sam.turn`, persiste `ai_conversations.profile = sam` y `ai_messages.correlation_id`, audita en `mcp_tool_invocations` con correlación, redacta la frase `CONFIRM …` y delega la confirmación en el módulo. Incluye el hook de superficie en el layout (`SAM_ENABLED`, permiso y componente registrado), `config/lnx_sam.php`, `.env.example` y el comando `sam:prune-conversations`. La identidad y el panel quedan en el paquete `luinuxscl/sam` (#85).
+
+### Cambiado
+
+- **`/chat` deja de ser una superficie de usuario (#85).** La ruta sale de la navegación y redirige a `dashboard?sam=open`, donde el panel global del paquete `luinuxscl/sam` se abre si `SAM_ENABLED` y el actor tiene `sam.use`. Se retiran la tarjeta del dashboard y la entrada del `NavigationSeeder`; en instalaciones existentes, `navigation:sync` oculta el ítem huérfano. El componente, el servicio y las conversaciones heredadas se conservan hasta la limpieza mayor. Este cambio es incompatible: la próxima release del kit debe ser MAJOR.
+
+### Corregido
+
+- **Endurecimiento del runtime de Sam.** Las bases `SamReadTool`/`SamProposeTool` re-comprueban `SAM_ENABLED` (denegación auditada como `disabled`), el runtime rechaza nombres de herramienta duplicados entre módulos (`duplicate_name`) y la redacción de `CONFIRM …` exige un token de 6 o más caracteres para evitar falsos positivos.
+
 ## [1.0.0] - 2026-11-01
 
 Primera release bajo el esquema SemVer del kit completo.

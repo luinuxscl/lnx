@@ -153,7 +153,6 @@ class NavigationSeeder extends Seeder
                     ['route_name' => 'admin.packages.index'],
                     ['route_name' => 'admin.packages.lnx-ui'],
                     ['route_name' => 'help.index'],
-                    ['route_name' => 'chat'],
                     ['route_name' => 'knowledge.index'],
                     ['route_name' => 'documents.index'],
                     ['route_name' => 'admin.ai.usage', 'label_key' => 'AI usage', 'icon' => 'chart-bar'],
