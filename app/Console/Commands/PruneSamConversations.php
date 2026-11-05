@@ -36,16 +36,24 @@ class PruneSamConversations extends Command
             return self::SUCCESS;
         }
 
+        $cutoff = now()->subDays($days);
+
         $conversationIds = AiConversation::query()
             ->where('profile', SamRuntime::PROFILE)
             ->select('id');
 
-        $deleted = AiChatMessage::query()
+        $messages = AiChatMessage::query()
             ->whereIn('conversation_id', $conversationIds)
-            ->where('created_at', '<', now()->subDays($days))
+            ->where('created_at', '<', $cutoff)
             ->delete();
 
-        $this->info("Deleted {$deleted} Sam message(s) older than {$days} day(s).");
+        $conversations = AiConversation::query()
+            ->where('profile', SamRuntime::PROFILE)
+            ->where('updated_at', '<', $cutoff)
+            ->whereDoesntHave('messages')
+            ->delete();
+
+        $this->info("Deleted {$messages} Sam message(s) and {$conversations} empty conversation(s) older than {$days} day(s).");
 
         return self::SUCCESS;
     }

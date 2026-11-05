@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $tokens
  * @property string $status
  * @property string|null $correlation_id
+ * @property array<string, mixed>|null $context
  * @property array<int, array<string, mixed>>|null $citations
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -32,6 +33,7 @@ class AiChatMessage extends Model
         'tokens',
         'status',
         'correlation_id',
+        'context',
         'citations',
     ];
 
@@ -41,6 +43,7 @@ class AiChatMessage extends Model
     protected function casts(): array
     {
         return [
+            'context' => 'array',
             'citations' => 'array',
         ];
     }

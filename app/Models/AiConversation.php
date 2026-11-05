@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -57,6 +58,16 @@ class AiConversation extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(AiChatMessage::class, 'conversation_id');
+    }
+
+    /**
+     * Last message of the thread, used by the conversation list.
+     *
+     * @return HasOne<AiChatMessage, $this>
+     */
+    public function latestMessage(): HasOne
+    {
+        return $this->hasOne(AiChatMessage::class, 'conversation_id')->latestOfMany();
     }
 
     /**
