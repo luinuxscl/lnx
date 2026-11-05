@@ -450,11 +450,73 @@ class SamRuntime
             $context = $contributor->context($request);
 
             if ($context instanceof SamContext) {
-                return $context;
+                return $this->withSignals($contributor, auth()->user(), $context);
             }
         }
 
         return null;
+    }
+
+    /**
+     * Screen context of one focused row, resolved by the module that owns it.
+     *
+     * The browser only names the resource and the id: the module re-checks the
+     * actor's access, resolves the label and answers null when the record is
+     * out of reach. Labels and filters from the client are never trusted.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function contextForRow(User $actor, string $resource, string $id, array $filters = []): ?SamContext
+    {
+        if (! $this->canUse($actor)) {
+            return null;
+        }
+
+        $resource = trim($resource);
+        $id = trim($id);
+
+        if ($resource === '' || $id === '') {
+            return null;
+        }
+
+        foreach ($this->registry->contributors() as $contributor) {
+            $context = $contributor->rowContext($actor, $resource, $id, $filters);
+
+            if ($context instanceof SamContext) {
+                return $this->withSignals($contributor, $actor, $context);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Attach the deterministic signals the module declares for the context.
+     *
+     * They are computed by the module and only carried here: the runtime never
+     * invents an observation.
+     */
+    private function withSignals(SamContributor $contributor, ?User $actor, SamContext $context): SamContext
+    {
+        if (! $actor instanceof User) {
+            return $context;
+        }
+
+        $signals = $contributor->signals($actor, $context);
+
+        if ($signals === []) {
+            return $context;
+        }
+
+        return new SamContext(
+            source: $context->source,
+            resource: $context->resource,
+            id: $context->id,
+            label: $context->label,
+            route: $context->route,
+            filters: $context->filters,
+            signals: $signals,
+        );
     }
 
     /**

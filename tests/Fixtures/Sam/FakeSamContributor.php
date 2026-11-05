@@ -5,6 +5,7 @@ namespace Tests\Fixtures\Sam;
 use App\Ai\Sam\SamContext;
 use App\Ai\Sam\SamContributor;
 use App\Ai\Sam\SamProposalPresenter;
+use App\Ai\Sam\SamSignal;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -17,6 +18,13 @@ class FakeSamContributor implements SamContributor
     public static ?string $knowledge = 'Dominio falso con contactos y empresas.';
 
     public static ?SamContext $context = null;
+
+    public static ?SamContext $rowContext = null;
+
+    /**
+     * @var list<SamSignal>
+     */
+    public static array $signals = [];
 
     public function source(): string
     {
@@ -52,6 +60,16 @@ class FakeSamContributor implements SamContributor
     public function context(Request $request): ?SamContext
     {
         return self::$context;
+    }
+
+    public function rowContext(User $actor, string $resource, string $id, array $filters = []): ?SamContext
+    {
+        return self::$rowContext;
+    }
+
+    public function signals(User $actor, SamContext $context): array
+    {
+        return self::$signals;
     }
 
     public function suggestions(User $actor, ?SamContext $context): array
