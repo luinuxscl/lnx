@@ -2,6 +2,7 @@
 
 namespace App\Ai\Sam;
 
+use App\Models\User;
 use InvalidArgumentException;
 use Livewire\Component;
 
@@ -25,6 +26,13 @@ class SamRegistry
     private ?SamProfile $profile = null;
 
     private ?string $surface = null;
+
+    /**
+     * Registered preference sources, keyed by their package.
+     *
+     * @var array<string, SamPreferencesPresenter>
+     */
+    private array $preferences = [];
 
     /**
      * Declare the contributor a module contributes to Sam.
@@ -86,6 +94,34 @@ class SamRegistry
         $this->surface = $component;
     }
 
+    /**
+     * Declare the source that stores the person's preferences.
+     *
+     * @param  class-string  $presenter
+     */
+    public function registerPreferences(string $source, string $presenter): void
+    {
+        $this->normalizeSource($source);
+
+        $this->preferences[$source] = $this->resolve($presenter, SamPreferencesPresenter::class, 'preferences');
+    }
+
+    /**
+     * Preferences of the actor, or the defaults when no source answers.
+     */
+    public function preferencesFor(User $actor): SamPreferences
+    {
+        foreach ($this->preferences as $presenter) {
+            $preferences = $presenter->preferences($actor);
+
+            if ($preferences instanceof SamPreferences) {
+                return $preferences;
+            }
+        }
+
+        return SamPreferences::defaults();
+    }
+
     public function has(string $source): bool
     {
         return array_key_exists($this->normalizeSource($source), $this->contributors);
@@ -122,6 +158,7 @@ class SamRegistry
         $this->contributors = [];
         $this->profile = null;
         $this->surface = null;
+        $this->preferences = [];
     }
 
     private function normalizeSource(string $source): string

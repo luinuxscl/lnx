@@ -16,11 +16,19 @@ use App\Models\AiConversation;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Exceptions\InsufficientCreditsException;
 use Laravel\Ai\Messages\Message;
+use Laravel\Ai\Responses\Data\Citation as CitationData;
+use Laravel\Ai\Responses\Data\UrlCitation;
+use Laravel\Ai\Streaming\Events\Citation as CitationEvent;
+use Laravel\Ai\Streaming\Events\TextDelta;
+use Laravel\Ai\Streaming\Events\ToolCall as ToolCallEvent;
+use Laravel\Ai\Streaming\Events\ToolResult as ToolResultEvent;
 use Throwable;
 
 /**
@@ -272,12 +280,20 @@ class SamRuntime
 
     /**
      * Run one turn, on the selected conversation or on the actor's latest one.
+     *
+     * When `$onEvent` is provided the answer is streamed through it as the
+     * provider emits it. The callback only receives bounded events: text
+     * deltas and the name of the tool being used, never its arguments or its
+     * results. The complete trace still comes from the module after the turn.
+     *
+     * @param  (callable(array{type: string, delta?: string, tool?: string}): void)|null  $onEvent
      */
     public function send(
         User $actor,
         string $message,
         ?SamContext $context = null,
         ?AiConversation $conversation = null,
+        ?callable $onEvent = null,
     ): SamReply {
         $message = trim($message);
 
@@ -343,21 +359,36 @@ class SamRuntime
             ->withTools($tools)
             ->withInstructions($this->instructions->compose($actor, $message, $context, $firstAssistantTurn));
 
+        $capabilities = $tools === [] ? [] : ['tools'];
+        $streamed = null;
+
         try {
-            $response = $this->gateway->prompt(
-                $agent,
-                $message,
-                capabilities: $tools === [] ? [] : ['tools'],
-                timeout: $agent->timeout(),
-                application: $this->application(),
-                reservedTokens: $agent->maxTokens(),
-                correlationId: $correlationId,
-            );
+            if ($onEvent !== null) {
+                $streamed = $this->streamTurn($agent, $message, $capabilities, $correlationId, $onEvent);
+            }
+
+            if ($streamed === null) {
+                $response = $this->gateway->prompt(
+                    $agent,
+                    $message,
+                    capabilities: $capabilities,
+                    timeout: $agent->timeout(),
+                    application: $this->application(),
+                    reservedTokens: $agent->maxTokens(),
+                    correlationId: $correlationId,
+                );
+
+                $streamed = [
+                    'text' => trim((string) $response->text),
+                    'tokens' => $response->usage->totalTokens(),
+                    'citations' => [],
+                ];
+            }
         } catch (Throwable $exception) {
             return SamReply::failed($this->errorKey($exception), $correlationId);
         }
 
-        $text = trim((string) $response->text);
+        $text = $streamed['text'];
 
         if ($text === '') {
             return SamReply::failed('empty_response', $correlationId);
@@ -365,19 +396,148 @@ class SamRuntime
 
         $text = $this->guaranteeDeclaration($text, $firstAssistantTurn);
 
+        $citations = $this->citationsFor($text, $streamed['citations']);
+
         AiChatMessage::create([
             'conversation_id' => $conversation->id,
             'role' => 'assistant',
             'content' => SamRedactor::redact($text),
             'status' => 'completed',
-            'tokens' => $response->usage->totalTokens(),
+            'tokens' => $streamed['tokens'],
             'correlation_id' => $correlationId,
+            'citations' => $citations === [] ? null : $citations,
         ]);
 
         $conversation->touch();
         $this->prune($actor);
 
-        return SamReply::ok($text, $correlationId, $response->usage->totalTokens());
+        return SamReply::ok($text, $correlationId, $streamed['tokens'], $citations);
+    }
+
+    /**
+     * Stream one turn and collect its final text, tokens and citations.
+     *
+     * It answers null when the resolved model does not declare streaming, so
+     * the caller falls back to a regular prompt without failing the turn.
+     *
+     * @param  list<string>  $capabilities
+     * @param  callable(array{type: string, delta?: string, tool?: string}): void  $onEvent
+     * @return array{text: string, tokens: int, citations: list<array{type: string, title: string, url: string, slug?: string}>}|null
+     */
+    private function streamTurn(
+        SamAgent $agent,
+        string $message,
+        array $capabilities,
+        string $correlationId,
+        callable $onEvent,
+    ): ?array {
+        try {
+            $streamable = $this->gateway->stream(
+                $agent,
+                $message,
+                capabilities: $capabilities,
+                timeout: $agent->timeout(),
+                application: $this->application(),
+                reservedTokens: $agent->maxTokens(),
+                correlationId: $correlationId,
+            );
+        } catch (UnsupportedCapabilityException) {
+            return null;
+        }
+
+        $text = '';
+        $citations = [];
+
+        foreach ($streamable as $event) {
+            if ($event instanceof TextDelta) {
+                $text .= $event->delta;
+                $onEvent(['type' => 'text', 'delta' => $event->delta]);
+            } elseif ($event instanceof ToolCallEvent) {
+                $onEvent(['type' => 'tool', 'tool' => $event->toolCall->name]);
+            } elseif ($event instanceof ToolResultEvent) {
+                $onEvent(['type' => 'tool', 'tool' => $event->toolResult->name]);
+            } elseif ($event instanceof CitationEvent) {
+                $this->pushCitation($citations, $event->citation);
+            }
+        }
+
+        foreach ($streamable->citations as $citation) {
+            $this->pushCitation($citations, $citation);
+        }
+
+        return [
+            'text' => trim($text),
+            'tokens' => (int) ($streamable->usage?->totalTokens() ?? 0),
+            'citations' => $citations,
+        ];
+    }
+
+    /**
+     * Append a provider citation when it is a clickable URL.
+     *
+     * @param  list<array{type: string, title: string, url: string}>  $citations
+     */
+    private function pushCitation(array &$citations, CitationData $citation): void
+    {
+        if (! $citation instanceof UrlCitation) {
+            return;
+        }
+
+        $url = trim($citation->url);
+
+        if ($url === '') {
+            return;
+        }
+
+        foreach ($citations as $existing) {
+            if ($existing['url'] === $url) {
+                return;
+            }
+        }
+
+        $citations[] = [
+            'type' => 'web',
+            'title' => trim((string) ($citation->title ?? '')) ?: $url,
+            'url' => $url,
+        ];
+    }
+
+    /**
+     * Citations of the answer: the help sources it used plus the provider's.
+     *
+     * A help source is cited only when the answer mentions its title or its
+     * URL, so the message never links documentation the model did not use.
+     *
+     * @param  list<array{type: string, title: string, url: string}>  $web
+     * @return list<array{type: string, title: string, url: string, slug?: string}>
+     */
+    private function citationsFor(string $text, array $web): array
+    {
+        $citations = [];
+        $needle = mb_strtolower($text);
+
+        foreach ($this->instructions->lastSources() as $source) {
+            $title = mb_strtolower(trim($source['title']));
+            $url = mb_strtolower(trim($source['url']));
+
+            if (($title === '' || ! str_contains($needle, $title))
+                && ($url === '' || ! str_contains($needle, $url))) {
+                continue;
+            }
+
+            $citations[] = [
+                'type' => 'help',
+                'slug' => $source['slug'],
+                'title' => $source['title'],
+                'url' => $source['url'],
+            ];
+        }
+
+        foreach ($web as $citation) {
+            $citations[] = $citation;
+        }
+
+        return $citations;
     }
 
     /**
@@ -387,8 +547,10 @@ class SamRuntime
      * replaced and the model is called once more under a new correlation, so
      * the history keeps one answer per prompt and the audit keeps both
      * attempts. Only the last turn of the thread can be regenerated.
+     *
+     * @param  (callable(array{type: string, delta?: string, tool?: string}): void)|null  $onEvent
      */
-    public function retry(User $actor, ?AiConversation $conversation, string $correlationId): SamReply
+    public function retry(User $actor, ?AiConversation $conversation, string $correlationId, ?callable $onEvent = null): SamReply
     {
         $correlationId = trim($correlationId);
 
@@ -431,7 +593,7 @@ class SamRuntime
 
         $conversation->messages()->where('correlation_id', $correlationId)->delete();
 
-        return $this->send($actor, (string) $prompt->content, $context, $conversation);
+        return $this->send($actor, (string) $prompt->content, $context, $conversation, $onEvent);
     }
 
     /**
@@ -600,6 +762,127 @@ class SamRuntime
         }
 
         return null;
+    }
+
+    /**
+     * AI application used by the brief narrative, separate from the chat turn.
+     */
+    public function briefApplication(): string
+    {
+        $application = config('lnx_sam.brief_application', 'sam.brief');
+
+        return is_string($application) && trim($application) !== '' ? trim($application) : 'sam.brief';
+    }
+
+    /**
+     * Model narrative of a deterministic brief, verified and cached.
+     *
+     * The module keeps owning the fallback: this method only returns a
+     * narrative when the provider answers within the brief timeout and the
+     * text passes the grounding verification. Quota exhaustion, provider
+     * failures and rejected texts answer null so the caller keeps the
+     * deterministic fallback without showing an error.
+     */
+    public function narrateBrief(User $actor, SamBrief $brief): ?string
+    {
+        if (! $this->canUse($actor) || ! $this->enabled() || ! $this->ready()) {
+            return null;
+        }
+
+        if ($brief->signals === []) {
+            return null;
+        }
+
+        $locale = app()->getLocale();
+        $cacheKey = 'sam.brief.narrative.'.$actor->getKey().'.'.sha1($brief->toPrompt().'|'.$locale);
+        $failedKey = $cacheKey.'.failed';
+
+        $cached = Cache::get($cacheKey);
+
+        if (is_string($cached) && trim($cached) !== '') {
+            return $cached;
+        }
+
+        if (Cache::has($failedKey)) {
+            return null;
+        }
+
+        $agent = new SamBriefNarrativeAgent;
+
+        $payload = [
+            'resource' => $brief->resourceLabel,
+            'label' => $brief->label,
+            'signals' => array_map(
+                fn (SamSignal $signal): array => $signal->sanitized(),
+                $brief->signals,
+            ),
+        ];
+
+        $prompt = 'Registro en foco: '.json_encode(
+            $payload,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+        );
+
+        $correlationId = (string) Str::uuid();
+        $startedAt = microtime(true);
+
+        try {
+            $response = $this->gateway->prompt(
+                $agent,
+                $prompt,
+                capabilities: [],
+                timeout: $agent->timeout(),
+                application: $this->briefApplication(),
+                reservedTokens: $agent->maxTokens(),
+                correlationId: $correlationId,
+            );
+        } catch (Throwable $exception) {
+            Cache::put($failedKey, true, now()->addSeconds(60));
+            $this->logBriefRejection($brief, $correlationId, $this->errorKey($exception));
+
+            return null;
+        }
+
+        // The provider may answer after the budget: the fallback is already
+        // painted, so a late narrative is ignored instead of replacing it.
+        if ((microtime(true) - $startedAt) > $agent->timeout()) {
+            Cache::put($failedKey, true, now()->addSeconds(60));
+            $this->logBriefRejection($brief, $correlationId, 'timeout');
+
+            return null;
+        }
+
+        $narrative = trim((string) $response->text);
+
+        $reason = app(SamBriefNarrativeVerifier::class)->verify($brief, $narrative);
+
+        if ($reason !== null) {
+            Cache::put($failedKey, true, now()->addSeconds(60));
+            $this->logBriefRejection($brief, $correlationId, $reason);
+
+            return null;
+        }
+
+        $ttl = (int) config('lnx_sam.brief_cache_ttl', 3600);
+
+        if ($ttl > 0) {
+            Cache::put($cacheKey, $narrative, now()->addSeconds($ttl));
+        }
+
+        return $narrative;
+    }
+
+    /**
+     * Log a rejected narrative without storing its text.
+     */
+    private function logBriefRejection(SamBrief $brief, string $correlationId, string $reason): void
+    {
+        Log::info('sam.brief.narrative.rejected', [
+            'source' => $brief->source,
+            'resource' => $brief->resource,
+            'reason' => $reason,
+            'correlation_id' => $correlationId,
+        ]);
     }
 
     /**

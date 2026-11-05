@@ -31,6 +31,7 @@ final class SamBrief
         public readonly array $actions = [],
         public readonly ?string $evidence = null,
         public readonly ?string $continuePrompt = null,
+        public readonly ?string $narrativeUrl = null,
     ) {}
 
     /**

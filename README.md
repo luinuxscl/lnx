@@ -847,8 +847,18 @@ app(SamRegistry::class)->registerSurface('sam', SamPanel::class);      // panel 
 | `SAM_MAX_OUTPUT_TOKENS` | `1200` | Tope de salida por turno |
 | `SAM_TIMEOUT` | `45` | Timeout del turno en segundos |
 | `SAM_RETENTION_DAYS` | `0` | Retención del historial; `0` no purga |
+| `SAM_BRIEF_APPLICATION` | `sam.brief` | Aplicación de IA para la cuota de la narrativa |
+| `SAM_BRIEF_TIMEOUT` | `4` | Timeout de la narrativa en segundos |
+| `SAM_BRIEF_MAX_TOKENS` | `900` | Tope de salida de la narrativa |
+| `SAM_BRIEF_CACHE_TTL` | `3600` | Caché saneada de la narrativa, en segundos |
 
 La retención se aplica con `php artisan sam:prune-conversations` (programado a diario). Sin `SAM_ENABLED=true`, AI configurada y un modelo con capacidad `tools`, el runtime responde `disabled` o `not_configured` y no llama al proveedor.
+
+### Brief, streaming y preferencias
+
+- `SamRuntime::narrateBrief()` pide al modelo una narrativa corta del brief con verificación de grounding, timeout, caché saneada y una aplicación de cuota propia (`sam.brief`), separada del turno. El fallback determinista del módulo se pinta siempre primero y nunca se bloquea por el modelo.
+- `send()` y `retry()` aceptan un callback de streaming que entrega deltas de texto y el nombre de la tool en uso; nunca sus argumentos ni resultados. Las citas de la respuesta se guardan en `ai_messages.citations`.
+- El runtime lee las preferencias del actor desde el presentador que registre el producto con `SamRegistry::registerPreferences()` y añade la sección `[Preferencias de la persona]` a las instrucciones del turno.
 
 ### Estado
 

@@ -2,13 +2,17 @@
 
 use App\Ai\Sam\SamContext;
 use App\Ai\Sam\SamInstructions;
+use App\Ai\Sam\SamPreferences;
 use App\Ai\Sam\SamRegistry;
 use App\Models\User;
 use Tests\Fixtures\Sam\FakeSamContributor;
+use Tests\Fixtures\Sam\FakeSamPreferences;
 use Tests\Fixtures\Sam\FakeSamProfile;
 
 beforeEach(function (): void {
     resetSamFixtures();
+
+    FakeSamPreferences::$preferences = null;
 
     app(SamRegistry::class)->register('fake', FakeSamContributor::class);
     app(SamRegistry::class)->registerProfile('fake', FakeSamProfile::class);
@@ -56,4 +60,32 @@ it('works without a registered profile', function (): void {
 
     expect($instructions)->toContain('Dominio falso')
         ->and($instructions)->not->toContain('Eres Fake Sam');
+});
+
+it('composes the person preferences into the instructions', function (): void {
+    FakeSamPreferences::$preferences = new SamPreferences(
+        verbosity: SamPreferences::DETAILED,
+        showWhy: false,
+        showSources: false,
+    );
+
+    app(SamRegistry::class)->registerPreferences('fake', FakeSamPreferences::class);
+
+    $instructions = app(SamInstructions::class)->compose(User::factory()->create(), 'hola');
+
+    expect($instructions)
+        ->toContain('[Preferencias de la persona]')
+        ->toContain('Respuestas detalladas')
+        ->toContain('No expliques el porqué')
+        ->toContain('No incluyas enlaces')
+        ->not->toContain('Respuestas concisas');
+});
+
+it('uses the conservative defaults without a preference source', function (): void {
+    $instructions = app(SamInstructions::class)->compose(User::factory()->create(), 'hola');
+
+    expect($instructions)
+        ->toContain('Respuestas concisas')
+        ->toContain('Explica brevemente por qué')
+        ->toContain('cita su título y su enlace');
 });

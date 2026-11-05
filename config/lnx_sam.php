@@ -43,6 +43,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Brief narrative
+    |--------------------------------------------------------------------------
+    |
+    | The brief keeps its deterministic fallback and may receive a model
+    | narrative. That call uses its own quota bucket, a short timeout and a
+    | session cache, so it never consumes the chat turn or blocks the panel.
+    |
+    */
+
+    'brief_application' => (string) env('SAM_BRIEF_APPLICATION', 'sam.brief'),
+
+    'brief_timeout' => (int) env('SAM_BRIEF_TIMEOUT', 4),
+
+    'brief_max_tokens' => (int) env('SAM_BRIEF_MAX_TOKENS', 900),
+
+    'brief_cache_ttl' => (int) env('SAM_BRIEF_CACHE_TTL', 3600),
+
+    /*
+    |--------------------------------------------------------------------------
     | Turn bounds
     |--------------------------------------------------------------------------
     |
