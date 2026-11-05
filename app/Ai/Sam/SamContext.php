@@ -13,6 +13,7 @@ final class SamContext
 {
     /**
      * @param  array<string, mixed>  $filters
+     * @param  list<SamSignal>  $signals
      */
     public function __construct(
         public readonly string $source,
@@ -21,12 +22,13 @@ final class SamContext
         public readonly ?string $label = null,
         public readonly ?string $route = null,
         public readonly array $filters = [],
+        public readonly array $signals = [],
     ) {}
 
     /**
      * A bounded, scalar-only representation safe to send to the provider.
      *
-     * @return array{source: string, resource?: string, id?: string, label?: string, route?: string, filters?: array<string, bool|int|float|string>}
+     * @return array{source: string, resource?: string, id?: string, label?: string, route?: string, filters?: array<string, bool|int|float|string>, signals?: list<array{name: string, value: string|int|bool, evidence?: string}>}
      */
     public function sanitized(): array
     {
@@ -56,6 +58,16 @@ final class SamContext
 
         if ($filters !== []) {
             $context['filters'] = $filters;
+        }
+
+        $signals = [];
+
+        foreach ($this->signals as $signal) {
+            $signals[] = $signal->sanitized();
+        }
+
+        if ($signals !== []) {
+            $context['signals'] = $signals;
         }
 
         return $context;

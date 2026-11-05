@@ -43,6 +43,16 @@ class DuplicateToolContributor implements SamContributor
         return null;
     }
 
+    public function rowContext(User $actor, string $resource, string $id, array $filters = []): ?SamContext
+    {
+        return null;
+    }
+
+    public function signals(User $actor, SamContext $context): array
+    {
+        return [];
+    }
+
     public function suggestions(User $actor, ?SamContext $context): array
     {
         return [];

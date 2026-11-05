@@ -52,6 +52,26 @@ interface SamContributor
     public function context(Request $request): ?SamContext;
 
     /**
+     * Screen context of one row the person focused, if it is theirs to see.
+     *
+     * The browser sends only the resource and the id: the module resolves the
+     * label and the filters again and answers null when the identity cannot
+     * reach the record. Never trust a label sent from the client.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function rowContext(User $actor, string $resource, string $id, array $filters = []): ?SamContext;
+
+    /**
+     * Deterministic observations about the record of the context.
+     *
+     * Computed by the module in SQL, never by the model.
+     *
+     * @return list<SamSignal>
+     */
+    public function signals(User $actor, SamContext $context): array;
+
+    /**
      * Conversation starters that respect the identity's permissions.
      *
      * @return list<string>

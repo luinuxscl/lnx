@@ -98,6 +98,8 @@ function resetSamFixtures(): void
     FakeSamContributor::$withPlainTool = false;
     FakeSamContributor::$knowledge = 'Dominio falso con contactos y empresas.';
     FakeSamContributor::$context = null;
+    FakeSamContributor::$rowContext = null;
+    FakeSamContributor::$signals = [];
 
     app(SamRegistry::class)->flush();
     SamTurn::clear();

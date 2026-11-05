@@ -326,6 +326,9 @@ interface SamContributor
     /** @return list<Tool> */
     public function proposeTools(User $actor): array;
     public function context(Request $request): ?SamContext;
+    public function rowContext(User $actor, string $resource, string $id, array $filters = []): ?SamContext;
+    /** @return list<SamSignal> */
+    public function signals(User $actor, SamContext $context): array;
     /** @return list<string> */
     public function suggestions(User $actor, ?SamContext $context): array;
     public function proposals(): ?SamProposalPresenter;
@@ -337,6 +340,8 @@ interface SamContributor
 - **`readTools` y `proposeTools` se autorizan por actor.** Cada herramienta vuelve a comprobar `$user->can(...)` dentro de `handle()` y filtra con `accessibleTo()`/policies. Una herramienta de lectura no puede consultar por fuera del alcance; una de propuesta no puede escribir: delega en la acción de dominio del módulo y devuelve un borrador.
 - **Sin herramientas de confirmación, borrado, fusión ni envío.** El runtime no las acepta. La confirmación es una acción humana que ejecuta el módulo; Sam solo la solicita.
 - **`context` es contexto de pantalla, no un volcado.** Devuelve un `SamContext` con `source`, `resource`, `id`, `label`, `route` y `filters`. No incluye valores de formulario, tokens, hashes ni texto libre del registro. El runtime lo sanea otra vez antes de enviarlo al proveedor.
+- **`rowContext` es el contexto de una fila enfocada.** El navegador envía solo `resource` e `id`; el módulo resuelve la etiqueta, los filtros y el permiso otra vez, y responde `null` cuando el registro queda fuera del alcance del actor. Un `id` falsificado nunca se convierte en el registro de otra identidad. El panel lo invoca al pulsar el disparador de la fila (`sam-focus-row`) y vuelve al contexto de ruta en la siguiente navegación.
+- **`signals` son observaciones deterministas.** El módulo las calcula en SQL, acotadas al alcance y con un `count()`/`exists()` sobre columnas indexadas: nunca recorren el dataset completo. Cada `SamSignal` lleva un `name` estable, un `value` acotado y una `evidence` opcional con el enlace donde la persona puede comprobarla. El runtime las adjunta al contexto (`screen_context.signals`) y una frase del prompt indica al modelo que son ciertas y que no debe inventar otras.
 - **`suggestions` respeta permisos y alcance.** Son arranques de conversación, no promesas: no ofrecen una capacidad que el actor no pueda ejecutar.
 - **`proposals` es opcional.** Si el módulo propone escrituras, implementa `SamProposalPresenter` para que el runtime pueda pintar sus borradores y delegar la confirmación.
 - **Bases de herramienta obligatorias.** El runtime solo acepta herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`. Ambas re-comprueban `SAM_ENABLED` y el permiso de superficie, capturan autorización/validación y auditan la invocación; cualquier otro `Tool` se descarta y queda auditado como `tool_rejected` (`reason: not_declared`). Los nombres de herramienta son globales en el turno: un nombre ya expuesto se rechaza con `reason: duplicate_name`. Así el runtime no puede ejecutar confirmación, borrado, fusión ni envío aunque un módulo los declare por error.
@@ -352,6 +357,7 @@ final class SamContext
 {
     /**
      * @param  array<string, mixed>  $filters
+     * @param  list<SamSignal>  $signals
      */
     public function __construct(
         public readonly string $source,
@@ -360,6 +366,16 @@ final class SamContext
         public readonly ?string $label = null,
         public readonly ?string $route = null,
         public readonly array $filters = [],
+        public readonly array $signals = [],
+    ) {}
+}
+
+final class SamSignal
+{
+    public function __construct(
+        public readonly string $name,
+        public readonly string|int|bool $value,
+        public readonly ?string $evidence = null,
     ) {}
 }
 
