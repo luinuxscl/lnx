@@ -47,9 +47,18 @@ class SamAccess
     }
 
     /**
-     * Effective mode of the identity: the lowest of the deployment ceiling and
-     * the ceiling of their role. An identity without the surface permission,
-     * or without a session, is read only.
+     * Ceiling the identity can reach before their own preference. It does not
+     * depend on the surface permission: that gate belongs to `modeFor()`.
+     */
+    public function ceilingFor(?User $actor): SamMode
+    {
+        return $this->modes->ceilingFor($actor);
+    }
+
+    /**
+     * Effective mode of the identity: the lowest of the deployment ceiling, the
+     * ceiling of their role and their preference. An identity without the
+     * surface permission, or without a session, is read only.
      */
     public function modeFor(?User $actor): SamMode
     {

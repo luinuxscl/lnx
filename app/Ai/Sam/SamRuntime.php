@@ -72,6 +72,14 @@ class SamRuntime
     }
 
     /**
+     * Ceiling the actor can reach before their own preference.
+     */
+    public function ceilingFor(User $actor): SamMode
+    {
+        return $this->access->ceilingFor($actor);
+    }
+
+    /**
      * Effective mode of the actor, for the surface and the tools of the turn.
      */
     public function modeFor(User $actor): SamMode

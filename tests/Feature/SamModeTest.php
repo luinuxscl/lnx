@@ -3,6 +3,7 @@
 use App\Ai\Sam\SamAccess;
 use App\Ai\Sam\SamMode;
 use App\Ai\Sam\SamModeResolver;
+use App\Ai\Sam\SamPreferences;
 use App\Ai\Sam\SamRegistry;
 use App\Ai\Sam\SamRisk;
 use App\Ai\Sam\SamRuntime;
@@ -14,9 +15,13 @@ use Database\Seeders\RolePermissionSeeder;
 use Laravel\Ai\Tools\Request;
 use Tests\Fixtures\Sam\FakeProposeTool;
 use Tests\Fixtures\Sam\FakeSamContributor;
+use Tests\Fixtures\Sam\FakeSamPreferences;
+use Tests\Fixtures\Sam\RecursiveSamPreferences;
 
 beforeEach(function (): void {
     resetSamFixtures();
+    FakeSamPreferences::$preferences = null;
+    RecursiveSamPreferences::$calls = 0;
     $this->seed(RolePermissionSeeder::class);
 });
 
@@ -80,6 +85,55 @@ it('takes the highest ceiling among the roles of the identity', function (): voi
     $user->assignRole(Role::Root->value);
 
     expect(app(SamModeResolver::class)->for($user))->toBe(SamMode::Draft);
+});
+
+it('lowers the effective mode to the person preference', function (): void {
+    config()->set('lnx_sam.max_mode', 'draft');
+
+    app(SamRegistry::class)->registerPreferences('fake', FakeSamPreferences::class);
+    FakeSamPreferences::$preferences = new SamPreferences(mode: SamMode::ReadOnly);
+
+    expect(app(SamModeResolver::class)->for(samModeActor()))->toBe(SamMode::ReadOnly);
+});
+
+it('does not let a preference raise the role ceiling', function (): void {
+    config()->set('lnx_sam.max_mode', 'assisted');
+
+    SamModeCeiling::factory()->create([
+        'role' => Role::Admin->value,
+        'mode' => SamMode::Draft,
+    ]);
+
+    app(SamRegistry::class)->registerPreferences('fake', FakeSamPreferences::class);
+    FakeSamPreferences::$preferences = new SamPreferences(mode: SamMode::Assisted);
+
+    $user = samModeActor(Role::Admin);
+
+    expect(app(SamModeResolver::class)->for($user))->toBe(SamMode::Draft)
+        ->and(app(SamModeResolver::class)->ceilingFor($user))->toBe(SamMode::Draft)
+        ->and(app(SamRuntime::class)->ceilingFor($user))->toBe(SamMode::Draft);
+});
+
+it('ignores a missing preference and keeps the mode out of the turn payload', function (): void {
+    config()->set('lnx_sam.max_mode', 'draft');
+
+    app(SamRegistry::class)->registerPreferences('fake', FakeSamPreferences::class);
+    FakeSamPreferences::$preferences = new SamPreferences(mode: null);
+
+    $preferences = new SamPreferences(verbosity: SamPreferences::DETAILED, mode: SamMode::Assisted);
+
+    expect(app(SamModeResolver::class)->for(samModeActor()))->toBe(SamMode::Draft)
+        ->and($preferences->sanitized())->not->toHaveKey('mode')
+        ->and($preferences->sanitized()['verbosity'])->toBe(SamPreferences::DETAILED);
+});
+
+it('does not reenter when a preference presenter asks for the mode', function (): void {
+    config()->set('lnx_sam.max_mode', 'assisted');
+
+    app(SamRegistry::class)->registerPreferences('fake', RecursiveSamPreferences::class);
+
+    expect(app(SamModeResolver::class)->for(samModeActor()))->toBe(SamMode::ReadOnly)
+        ->and(RecursiveSamPreferences::$calls)->toBe(1);
 });
 
 it('falls back to read only when the configured ceiling is invalid', function (): void {

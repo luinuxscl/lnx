@@ -8,6 +8,7 @@ use App\Models\HelpEntry;
 use App\Models\HelpGroup;
 use App\Models\NavigationGroup;
 use App\Models\NavigationItem;
+use App\Models\SamModeCeiling;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\UserInvitation;
@@ -23,6 +24,7 @@ class RecordAdministrativeActivity
         'navigation_item' => ['audience', 'type', 'route_name', 'url', 'label_key', 'label_es', 'label_en', 'icon', 'position'],
         'help_entry' => ['source', 'slug', 'type', 'title_key', 'summary_key', 'body_key', 'title_es', 'title_en', 'summary_es', 'summary_en', 'body_es', 'body_en', 'roles', 'position', 'route_name', 'enabled', 'overridden'],
         'help_group' => ['source', 'group_key', 'position', 'enabled', 'overridden'],
+        'sam_mode_ceiling' => ['role', 'mode'],
     ];
 
     /**
@@ -39,6 +41,7 @@ class RecordAdministrativeActivity
             $resource instanceof NavigationItem => 'navigation_item',
             $resource instanceof HelpEntry => 'help_entry',
             $resource instanceof HelpGroup => 'help_group',
+            $resource instanceof SamModeCeiling => 'sam_mode_ceiling',
             default => throw new \InvalidArgumentException('Unsupported administrative resource.'),
         };
 
@@ -64,7 +67,11 @@ class RecordAdministrativeActivity
             'action' => $action,
             'resource_type' => $type,
             'resource_id' => $resource->getKey(),
-            'resource_name' => $resource instanceof User ? $resource->name : null,
+            'resource_name' => match (true) {
+                $resource instanceof User => $resource->name,
+                $resource instanceof SamModeCeiling => $resource->role,
+                default => null,
+            },
             'resource_email' => $resource instanceof User || $resource instanceof UserInvitation ? $resource->email : null,
             'invitation_id' => $invitationId,
             'changes' => $changes,

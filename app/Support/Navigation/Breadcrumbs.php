@@ -33,6 +33,7 @@ class Breadcrumbs
         'documents.' => ['label' => 'Document extraction', 'route' => 'documents.index'],
         'support.' => ['label' => 'Support requests', 'route' => 'support.index'],
         'admin.activity.' => ['label' => 'Administrative activity', 'route' => 'admin.activity.index'],
+        'admin.sam.' => ['label' => 'Sam', 'route' => 'admin.sam.index'],
         'admin.setup.' => ['label' => 'Setup checklist', 'route' => 'admin.setup.index'],
         'admin.ai.' => ['label' => 'AI', 'route' => 'admin.ai.index'],
         'admin.packages.' => ['label' => 'Packages', 'route' => 'admin.packages.index'],
