@@ -64,7 +64,7 @@ final class SamInsight
         $observations = [];
 
         foreach ($this->observations as $observation) {
-            if (is_string($observation) && trim($observation) !== '') {
+            if (trim($observation) !== '') {
                 $observations[] = mb_substr(trim($observation), 0, 300);
             }
         }

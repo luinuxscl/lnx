@@ -1137,6 +1137,9 @@ class SamRuntime
         );
     }
 
+    /**
+     * @return list<Message>
+     */
     private function contextMessages(AiConversation $conversation): array
     {
         $messages = $conversation->messages()

@@ -13,6 +13,7 @@ use Illuminate\View\View;
 use InvalidArgumentException;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use RuntimeException;
 use Spatie\Permission\Models\Role as SpatieRole;
 
 #[Title('Sam')]
@@ -82,11 +83,12 @@ class Index extends Component
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(function (SpatieRole $role) use ($global): array {
-                $value = $this->ceilings[$role->id] ?? UpdateSamModeCeiling::INHERIT;
+                $id = $this->roleId($role);
+                $value = $this->ceilings[$id] ?? UpdateSamModeCeiling::INHERIT;
                 $selected = SamMode::tryFrom($value);
 
                 return [
-                    'id' => $role->id,
+                    'id' => $id,
                     'label' => $this->roleLabel($role->name),
                     'exceeds' => $selected instanceof SamMode && $selected->rank() > $global->rank(),
                 ];
@@ -130,13 +132,28 @@ class Index extends Component
             ->get(['role', 'mode'])
             ->mapWithKeys(fn (SamModeCeiling $ceiling): array => [$ceiling->role => $ceiling->mode->value]);
 
-        $this->ceilings = SpatieRole::query()
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->mapWithKeys(fn (SpatieRole $role): array => [
-                $role->id => $stored->get($role->name, UpdateSamModeCeiling::INHERIT),
-            ])
-            ->all();
+        $ceilings = [];
+
+        foreach (SpatieRole::query()->orderBy('name')->get(['id', 'name']) as $role) {
+            $ceilings[$this->roleId($role)] = $stored->get($role->name, UpdateSamModeCeiling::INHERIT);
+        }
+
+        $this->ceilings = $ceilings;
+    }
+
+    private function roleId(SpatieRole $role): int
+    {
+        $id = $role->getKey();
+
+        if (is_int($id)) {
+            return $id;
+        }
+
+        if (is_string($id) && ctype_digit($id)) {
+            return (int) $id;
+        }
+
+        throw new RuntimeException('The role id must be an integer.');
     }
 
     private function roleLabel(string $name): string
