@@ -8,7 +8,8 @@ namespace App\Ai\Sam;
  * They are stored by the product package that owns the surface, never by the
  * runtime: the kit only composes the instructions from them. The defaults are
  * deliberately conservative so a project without preferences gets the same
- * behavior as before.
+ * behavior as before. `mode` is null when the person has not chosen one; it is
+ * kept out of `sanitized()` so it never enters the turn instructions.
  */
 final class SamPreferences
 {
@@ -20,6 +21,7 @@ final class SamPreferences
         public readonly string $verbosity = self::CONCISE,
         public readonly bool $showWhy = true,
         public readonly bool $showSources = true,
+        public readonly ?SamMode $mode = null,
     ) {}
 
     public static function defaults(): self

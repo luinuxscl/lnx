@@ -28,4 +28,5 @@ enum AdministrativeAction: string
     case HelpEntryUpdated = 'help_entry_updated';
     case HelpEntryHidden = 'help_entry_hidden';
     case HelpGroupUpdated = 'help_group_updated';
+    case SamModeCeilingUpdated = 'sam_mode_ceiling_updated';
 }

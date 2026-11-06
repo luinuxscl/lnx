@@ -832,7 +832,7 @@ app(SamRegistry::class)->registerSurface('sam', SamPanel::class);      // panel 
 
 ### Modo y techo
 
-El modo ordena qué puede hacer Sam, no qué puede ver. `read_only` lee y explica; `draft` propone borradores; `assisted` permite al módulo ejecutar acciones reversibles tras la confirmación. `SAM_MAX_MODE` fija el techo del despliegue y nace en `read_only`; una fila de `sam_mode_ceilings` (`role`, `mode`) puede bajarlo por rol, nunca subirlo. El modo efectivo es el mínimo de ambos y se resuelve en `SamAccess::modeFor()` / `SamModeResolver`; root tampoco se salta el techo. Un rol sin fila hereda el techo global, así que no hace falta sembrar la tabla.
+El modo ordena qué puede hacer Sam, no qué puede ver. `read_only` lee y explica; `draft` propone borradores; `assisted` permite al módulo ejecutar acciones reversibles tras la confirmación. `SAM_MAX_MODE` fija el techo del despliegue y nace en `read_only`; una fila de `sam_mode_ceilings` (`role`, `mode`) puede bajarlo por rol, nunca subirlo. La persona puede bajarlo otra vez con `SamPreferences::$mode`, que el producto guarda sin recortar y el runtime recorta al resolver. El modo efectivo es el mínimo de los tres y se resuelve en `SamAccess::modeFor()` / `SamModeResolver`; `ceilingFor()` devuelve el mínimo del despliegue y del rol, sin la preferencia. Root tampoco se salta el techo. Un rol sin fila hereda el techo global, así que no hace falta sembrar la tabla. `/admin/sam` (solo root) muestra el techo del despliegue como dato y una fila por rol de Spatie: «heredar» borra la fila y cualquier otro valor la guarda tal cual, aunque el techo global lo ignore hasta que suba. Cada cambio queda en la actividad administrativa.
 
 ### Persistencia, cuota y redacción
 
@@ -864,11 +864,11 @@ La retención se aplica con `php artisan sam:prune-conversations` (programado a 
 
 - `SamRuntime::narrateBrief()` pide al modelo una narrativa corta del brief con verificación de grounding, timeout, caché saneada y una aplicación de cuota propia (`sam.brief`), separada del turno. El fallback determinista del módulo se pinta siempre primero y nunca se bloquea por el modelo.
 - `send()` y `retry()` aceptan un callback de streaming que entrega deltas de texto y el nombre de la tool en uso; nunca sus argumentos ni resultados. Las citas de la respuesta se guardan en `ai_messages.citations`.
-- El runtime lee las preferencias del actor desde el presentador que registre el producto con `SamRegistry::registerPreferences()` y añade la sección `[Preferencias de la persona]` a las instrucciones del turno.
+- El runtime lee las preferencias del actor desde el presentador que registre el producto con `SamRegistry::registerPreferences()` y añade la sección `[Preferencias de la persona]` a las instrucciones del turno. `mode` viaja en el mismo presentador y no entra en esas instrucciones: `sanitized()` no lo incluye. Un presentador no debe llamar a `modeFor()` para calcularlo; si lo hace, esa llamada anidada ignora la preferencia para no entrar en bucle.
 
 ### Estado
 
-El runtime está cubierto por la suite con un contributor, un perfil y una superficie falsos, y con el contributor real del CRM. El corte de lectura de Sam (presencia, contexto por vista y por fila, brief, traza y streaming) está cerrado; el trabajo siguiente es la escritura controlada: modo efectivo, techo y confirmación proporcional.
+El runtime está cubierto por la suite con un contributor, un perfil y una superficie falsos, y con el contributor real del CRM. El corte de lectura de Sam (presencia, contexto por vista y por fila, brief, traza y streaming) está cerrado. La escritura controlada ya resuelve el modo efectivo, el techo por rol, la preferencia de la persona y la pantalla `/admin/sam`; el selector del panel y la confirmación proporcional siguen en los paquetes.
 
 ## Extracción de documentos con IA y revisión
 
