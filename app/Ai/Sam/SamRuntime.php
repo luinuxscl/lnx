@@ -1056,6 +1056,55 @@ class SamRuntime
     }
 
     /**
+     * Undo a confirmed change through its owning module.
+     *
+     * The proposal is resolved again by correlation, actor and source, so a
+     * forged DTO cannot undo anything. Only a module that implements the
+     * optional {@see SamProposalUndoer} capability answers here: the runtime
+     * never invents a reversal for a presenter that cannot keep the previous
+     * state. The module revalidates ownership, the window and freshness; the
+     * runtime audits the attempt and its outcome.
+     */
+    public function undo(User $actor, SamProposal $proposal): SamProposalResult
+    {
+        if (! $this->canUse($actor)) {
+            $this->auditUndo($actor, $proposal, 'denied', ['reason' => 'forbidden']);
+
+            return SamProposalResult::failed(__('You cannot undo this change.'));
+        }
+
+        $resolved = $this->resolveProposal($actor, $proposal);
+
+        if ($resolved === null) {
+            $this->auditUndo($actor, $proposal, 'denied', ['reason' => 'not_found']);
+
+            return SamProposalResult::failed(__('This change is no longer available.'));
+        }
+
+        [$presenter, $current] = $resolved;
+
+        if (! $presenter instanceof SamProposalUndoer) {
+            $this->auditUndo($actor, $current, 'denied', ['reason' => 'not_undoable']);
+
+            return SamProposalResult::failed(__('This change cannot be undone.'));
+        }
+
+        try {
+            $result = $presenter->undo($current, $actor);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->auditUndo($actor, $current, 'failed', ['reason' => 'error']);
+
+            return SamProposalResult::failed(__('The undo could not be completed.'));
+        }
+
+        $this->auditUndo($actor, $current, $result->status);
+
+        return $result;
+    }
+
+    /**
      * @return array{0: SamProposalPresenter, 1: SamProposal}|null
      */
     private function resolveProposal(User $actor, SamProposal $proposal): ?array
@@ -1223,6 +1272,28 @@ class SamRuntime
                 'channel' => 'sam',
                 'source' => $proposal->source,
                 'action' => 'confirm',
+                'proposal_id' => $proposal->id,
+            ], $context),
+        );
+    }
+
+    /**
+     * Audit one undo attempt: identity, proposal and outcome, never content.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    private function auditUndo(User $actor, SamProposal $proposal, string $status, array $context = []): void
+    {
+        app(RecordMcpInvocation::class)->handle(
+            $actor,
+            'sam_undo',
+            $status,
+            $proposal->correlationId !== '' ? $proposal->correlationId : SamTurn::correlationId(),
+            null,
+            array_merge([
+                'channel' => 'sam',
+                'source' => $proposal->source,
+                'action' => 'undo',
                 'proposal_id' => $proposal->id,
             ], $context),
         );
