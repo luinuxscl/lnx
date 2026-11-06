@@ -3,6 +3,8 @@
 namespace App\Ai\Sam\Tools;
 
 use App\Ai\Sam\SamAccess;
+use App\Ai\Sam\SamMode;
+use App\Ai\Sam\SamRisk;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -16,10 +18,34 @@ use Throwable;
  * The module delegates in its own draft action, which validates, authorizes,
  * previews and audits the draft. The tool returns the envelope to the model
  * and never writes: confirmation is a person's action, never a tool.
+ *
+ * A proposal declares the minimum mode it needs and the risk of confirming it.
+ * The runtime does not expose it below that mode and only keeps the phrase
+ * requirement for irreversible or bulk changes.
  */
 abstract class SamProposeTool extends SamTool
 {
     public const ACTION = 'propose';
+
+    public const RISK = SamRisk::Reversible;
+
+    public const MIN_MODE = SamMode::Draft;
+
+    /**
+     * Risk of confirming the draft this tool proposes.
+     */
+    public function risk(): SamRisk
+    {
+        return static::RISK;
+    }
+
+    /**
+     * Lowest agent mode that may call this tool.
+     */
+    public function minimumMode(): SamMode
+    {
+        return static::MIN_MODE;
+    }
 
     abstract protected function run(Request $request, User $user): string;
 
@@ -45,6 +71,18 @@ abstract class SamProposeTool extends SamTool
             $this->audit($user, 'denied', null, ['reason' => 'forbidden']);
 
             return 'Permission denied: this identity cannot use the agent.';
+        }
+
+        $mode = $access->modeFor($user);
+
+        if (! $mode->allows($this->minimumMode())) {
+            $this->audit($user, 'denied', null, [
+                'reason' => 'mode',
+                'mode' => $mode->value,
+                'required_mode' => $this->minimumMode()->value,
+            ]);
+
+            return 'This action needs a higher agent mode and is not available now.';
         }
 
         try {

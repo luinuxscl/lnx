@@ -30,6 +30,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Mode ceiling
+    |--------------------------------------------------------------------------
+    |
+    | Highest mode any identity may reach in this deployment: `read_only` lets
+    | Sam read and explain but not propose, `draft` lets it propose drafts and
+    | `assisted` lets the owning module execute reversible actions after
+    | confirmation. A role may lower the ceiling with a `sam_mode_ceilings`
+    | row; the effective mode is always the lowest of both, root included.
+    |
+    */
+
+    'max_mode' => (string) env('SAM_MAX_MODE', 'read_only'),
+
+    /*
+    |--------------------------------------------------------------------------
     | AI application
     |--------------------------------------------------------------------------
     |

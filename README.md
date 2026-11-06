@@ -826,12 +826,17 @@ app(SamRegistry::class)->registerSurface('sam', SamPanel::class);      // panel 
 
 - Solo se aceptan herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`: re-comprueban el interruptor y el permiso de superficie, capturan la denegación por autorización/validación y auditan cada invocación. Cualquier otro `Tool` se descarta y se audita como `tool_rejected` (`not_declared`); un nombre de herramienta repetido entre módulos se audita como `duplicate_name`.
 - No existen herramientas de confirmación, borrado, fusión ni envío. La confirmación es una acción humana que ejecuta el módulo.
+- Cada herramienta de propuesta declara `RISK` (`reversible`, `irreversible` o `bulk`) y `MIN_MODE` (por defecto `draft`). El runtime no la ofrece por debajo del modo efectivo y la herramienta vuelve a comprobarlo al invocarse, auditando `denied` con `reason = mode`. Una propuesta confirma con la frase salvo que su módulo declare `requiresPhrase = false`, que solo debe hacer cuando la acción sea reversible y tenga undo.
 - La auditoría reutiliza `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`) y el `correlation_id` del turno; ese id también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events`. La vista de actividad del módulo puede reconstruir el ciclo completo.
 - `SamRuntime::confirm()` re-resuelve la propuesta por correlación, actor y `source`, comprueba vigencia y `canConfirm`, delega en `SamProposalPresenter::confirm()` y audita `confirmed`, `duplicate`, `failed` o `expired`. El kit nunca escribe por su cuenta.
 
+### Modo y techo
+
+El modo ordena qué puede hacer Sam, no qué puede ver. `read_only` lee y explica; `draft` propone borradores; `assisted` permite al módulo ejecutar acciones reversibles tras la confirmación. `SAM_MAX_MODE` fija el techo del despliegue y nace en `read_only`; una fila de `sam_mode_ceilings` (`role`, `mode`) puede bajarlo por rol, nunca subirlo. El modo efectivo es el mínimo de ambos y se resuelve en `SamAccess::modeFor()` / `SamModeResolver`; root tampoco se salta el techo. Un rol sin fila hereda el techo global, así que no hace falta sembrar la tabla.
+
 ### Persistencia, cuota y redacción
 
-- Una conversación `profile = sam` por actor; el historial se acota con `SAM_MAX_CONTEXT_MESSAGES`. Migraciones: `ai_conversations.profile` y `ai_messages.correlation_id`.
+- Varias conversaciones por actor (`profile = sam`); el historial se acota con `SAM_MAX_CONTEXT_MESSAGES`. Migraciones: `ai_conversations.profile`, `ai_messages.correlation_id` y `ai_messages.context`.
 - Cada turno pasa por `AiGateway::prompt()` con la aplicación `sam.turn`: la cuota se aplica con la declaración del paquete en `AiApplicationRegistry` (o el límite por defecto) y el consumo queda en `ai_usage_events`.
 - La frase `CONFIRM …` se redacta antes de persistir una respuesta y un mensaje que sea solo la frase no se guarda como turno. La genera y valida el módulo.
 
@@ -841,6 +846,7 @@ app(SamRegistry::class)->registerSurface('sam', SamPanel::class);      // panel 
 | --- | --- | --- |
 | `SAM_ENABLED` | `false` | Enciende el runtime; sin esto no se publica la superficie |
 | `SAM_PERMISSION` | `sam.use` | Permiso de superficie; los módulos conservan los suyos |
+| `SAM_MAX_MODE` | `read_only` | Techo de modo del despliegue: `read_only`, `draft` o `assisted` |
 | `SAM_APPLICATION` | `sam.turn` | Aplicación de IA para cuota y consumo |
 | `SAM_MAX_INPUT_CHARS` | `2000` | Tope de entrada por turno |
 | `SAM_MAX_CONTEXT_MESSAGES` | `20` | Turnos previos enviados como contexto |
@@ -862,7 +868,7 @@ La retención se aplica con `php artisan sam:prune-conversations` (programado a 
 
 ### Estado
 
-El runtime está cubierto por la suite con un contributor, un perfil y una superficie falsos. La capacidad no se anuncia como disponible hasta que el paquete `luinuxscl/sam` (#85) y el primer contributor real (CRM #7) pasen sus pruebas.
+El runtime está cubierto por la suite con un contributor, un perfil y una superficie falsos, y con el contributor real del CRM. El corte de lectura de Sam (presencia, contexto por vista y por fila, brief, traza y streaming) está cerrado; el trabajo siguiente es la escritura controlada: modo efectivo, techo y confirmación proporcional.
 
 ## Extracción de documentos con IA y revisión
 

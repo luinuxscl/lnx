@@ -19,6 +19,7 @@ class SamAccess
     public function __construct(
         private readonly AiGateway $gateway,
         private readonly AiConfig $config,
+        private readonly SamModeResolver $modes,
     ) {}
 
     public function enabled(): bool
@@ -43,5 +44,19 @@ class SamAccess
         return $this->enabled()
             && $this->gateway->isReady()
             && $this->config->supports($this->config->defaultModel(), 'tools');
+    }
+
+    /**
+     * Effective mode of the identity: the lowest of the deployment ceiling and
+     * the ceiling of their role. An identity without the surface permission,
+     * or without a session, is read only.
+     */
+    public function modeFor(?User $actor): SamMode
+    {
+        if (! $this->canUse($actor)) {
+            return SamMode::ReadOnly;
+        }
+
+        return $this->modes->for($actor);
     }
 }
