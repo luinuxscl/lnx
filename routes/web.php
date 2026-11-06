@@ -24,6 +24,7 @@ use App\Livewire\Navigation\Index as NavigationIndex;
 use App\Livewire\Notifications\Index as NotificationsIndex;
 use App\Livewire\Packages\Index as PackagesIndex;
 use App\Livewire\Packages\LnxUi;
+use App\Livewire\Sam\Index as SamIndex;
 use App\Livewire\Setup\Index as SetupIndex;
 use App\Livewire\Support\Index as SupportIndex;
 use App\Livewire\Support\Show as SupportShow;
@@ -95,6 +96,18 @@ Route::livewire('admin/activity', ActivityIndex::class)
     ->menu([
         'label' => 'Activity',
         'icon' => 'clock',
+        'group' => 'Administration',
+        'group_icon' => 'cog-6-tooth',
+        'audiences' => ['root'],
+        'roles' => ['root'],
+    ]);
+
+Route::livewire('admin/sam', SamIndex::class)
+    ->middleware(['auth', 'role:'.Role::Root->value])
+    ->name('admin.sam.index')
+    ->menu([
+        'label' => 'Sam',
+        'icon' => 'sparkles',
         'group' => 'Administration',
         'group_icon' => 'cog-6-tooth',
         'audiences' => ['root'],

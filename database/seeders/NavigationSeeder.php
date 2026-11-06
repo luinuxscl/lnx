@@ -145,6 +145,7 @@ class NavigationSeeder extends Seeder
                     ['route_name' => 'support.index'],
                     ['route_name' => 'admin.users.index'],
                     ['route_name' => 'admin.activity.index'],
+                    ['route_name' => 'admin.sam.index'],
                     ['route_name' => 'admin.settings.edit'],
                     ['route_name' => 'admin.setup.index'],
                     ['route_name' => 'admin.ai.index'],

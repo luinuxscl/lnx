@@ -826,12 +826,18 @@ app(SamRegistry::class)->registerSurface('sam', SamPanel::class);      // panel 
 
 - Solo se aceptan herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`: re-comprueban el interruptor y el permiso de superficie, capturan la denegación por autorización/validación y auditan cada invocación. Cualquier otro `Tool` se descarta y se audita como `tool_rejected` (`not_declared`); un nombre de herramienta repetido entre módulos se audita como `duplicate_name`.
 - No existen herramientas de confirmación, borrado, fusión ni envío. La confirmación es una acción humana que ejecuta el módulo.
-- La auditoría reutiliza `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`) y el `correlation_id` del turno; ese id también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events`. La vista de actividad del módulo puede reconstruir el ciclo completo.
+- Cada herramienta de propuesta declara `RISK` (`reversible`, `irreversible` o `bulk`) y `MIN_MODE` (por defecto `draft`). El runtime no la ofrece por debajo del modo efectivo y la herramienta vuelve a comprobarlo al invocarse, auditando `denied` con `reason = mode`. Una propuesta confirma con la frase salvo que su módulo declare `requiresPhrase = false`, que solo debe hacer cuando la acción sea reversible y tenga undo.
+- Un módulo que conserva el estado previo implementa además `SamProposalUndoer` y marca `canUndo`/`undoExpiresAt` en `SamProposal`. `SamRuntime::undo()` re-resuelve la propuesta por correlación, actor y `source`, delega en el módulo y audita `sam_undo`; el módulo revalida propiedad, ventana y frescura, y el undo es de un solo uso.
+- La auditoría reutiliza `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`, `undo`) y el `correlation_id` del turno; ese id también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events`. La vista de actividad del módulo puede reconstruir el ciclo completo.
 - `SamRuntime::confirm()` re-resuelve la propuesta por correlación, actor y `source`, comprueba vigencia y `canConfirm`, delega en `SamProposalPresenter::confirm()` y audita `confirmed`, `duplicate`, `failed` o `expired`. El kit nunca escribe por su cuenta.
+
+### Modo y techo
+
+El modo ordena qué puede hacer Sam, no qué puede ver. `read_only` lee y explica; `draft` propone borradores; `assisted` permite al módulo ejecutar acciones reversibles tras la confirmación. `SAM_MAX_MODE` fija el techo del despliegue y nace en `read_only`; una fila de `sam_mode_ceilings` (`role`, `mode`) puede bajarlo por rol, nunca subirlo. La persona puede bajarlo otra vez con `SamPreferences::$mode`, que el producto guarda sin recortar y el runtime recorta al resolver. El modo efectivo es el mínimo de los tres y se resuelve en `SamAccess::modeFor()` / `SamModeResolver`; `ceilingFor()` devuelve el mínimo del despliegue y del rol, sin la preferencia. Root tampoco se salta el techo. Un rol sin fila hereda el techo global, así que no hace falta sembrar la tabla. `/admin/sam` (solo root) muestra el techo del despliegue como dato y una fila por rol de Spatie: «heredar» borra la fila y cualquier otro valor la guarda tal cual, aunque el techo global lo ignore hasta que suba. Cada cambio queda en la actividad administrativa.
 
 ### Persistencia, cuota y redacción
 
-- Una conversación `profile = sam` por actor; el historial se acota con `SAM_MAX_CONTEXT_MESSAGES`. Migraciones: `ai_conversations.profile` y `ai_messages.correlation_id`.
+- Varias conversaciones por actor (`profile = sam`); el historial se acota con `SAM_MAX_CONTEXT_MESSAGES`. Migraciones: `ai_conversations.profile`, `ai_messages.correlation_id` y `ai_messages.context`.
 - Cada turno pasa por `AiGateway::prompt()` con la aplicación `sam.turn`: la cuota se aplica con la declaración del paquete en `AiApplicationRegistry` (o el límite por defecto) y el consumo queda en `ai_usage_events`.
 - La frase `CONFIRM …` se redacta antes de persistir una respuesta y un mensaje que sea solo la frase no se guarda como turno. La genera y valida el módulo.
 
@@ -841,6 +847,7 @@ app(SamRegistry::class)->registerSurface('sam', SamPanel::class);      // panel 
 | --- | --- | --- |
 | `SAM_ENABLED` | `false` | Enciende el runtime; sin esto no se publica la superficie |
 | `SAM_PERMISSION` | `sam.use` | Permiso de superficie; los módulos conservan los suyos |
+| `SAM_MAX_MODE` | `read_only` | Techo de modo del despliegue: `read_only`, `draft` o `assisted` |
 | `SAM_APPLICATION` | `sam.turn` | Aplicación de IA para cuota y consumo |
 | `SAM_MAX_INPUT_CHARS` | `2000` | Tope de entrada por turno |
 | `SAM_MAX_CONTEXT_MESSAGES` | `20` | Turnos previos enviados como contexto |
@@ -858,11 +865,11 @@ La retención se aplica con `php artisan sam:prune-conversations` (programado a 
 
 - `SamRuntime::narrateBrief()` pide al modelo una narrativa corta del brief con verificación de grounding, timeout, caché saneada y una aplicación de cuota propia (`sam.brief`), separada del turno. El fallback determinista del módulo se pinta siempre primero y nunca se bloquea por el modelo.
 - `send()` y `retry()` aceptan un callback de streaming que entrega deltas de texto y el nombre de la tool en uso; nunca sus argumentos ni resultados. Las citas de la respuesta se guardan en `ai_messages.citations`.
-- El runtime lee las preferencias del actor desde el presentador que registre el producto con `SamRegistry::registerPreferences()` y añade la sección `[Preferencias de la persona]` a las instrucciones del turno.
+- El runtime lee las preferencias del actor desde el presentador que registre el producto con `SamRegistry::registerPreferences()` y añade la sección `[Preferencias de la persona]` a las instrucciones del turno. `mode` viaja en el mismo presentador y no entra en esas instrucciones: `sanitized()` no lo incluye. Un presentador no debe llamar a `modeFor()` para calcularlo; si lo hace, esa llamada anidada ignora la preferencia para no entrar en bucle.
 
 ### Estado
 
-El runtime está cubierto por la suite con un contributor, un perfil y una superficie falsos. La capacidad no se anuncia como disponible hasta que el paquete `luinuxscl/sam` (#85) y el primer contributor real (CRM #7) pasen sus pruebas.
+El runtime está cubierto por la suite con un contributor, un perfil y una superficie falsos, y con el contributor real del CRM. El corte de lectura de Sam (presencia, contexto por vista y por fila, brief, traza y streaming) está cerrado. La escritura controlada ya resuelve el modo efectivo, el techo por rol, la preferencia de la persona y la pantalla `/admin/sam`; el selector del panel y la confirmación proporcional siguen en los paquetes.
 
 ## Extracción de documentos con IA y revisión
 

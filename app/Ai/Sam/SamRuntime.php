@@ -71,6 +71,22 @@ class SamRuntime
         return $this->access->permission();
     }
 
+    /**
+     * Ceiling the actor can reach before their own preference.
+     */
+    public function ceilingFor(User $actor): SamMode
+    {
+        return $this->access->ceilingFor($actor);
+    }
+
+    /**
+     * Effective mode of the actor, for the surface and the tools of the turn.
+     */
+    public function modeFor(User $actor): SamMode
+    {
+        return $this->access->modeFor($actor);
+    }
+
     public function application(): string
     {
         $application = config('lnx_sam.application', 'sam.turn');
@@ -612,6 +628,7 @@ class SamRuntime
 
         $tools = [];
         $names = [];
+        $mode = $this->access->modeFor($actor);
 
         foreach ($this->registry->contributors() as $source => $contributor) {
             foreach ($contributor->readTools($actor) as $tool) {
@@ -623,11 +640,20 @@ class SamRuntime
             }
 
             foreach ($contributor->proposeTools($actor) as $tool) {
-                if ($tool instanceof SamProposeTool) {
-                    $this->addTool($tools, $names, $actor, $source, $tool);
-                } else {
+                if (! $tool instanceof SamProposeTool) {
                     $this->rejectTool($actor, $source, $tool);
+
+                    continue;
                 }
+
+                // A proposal above the effective mode is not offered at all:
+                // filtering is a deployment decision, not a failed attempt, so
+                // it is not written to the turn trace as a denial.
+                if (! $mode->allows($tool->minimumMode())) {
+                    continue;
+                }
+
+                $this->addTool($tools, $names, $actor, $source, $tool);
             }
         }
 
@@ -983,12 +1009,6 @@ class SamRuntime
             return SamProposalResult::failed(__('You cannot confirm this proposal.'));
         }
 
-        if (trim($phrase) === '') {
-            $this->auditConfirmation($actor, $proposal, 'denied', ['reason' => 'phrase_required']);
-
-            return SamProposalResult::failed(__('The confirmation phrase is required.'));
-        }
-
         $resolved = $this->resolveProposal($actor, $proposal);
 
         if ($resolved === null) {
@@ -1011,6 +1031,15 @@ class SamRuntime
             return SamProposalResult::expired(__('This proposal has expired.'));
         }
 
+        // The resolved proposal decides: a reversible change may be confirmed
+        // without the phrase once its module implements undo, while an
+        // irreversible or bulk one always requires it.
+        if ($current->requiresPhrase && trim($phrase) === '') {
+            $this->auditConfirmation($actor, $current, 'denied', ['reason' => 'phrase_required']);
+
+            return SamProposalResult::failed(__('The confirmation phrase is required.'));
+        }
+
         try {
             $result = $presenter->confirm($current, $actor, $phrase);
         } catch (Throwable $exception) {
@@ -1022,6 +1051,55 @@ class SamRuntime
         }
 
         $this->auditConfirmation($actor, $current, $result->status);
+
+        return $result;
+    }
+
+    /**
+     * Undo a confirmed change through its owning module.
+     *
+     * The proposal is resolved again by correlation, actor and source, so a
+     * forged DTO cannot undo anything. Only a module that implements the
+     * optional {@see SamProposalUndoer} capability answers here: the runtime
+     * never invents a reversal for a presenter that cannot keep the previous
+     * state. The module revalidates ownership, the window and freshness; the
+     * runtime audits the attempt and its outcome.
+     */
+    public function undo(User $actor, SamProposal $proposal): SamProposalResult
+    {
+        if (! $this->canUse($actor)) {
+            $this->auditUndo($actor, $proposal, 'denied', ['reason' => 'forbidden']);
+
+            return SamProposalResult::failed(__('You cannot undo this change.'));
+        }
+
+        $resolved = $this->resolveProposal($actor, $proposal);
+
+        if ($resolved === null) {
+            $this->auditUndo($actor, $proposal, 'denied', ['reason' => 'not_found']);
+
+            return SamProposalResult::failed(__('This change is no longer available.'));
+        }
+
+        [$presenter, $current] = $resolved;
+
+        if (! $presenter instanceof SamProposalUndoer) {
+            $this->auditUndo($actor, $current, 'denied', ['reason' => 'not_undoable']);
+
+            return SamProposalResult::failed(__('This change cannot be undone.'));
+        }
+
+        try {
+            $result = $presenter->undo($current, $actor);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->auditUndo($actor, $current, 'failed', ['reason' => 'error']);
+
+            return SamProposalResult::failed(__('The undo could not be completed.'));
+        }
+
+        $this->auditUndo($actor, $current, $result->status);
 
         return $result;
     }
@@ -1108,6 +1186,9 @@ class SamRuntime
         );
     }
 
+    /**
+     * @return list<Message>
+     */
     private function contextMessages(AiConversation $conversation): array
     {
         $messages = $conversation->messages()
@@ -1191,6 +1272,28 @@ class SamRuntime
                 'channel' => 'sam',
                 'source' => $proposal->source,
                 'action' => 'confirm',
+                'proposal_id' => $proposal->id,
+            ], $context),
+        );
+    }
+
+    /**
+     * Audit one undo attempt: identity, proposal and outcome, never content.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    private function auditUndo(User $actor, SamProposal $proposal, string $status, array $context = []): void
+    {
+        app(RecordMcpInvocation::class)->handle(
+            $actor,
+            'sam_undo',
+            $status,
+            $proposal->correlationId !== '' ? $proposal->correlationId : SamTurn::correlationId(),
+            null,
+            array_merge([
+                'channel' => 'sam',
+                'source' => $proposal->source,
+                'action' => 'undo',
                 'proposal_id' => $proposal->id,
             ], $context),
         );

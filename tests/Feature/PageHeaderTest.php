@@ -120,6 +120,7 @@ it('renders breadcrumbs on every page', function () {
         [route('support.index'), $root],
         [route('support.show', $ticket), $root],
         [route('admin.activity.index'), $root],
+        [route('admin.sam.index'), $root],
         [route('admin.setup.index'), $root],
         [route('admin.ai.index'), $root],
         [route('admin.ai.usage'), $root],
