@@ -10,6 +10,9 @@ use Carbon\CarbonInterface;
  * It is a read model: the runtime never writes from it. The owning module
  * resolves it again by correlation before confirming, so a forged DTO cannot
  * confirm anything.
+ *
+ * The risk decides how it is confirmed. The phrase is required by default, so
+ * a module that does not declare its risk never relaxes the confirmation.
  */
 final class SamProposal
 {
@@ -27,5 +30,7 @@ final class SamProposal
         public readonly ?CarbonInterface $expiresAt = null,
         public readonly ?string $recordUrl = null,
         public readonly bool $canConfirm = false,
+        public readonly SamRisk $risk = SamRisk::Reversible,
+        public readonly bool $requiresPhrase = true,
     ) {}
 }

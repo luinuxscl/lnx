@@ -3,6 +3,7 @@
 use App\Ai\Sam\SamProposal;
 use App\Ai\Sam\SamProposalResult;
 use App\Ai\Sam\SamRegistry;
+use App\Ai\Sam\SamRisk;
 use App\Ai\Sam\SamRuntime;
 use App\Models\McpToolInvocation;
 use App\Models\User;
@@ -171,5 +172,65 @@ it('requires a phrase and the surface permission', function (): void {
     Gate::define('sam.use', fn (User $user): bool => false);
 
     expect($runtime->confirm($user, $proposal, 'CONFIRM ABC12345')->status)->toBe(SamProposalResult::FAILED)
+        ->and($presenter->confirmCalls)->toBe(1);
+});
+
+it('relaxes the phrase only when the module declares that it may', function (): void {
+    configureSam();
+    grantSamPermission();
+
+    $presenter = fakePresenter();
+    $user = User::factory()->create();
+    $runtime = app(SamRuntime::class);
+
+    $reversible = new SamProposal(
+        source: 'fake',
+        id: 'draft-1',
+        correlationId: 'corr-1',
+        title: 'Actualizar registro',
+        summary: 'Cambia el nombre del registro.',
+        changes: [['field' => 'name', 'label' => 'Nombre', 'old' => 'Ada', 'new' => 'Ada Lovelace']],
+        status: 'pending',
+        expiresAt: now()->addHour(),
+        canConfirm: true,
+        risk: SamRisk::Reversible,
+        requiresPhrase: false,
+    );
+
+    $presenter->proposals['corr-1'] = [$reversible];
+    $presenter->result = SamProposalResult::confirmed('Confirmed.');
+
+    expect($runtime->confirm($user, $reversible, '')->succeeded())->toBeTrue()
+        ->and($presenter->confirmCalls)->toBe(1);
+});
+
+it('keeps the phrase for an irreversible draft', function (): void {
+    configureSam();
+    grantSamPermission();
+
+    $presenter = fakePresenter();
+    $user = User::factory()->create();
+    $runtime = app(SamRuntime::class);
+
+    $irreversible = new SamProposal(
+        source: 'fake',
+        id: 'draft-1',
+        correlationId: 'corr-1',
+        title: 'Archivar registro',
+        summary: 'Archiva el registro.',
+        changes: [['field' => 'archived', 'label' => 'Archivado', 'old' => 'No', 'new' => 'Sí']],
+        status: 'pending',
+        expiresAt: now()->addHour(),
+        canConfirm: true,
+        risk: SamRisk::Irreversible,
+    );
+
+    $presenter->proposals['corr-1'] = [$irreversible];
+    $presenter->result = SamProposalResult::confirmed('Confirmed.');
+
+    expect($runtime->confirm($user, $irreversible, '')->status)->toBe(SamProposalResult::FAILED)
+        ->and($presenter->confirmCalls)->toBe(0);
+
+    expect($runtime->confirm($user, $irreversible, 'CONFIRM ABC12345')->succeeded())->toBeTrue()
         ->and($presenter->confirmCalls)->toBe(1);
 });

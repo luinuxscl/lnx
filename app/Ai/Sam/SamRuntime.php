@@ -71,6 +71,14 @@ class SamRuntime
         return $this->access->permission();
     }
 
+    /**
+     * Effective mode of the actor, for the surface and the tools of the turn.
+     */
+    public function modeFor(User $actor): SamMode
+    {
+        return $this->access->modeFor($actor);
+    }
+
     public function application(): string
     {
         $application = config('lnx_sam.application', 'sam.turn');
@@ -612,6 +620,7 @@ class SamRuntime
 
         $tools = [];
         $names = [];
+        $mode = $this->access->modeFor($actor);
 
         foreach ($this->registry->contributors() as $source => $contributor) {
             foreach ($contributor->readTools($actor) as $tool) {
@@ -623,11 +632,20 @@ class SamRuntime
             }
 
             foreach ($contributor->proposeTools($actor) as $tool) {
-                if ($tool instanceof SamProposeTool) {
-                    $this->addTool($tools, $names, $actor, $source, $tool);
-                } else {
+                if (! $tool instanceof SamProposeTool) {
                     $this->rejectTool($actor, $source, $tool);
+
+                    continue;
                 }
+
+                // A proposal above the effective mode is not offered at all:
+                // filtering is a deployment decision, not a failed attempt, so
+                // it is not written to the turn trace as a denial.
+                if (! $mode->allows($tool->minimumMode())) {
+                    continue;
+                }
+
+                $this->addTool($tools, $names, $actor, $source, $tool);
             }
         }
 
@@ -983,12 +1001,6 @@ class SamRuntime
             return SamProposalResult::failed(__('You cannot confirm this proposal.'));
         }
 
-        if (trim($phrase) === '') {
-            $this->auditConfirmation($actor, $proposal, 'denied', ['reason' => 'phrase_required']);
-
-            return SamProposalResult::failed(__('The confirmation phrase is required.'));
-        }
-
         $resolved = $this->resolveProposal($actor, $proposal);
 
         if ($resolved === null) {
@@ -1009,6 +1021,15 @@ class SamRuntime
             $this->auditConfirmation($actor, $current, 'expired');
 
             return SamProposalResult::expired(__('This proposal has expired.'));
+        }
+
+        // The resolved proposal decides: a reversible change may be confirmed
+        // without the phrase once its module implements undo, while an
+        // irreversible or bulk one always requires it.
+        if ($current->requiresPhrase && trim($phrase) === '') {
+            $this->auditConfirmation($actor, $current, 'denied', ['reason' => 'phrase_required']);
+
+            return SamProposalResult::failed(__('The confirmation phrase is required.'));
         }
 
         try {
