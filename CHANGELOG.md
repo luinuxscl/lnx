@@ -22,6 +22,7 @@ El kit sigue [SemVer](https://semver.org/lang/es/) y cada release se publica con
 
 ### Corregido
 
+- **Estado vacío de los widgets y atajos de Sam.** `x-lnx-ui::widget` (lnx-ui v1.27.1) ignora los comentarios que Livewire inyecta alrededor de cada directiva antes de decidir si el slot está vacío, así que los widgets muestran su mensaje de vacío en vez de una tarjeta en blanco. Un widget `Action` cuyos elementos traen `prompt` se pinta como tarjeta con botones apilados a ancho completo: los atajos del agente dejan de truncarse en una columna estrecha.
 - **Endurecimiento del runtime de Sam.** Las bases `SamReadTool`/`SamProposeTool` re-comprueban `SAM_ENABLED` (denegación auditada como `disabled`), el runtime rechaza nombres de herramienta duplicados entre módulos (`duplicate_name`) y la redacción de `CONFIRM …` exige un token de 6 o más caracteres para evitar falsos positivos.
 
 ## [1.0.0] - 2026-11-01

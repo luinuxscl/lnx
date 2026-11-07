@@ -193,28 +193,45 @@
         @break
 
     @case(\App\Support\Dashboard\WidgetType::Action)
-        <div class="{{ $spanClass }} space-y-3">
-            @if (filled($widget->title()))
-                <flux:heading level="3">{{ $widget->title() }}</flux:heading>
-            @endif
+        @php
+            // Prompts open the agent panel, so they read as a vertical list of
+            // full-width actions. Links to screens keep the tool-card grid.
+            $hasPrompts = collect($data->items)->contains(fn ($item) => filled($item->prompt));
+        @endphp
 
-            @if (filled($widget->description()))
-                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ $widget->description() }}</flux:text>
-            @endif
-
-            @if ($data->items !== [])
-                <div class="grid grid-cols-12 gap-4">
+        @if ($hasPrompts)
+            <x-lnx-ui::widget
+                :title="$widget->title()"
+                :description="$widget->description()"
+                :span="$span"
+                :empty="$data->empty"
+            >
+                <div class="flex flex-col gap-2">
                     @foreach ($data->items as $item)
-                        @if (filled($item->prompt))
-                            <flux:button
-                                type="button"
-                                class="col-span-12 justify-start sm:col-span-6 xl:col-span-4"
-                                icon="sparkles"
-                                x-on:click="$dispatch('sam-suggestion', { text: @js($item->prompt) }); $dispatch('sam-open')"
-                            >
-                                {{ $item->label }}
-                            </flux:button>
-                        @else
+                        <flux:button
+                            type="button"
+                            class="justify-start"
+                            icon="sparkles"
+                            x-on:click="$dispatch('sam-suggestion', { text: @js($item->prompt) }); $dispatch('sam-open')"
+                        >
+                            {{ $item->label }}
+                        </flux:button>
+                    @endforeach
+                </div>
+            </x-lnx-ui::widget>
+        @else
+            <div class="{{ $spanClass }} space-y-3">
+                @if (filled($widget->title()))
+                    <flux:heading level="3">{{ $widget->title() }}</flux:heading>
+                @endif
+
+                @if (filled($widget->description()))
+                    <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ $widget->description() }}</flux:text>
+                @endif
+
+                @if ($data->items !== [])
+                    <div class="grid grid-cols-12 gap-4">
+                        @foreach ($data->items as $item)
                             <x-lnx-ui::tool-card
                                 class="col-span-12 sm:col-span-6 xl:col-span-4"
                                 :title="$item->label"
@@ -223,11 +240,11 @@
                                 :color="$item->color"
                                 :href="$item->href ?? '#'"
                             />
-                        @endif
-                    @endforeach
-                </div>
-            @endif
-        </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        @endif
         @break
 
     @case(\App\Support\Dashboard\WidgetType::Timeline)
