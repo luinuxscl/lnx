@@ -995,6 +995,39 @@ class SamRuntime
     }
 
     /**
+     * Pending drafts of every module, visible to the actor, newest first.
+     *
+     * The dashboard uses it to keep an approvals queue that is not tied to a
+     * conversation. Each module resolves its own drafts and scopes them to the
+     * actor; the runtime only aggregates and bounds the result.
+     *
+     * @return list<SamProposal>
+     */
+    public function pendingProposals(User $actor, int $limit = 5): array
+    {
+        if (! $this->canUse($actor)) {
+            return [];
+        }
+
+        $limit = max(1, min($limit, 20));
+        $proposals = [];
+
+        foreach ($this->registry->contributors() as $contributor) {
+            $presenter = $contributor->proposals();
+
+            if ($presenter === null) {
+                continue;
+            }
+
+            foreach ($presenter->pendingFor($actor, $limit) as $proposal) {
+                $proposals[] = $proposal;
+            }
+        }
+
+        return array_slice($proposals, 0, $limit);
+    }
+
+    /**
      * Confirm a draft through its owning module.
      *
      * The proposal is resolved again by correlation, actor and source, so a

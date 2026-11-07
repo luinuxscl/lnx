@@ -395,11 +395,16 @@ final class SamProposal
         public readonly string $summary,
         public readonly array $changes,
         public readonly string $status,
-        public readonly ?CarbonInterface $expiresAt,
-        public readonly ?string $recordUrl,
-        public readonly bool $canConfirm,
+        public readonly ?CarbonInterface $expiresAt = null,
+        public readonly ?string $recordUrl = null,
+        public readonly ?string $reviewUrl = null,
+        public readonly bool $canConfirm = false,
+        public readonly bool $canReject = false,
+        public readonly ?string $rejectUrl = null,
         public readonly SamRisk $risk = SamRisk::Reversible,
         public readonly bool $requiresPhrase = true,
+        public readonly bool $canUndo = false,
+        public readonly ?CarbonInterface $undoExpiresAt = null,
     ) {}
 }
 
@@ -417,6 +422,14 @@ interface SamProposalPresenter
     /** @return list<SamProposal> */
     public function forCorrelation(string $correlationId, User $actor): array;
 
+    /**
+     * Cola permanente del dashboard: borradores pendientes del actor, sin
+     * correlación. El módulo acota por actor y por vigencia.
+     *
+     * @return list<SamProposal>
+     */
+    public function pendingFor(User $actor, int $limit = 5): array;
+
     public function confirm(SamProposal $proposal, User $actor, string $phrase): SamProposalResult;
 }
 ```
@@ -433,6 +446,8 @@ interface SamBriefPresenter
 `SamBriefPresenter` **no ejecuta nada**: compone observaciones y acciones ya aprobadas y responde `null` cuando el actor no puede ver el registro.
 
 `SamProposalPresenter` **delega en la acción de confirmación del módulo**; nunca escribe directo. El runtime comprueba el actor y la vigencia antes de llamarlo, y trata `duplicate`, `failed` y `expired` sin presentarlos como éxito.
+
+**Cola de aprobaciones y descarte.** `SamRuntime::pendingProposals()` agrega `pendingFor()` de todos los módulos y acota el resultado; la sección Sam del dashboard la pinta como cola permanente. `canReject` y `rejectUrl` los declara el módulo dueño del borrador: la superficie solo publica un formulario hacia esa URL, nunca conoce sus rutas ni ejecuta el rechazo. Descartar es **terminal y auditado en el módulo**; el runtime no escribe nada.
 
 Responsabilidades del runtime del kit:
 
@@ -481,6 +496,79 @@ Criterios de aceptación:
 - El contrato se cubre con un contributor falso en la suite del kit antes de conectar el CRM.
 
 > **Estado:** runtime implementado en `lnx` el 2026-11-03 (issue #84), paquete `luinuxscl/sam` implementado (issue #85) con identidad, panel y tarjeta de propuesta, y conversaciones múltiples con contexto por mensaje implementadas el 2026-11-04 (issue #88, portadas a `crm-app`). El runtime del kit está cubierto con contributor, perfil y superficie falsos; la suite del paquete corre en una app derivada. La capacidad no se anuncia como disponible hasta que el primer contributor real pase sus pruebas.
+
+### 3.10 Contribuciones al dashboard (implementado)
+
+El dashboard es un **host de widgets**: el kit fija las secciones y la presentación,
+y cada paquete declara qué aporta. Un paquete no devuelve HTML ni Blade: devuelve
+**datos tipados** y el host decide cómo se ven.
+
+**Registro.** En el `register()` o `boot()` del `ServiceProvider` del paquete:
+
+```php
+use App\Support\Dashboard\DashboardRegistry;
+
+$this->app->make(DashboardRegistry::class)->register('crm', [
+    CrmContactsWidget::class,
+    CrmCompaniesWidget::class,
+]);
+```
+
+**Contrato.** Un widget extiende `App\Support\Dashboard\Widget` (o implementa
+`DashboardWidget`) y declara:
+
+| Método | Regla |
+| --- | --- |
+| `id()` | Único y prefijado con el `source`: `crm.contacts` |
+| `section()` | `Sam`, `Stats` o `Access`; son fijas |
+| `type()` | `Stat`, `Stats`, `Series`, `List`, `Approvals`, `Action`, `Timeline` o `Text` |
+| `title()` / `description()` | Textos ya traducidos por el paquete |
+| `permission()` | Ability simple, o `null` |
+| `visible(User $actor)` | Por defecto comprueba `permission()`; se sobrescribe para policies de modelo |
+| `order()` | Orden dentro de la sección; los empates se resuelven por `id` |
+| `span()` | Ancho de 1 a 12 columnas |
+| `resolve(User $actor)` | Devuelve el DTO del tipo o `null` para ocultar el widget |
+
+**DTOs** (en `App\Support\Dashboard`):
+
+| Tipo | DTO | Uso |
+| --- | --- | --- |
+| `Stat` | `StatData` | Una cifra con delta, icono y enlace |
+| `Stats` | `StatsData` | Un grupo de cifras en un panel |
+| `Series` | `SeriesData` | Serie temporal real (12 meses, 8 semanas) |
+| `List` | `ListData` | Lista corta de elementos |
+| `Approvals` | `ApprovalsData` | Cola de borradores por confirmar |
+| `Action` | `ActionData` | Accesos o acciones frecuentes |
+| `Timeline` | `TimelineData` | Eventos recientes |
+| `Text` | `TextData` | Texto breve, como el brief del agente |
+
+**Reglas:**
+
+- El host comprueba `visible()` **antes** de llamar a `resolve()`: un widget sin
+  permiso no ejecuta su consulta.
+- `resolve()` devuelve `null` para ocultar el widget; datos vacíos muestran estado
+  vacío.
+- El paquete acota cada consulta al actor (`accessibleTo`, policies). El host no
+  conoce su dominio.
+- Registrar dos veces el mismo `source` reemplaza sus widgets (idempotente); un
+  `id` duplicado dentro de una declaración es un error.
+- El dashboard es igual para todos los actores; la diferencia es qué widgets ven.
+  No hay personalización por usuario en este corte.
+- Sin caché ni polling: los datos se calculan en cada visita y cada widget debe ser
+  una consulta acotada.
+
+Criterios de aceptación:
+
+- Un paquete registrado aparece en su sección sin tocar la vista ni el componente
+  del host.
+- Un widget sin permiso no ejecuta su consulta; uno que devuelve `null` no se pinta.
+- Un id duplicado o sin el prefijo del `source` falla al registrar.
+- La suite del kit cubre registry, host y un widget de ejemplo.
+
+> **Estado:** implementado en `lnx` el 2026-11-06 (issue #93). La carcasa visual
+> `x-lnx-ui::widget` vive en `lnx-ui` (issue #5) y el host pinta las secciones
+> `Sam`, `Stats` y `Access`. Los widgets de producto (CRM y Sam) llegan en las
+> issues `crm#26` y `sam#6`.
 
 ## 4. Escritura por MCP (implementado)
 
