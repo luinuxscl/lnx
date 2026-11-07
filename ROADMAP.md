@@ -8,6 +8,18 @@ Este documento conserva el orden global de trabajo. GitHub es la fuente del esta
 
 **Prioridad vigente (2026-11-06): Etapa 17 — Sam como agente de plataforma.** Es el trabajo que se abre ahora y bloquea la replanificación del resto. Orden: [#84](https://github.com/luinuxscl/lnx/issues/84) → [#85](https://github.com/luinuxscl/lnx/issues/85) → [#88](https://github.com/luinuxscl/lnx/issues/88) → [lnx-ui #2](https://github.com/luinuxscl/lnx-ui/issues/2) → [crm #7](https://github.com/luinuxscl/crm/issues/7) → [crm-app #6](https://github.com/luinuxscl/crm-app/issues/6). El corte de lectura de Sam está cerrado (presencia, contexto por vista y por fila, brief, traza y streaming). La **Fase 2 — escritura controlada** ya tiene el modo efectivo y el techo en el runtime (2a, 2026-11-05) y la preferencia por persona con la pantalla de techos ([#90](https://github.com/luinuxscl/lnx/issues/90), 2b-1). El siguiente corte del panel es [sam#3](https://github.com/luinuxscl/sam/issues/3). Los demás frentes —producto CRM, mejoras del kit y de las apps derivadas— se revisan y se reordenan cuando Sam esté integrado y verificado.
 
+La **Etapa 18: Dashboard Sam-céntrico y contrato de widgets** se abre el
+2026-11-06 ([lnx#93](https://github.com/luinuxscl/lnx/issues/93),
+[lnx-ui#5](https://github.com/luinuxscl/lnx-ui/issues/5),
+[crm-app#12](https://github.com/luinuxscl/crm-app/issues/12),
+[crm#26](https://github.com/luinuxscl/crm/issues/26),
+[crm#25](https://github.com/luinuxscl/crm/issues/25) y
+[sam#6](https://github.com/luinuxscl/sam/issues/6)). El kit aporta el contrato
+de widgets, el registry y el host; los productos solo declaran datos tipados.
+Depende de la Etapa 17 solo para la sección Sam y no la reordena: el contrato y
+el host pueden avanzar en paralelo; la sección Sam espera al corte de escritura
+controlada.
+
 La **Etapa 8** ([#34 Mensajería interna entre usuarios, sistema e IA integrada con soporte](https://github.com/luinuxscl/lnx/issues/34)) y la **Etapa 9: Modernización visual y UI/UX** ([#27](https://github.com/luinuxscl/lnx/issues/27) y [#35](https://github.com/luinuxscl/lnx/issues/35)) han sido completadas e integradas con éxito.
 
 La **Etapa 10** ([#39 Contrato de módulo](https://github.com/luinuxscl/lnx/issues/39)) quedó **cerrada** (2026-10-11) con sus 7 puntos implementados. El estándar vive en [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) y su validación real continúa con el primer módulo, **Luz** (`luinuxscl/luz`): un punto que Luz no use no entra ni permanece en el contrato.
@@ -45,6 +57,7 @@ El 2026-11-03 se abrió la **Etapa 17: Sam como agente de plataforma**, con las 
 | 15. Edición y sincronización del centro de ayuda | [#81 Persistencia y `help:sync`](https://github.com/luinuxscl/lnx/issues/81) → [#76 Editor `/admin/help`](https://github.com/luinuxscl/lnx/issues/76) (cerradas, 2026-10-21) | Materializar el catálogo en base de datos con precedencia de root (auto / editado / disponible), sincronización idempotente, auditoría y edición bilingüe desde la UI. | Medio |
 | 16. Ayuda contextual y búsqueda semántica | [#79 Ayuda contextual](https://github.com/luinuxscl/lnx/issues/79) → [#80 Búsqueda semántica con Knowledge](https://github.com/luinuxscl/lnx/issues/80) (cerradas, 2026-10-21) | Llevar la ayuda al punto de duda con un componente reutilizable y enlaces profundos, y añadir búsqueda semántica con citas en el chat reutilizando el módulo Knowledge. | Medio |
 | 17. Sam como agente de plataforma | [#84 Runtime y contrato](https://github.com/luinuxscl/lnx/issues/84) → [#85 Paquete luinuxscl/sam](https://github.com/luinuxscl/lnx/issues/85) → [#88 Conversaciones múltiples](https://github.com/luinuxscl/lnx/issues/88) → [lnx-ui #2 Componentes](https://github.com/luinuxscl/lnx-ui/issues/2) → [crm #7 Contributor](https://github.com/luinuxscl/crm/issues/7) → [crm-app #6 Integración](https://github.com/luinuxscl/crm-app/issues/6) | Convertir a Sam en el agente de la plataforma: runtime y contrato en el kit, identidad y superficie en un paquete AGPL, contribución de módulos y una superficie global integrada. | Muy alto |
+| 18. Dashboard Sam-céntrico y contrato de widgets | [lnx#93](https://github.com/luinuxscl/lnx/issues/93) → [lnx-ui#5](https://github.com/luinuxscl/lnx-ui/issues/5) → [crm-app#12](https://github.com/luinuxscl/crm-app/issues/12) → [crm#26](https://github.com/luinuxscl/crm/issues/26) + [sam#6](https://github.com/luinuxscl/sam/issues/6) → [crm#25](https://github.com/luinuxscl/crm/issues/25) | Convertir el dashboard en un host de widgets con secciones fijas Sam/Stats/Accesos, datos tipados y permisos por widget; sección Sam permanente y rechazo terminal de borradores. | Alto |
 
 ### Etapa 17 — Sam como agente de plataforma (abierta 2026-11-03)
 
@@ -62,6 +75,16 @@ Corte de lectura cerrado el 2026-11-05: 1a (sidecar persistente, contexto por vi
 Criterio de cierre de la etapa: desde una pantalla del CRM, Sam abre con el contexto actual, responde con el alcance del actor, propone un borrador, se confirma inline con la frase y queda auditado; `/chat` y `/crm/sam` dejan de ser superficies de usuario. La etapa no se anuncia como terminada hasta que la suite de `lnx`, la del paquete Sam y la de `crm-app` pasen.
 
 ## Decisiones de secuencia
+
+- **Etapa 18 — dashboard Sam-céntrico (2026-11-06):** el dashboard deja de ser
+  una vista cableada y pasa a un host de widgets. El contrato vive en el kit
+  (`DashboardRegistry`, `DashboardWidget`, DTOs tipados) y la presentación en
+  `lnx-ui`; los paquetes solo aportan `resolve()`. Secciones fijas
+  Sam/Stats/Accesos, sin personalización por usuario. La sección Sam reutiliza
+  el runtime y añade `SamProposalPresenter::pendingFor()`; «descartar» es un
+  rechazo terminal auditado en `crm`. Fuera de alcance: pipeline, actividades,
+  cotizaciones, automatizaciones, notificaciones propias, exportación, vistas
+  guardadas y multi-organización.
 
 - **Etapa 17, corte 2b-1 — preferencia y techos (2026-11-06):** [#90](https://github.com/luinuxscl/lnx/issues/90) añade `SamPreferences::$mode` al presentador ya registrado. El modo efectivo pasa a ser el mínimo de `SAM_MAX_MODE`, el techo del rol y la preferencia; la preferencia se guarda sin recortar y se recorta al resolver. `/admin/sam` (solo root) lista los roles de Spatie, muestra el techo global como dato que siempre gana y registra cada cambio, incluido «heredar», en la actividad administrativa. No hay override de sesión y un rol no puede superar el techo global.
 - **Etapa 17, corte 2a — modo y techo (2026-11-05):** el runtime resuelve un modo efectivo por actor (`SamMode`: `read_only`, `draft`, `assisted`) como mínimo entre `SAM_MAX_MODE` y el techo de su rol en `sam_mode_ceilings`; root tampoco supera el techo. `SamProposeTool` declara `RISK` y `MIN_MODE`, el runtime no ofrece propuestas por debajo del modo efectivo y la herramienta vuelve a comprobarlo auditando `denied` con `reason = mode`. `SamProposal` incorpora `risk` y `requiresPhrase` —la frase sigue siendo obligatoria por defecto— para que el corte 2c pueda relajarla solo en acciones reversibles con undo.

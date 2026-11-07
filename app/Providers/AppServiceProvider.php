@@ -12,6 +12,10 @@ use App\Enums\Role;
 use App\Mail\RecordingMailManager;
 use App\Mcp\McpToolRegistry;
 use App\Models\User;
+use App\Support\Dashboard\DashboardRegistry;
+use App\Support\Dashboard\Widgets\AccountWidget;
+use App\Support\Dashboard\Widgets\RootToolsWidget;
+use App\Support\Dashboard\Widgets\UsersWidget;
 use App\Support\DevRootCredentials;
 use App\Support\Help\HelpRegistry;
 use App\Support\Notifications\NotificationTypeRegistry;
@@ -50,6 +54,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(IdentitySeederRegistry::class);
         $this->app->singleton(SamRegistry::class);
         $this->app->singleton(SamAccess::class);
+        $this->app->singleton(DashboardRegistry::class);
+
+        $this->app->make(DashboardRegistry::class)->register('lnx', [
+            AccountWidget::class,
+            UsersWidget::class,
+            RootToolsWidget::class,
+        ]);
 
         $this->app->make(IdentitySeederRegistry::class)
             ->register('lnx', IdentitySeeder::class, IdentitySeederRegistry::KIT_PRIORITY);

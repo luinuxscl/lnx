@@ -2,66 +2,80 @@
 
 namespace App\Livewire;
 
-use App\Enums\Role;
 use App\Models\User;
-use App\Models\UserInvitation;
-use Illuminate\Support\Facades\Gate;
+use App\Support\Appearance;
+use App\Support\Dashboard\DashboardRegistry;
+use App\Support\Dashboard\DashboardSection;
+use App\Support\Dashboard\DashboardWidget;
+use App\Support\Dashboard\WidgetData;
 use Illuminate\View\View;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
+/**
+ * Generic dashboard host.
+ *
+ * It knows nothing about the product: it asks the registry for the widgets,
+ * filters them by the actor, resolves the typed data and renders the fixed
+ * sections. Adding a widget never requires touching this class or its view.
+ */
 #[Title('Dashboard')]
 class Dashboard extends Component
 {
     public function render(): View
     {
-        $user = auth()->user();
-        $isRoot = $user->hasRole(Role::Root);
+        /** @var User $actor */
+        $actor = auth()->user();
+        $now = now(Appearance::currentTimezone($actor));
 
-        $canViewUsers = ! $isRoot
-            && $user->hasAnyRole([Role::Root, Role::Admin])
-            && Gate::allows('viewAny', User::class);
-        $canViewInvitations = $canViewUsers && Gate::allows('viewAny', UserInvitation::class);
-        $canCreateInvitations = $canViewInvitations && Gate::allows('create', UserInvitation::class);
+        $sections = [];
 
-        /** @var array{total: int, active: int, suspended: int, unverified: int, recent: int, admins: int}|null $userCounts */
-        $userCounts = null;
-        $pendingInvitations = null;
-
-        if ($canViewUsers) {
-            $counts = User::query()->selectRaw(
-                'COUNT(*) AS total, '
-                .'SUM(CASE WHEN suspended_at IS NULL THEN 1 ELSE 0 END) AS active, '
-                .'SUM(CASE WHEN suspended_at IS NOT NULL THEN 1 ELSE 0 END) AS suspended, '
-                .'SUM(CASE WHEN email_verified_at IS NULL THEN 1 ELSE 0 END) AS unverified, '
-                .'SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) AS recent',
-                [now()->subDays(7)],
-            )->first()?->toArray() ?? [];
-
-            $userCounts = [
-                'total' => (int) ($counts['total'] ?? 0),
-                'active' => (int) ($counts['active'] ?? 0),
-                'suspended' => (int) ($counts['suspended'] ?? 0),
-                'unverified' => (int) ($counts['unverified'] ?? 0),
-                'recent' => (int) ($counts['recent'] ?? 0),
-                'admins' => User::role(Role::Admin->value)->count(),
+        foreach ([DashboardSection::Sam, DashboardSection::Stats, DashboardSection::Access] as $section) {
+            $sections[] = [
+                'section' => $section,
+                'widgets' => $this->widgetsFor($actor, $section),
             ];
         }
 
-        if ($canViewInvitations) {
-            $pendingInvitations = UserInvitation::query()
-                ->whereNull('accepted_at')
-                ->whereNull('revoked_at')
-                ->where('expires_at', '>', now())
-                ->count();
+        return view('livewire.dashboard', [
+            'name' => $actor->name,
+            'today' => $now->isoFormat('dddd, LL'),
+            'todayIso' => $now->toDateString(),
+            'sections' => $sections,
+        ])->layout('layouts.app');
+    }
+
+    /**
+     * Visible widgets of one section, already resolved and sorted.
+     *
+     * The permission check runs before `resolve()`, so a widget the actor
+     * cannot see never executes its query.
+     *
+     * @return list<array{widget: DashboardWidget, data: WidgetData}>
+     */
+    private function widgetsFor(User $actor, DashboardSection $section): array
+    {
+        $widgets = [];
+
+        foreach (app(DashboardRegistry::class)->all() as $widget) {
+            if ($widget->section() !== $section || ! $widget->visible($actor)) {
+                continue;
+            }
+
+            $data = $widget->resolve($actor);
+
+            if ($data === null) {
+                continue;
+            }
+
+            $widgets[] = ['widget' => $widget, 'data' => $data];
         }
 
-        return view('livewire.dashboard', [
-            'name' => $user->name,
-            'isRoot' => $isRoot,
-            'userCounts' => $userCounts,
-            'pendingInvitations' => $pendingInvitations,
-            'canCreateInvitations' => $canCreateInvitations,
-        ])->layout('layouts.app');
+        usort($widgets, static function (array $left, array $right): int {
+            return [$left['widget']->order(), $left['widget']->id()]
+                <=> [$right['widget']->order(), $right['widget']->id()];
+        });
+
+        return $widgets;
     }
 }
