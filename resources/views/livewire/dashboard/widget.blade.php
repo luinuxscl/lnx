@@ -24,6 +24,7 @@
         <x-lnx-ui::stat-card
             class="{{ $spanClass }}"
             :label="$data->label ?? $widget->title()"
+            :aria-label="$data->ariaLabel ?? false"
             :value="$data->value"
             :icon="$data->icon"
             :color="$data->color"
@@ -60,6 +61,7 @@
                         <x-lnx-ui::stat-card
                             class="col-span-12 sm:col-span-6 xl:col-span-3"
                             :label="$item->label"
+                            :aria-label="$item->ariaLabel ?? false"
                             :value="$item->value"
                             :icon="$item->icon"
                             :color="$item->color"

@@ -13,6 +13,7 @@ final class StatData implements WidgetData
     public function __construct(
         public readonly string $value,
         public readonly ?string $label = null,
+        public readonly ?string $ariaLabel = null,
         public readonly ?string $delta = null,
         public readonly ?string $deltaTone = null,
         public readonly ?string $href = null,
