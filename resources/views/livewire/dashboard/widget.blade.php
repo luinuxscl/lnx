@@ -208,14 +208,25 @@
             >
                 <div class="flex flex-col gap-2">
                     @foreach ($data->items as $item)
-                        <flux:button
-                            type="button"
-                            class="justify-start"
-                            icon="sparkles"
-                            x-on:click="$dispatch('sam-suggestion', { text: @js($item->prompt) }); $dispatch('sam-open')"
-                        >
-                            {{ $item->label }}
-                        </flux:button>
+                        @if (filled($item->prompt))
+                            <flux:button
+                                type="button"
+                                class="justify-start"
+                                icon="sparkles"
+                                x-on:click="$dispatch('sam-suggestion', { text: @js($item->prompt) }); $dispatch('sam-open')"
+                            >
+                                {{ $item->label }}
+                            </flux:button>
+                        @else
+                            <flux:button
+                                class="justify-start"
+                                :icon="$item->icon ?? 'arrow-right'"
+                                :href="$item->href"
+                                wire:navigate
+                            >
+                                {{ $item->label }}
+                            </flux:button>
+                        @endif
                     @endforeach
                 </div>
             </x-lnx-ui::widget>
