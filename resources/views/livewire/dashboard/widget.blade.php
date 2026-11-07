@@ -205,14 +205,25 @@
             @if ($data->items !== [])
                 <div class="grid grid-cols-12 gap-4">
                     @foreach ($data->items as $item)
-                        <x-lnx-ui::tool-card
-                            class="col-span-12 sm:col-span-6 xl:col-span-4"
-                            :title="$item->label"
-                            :description="$item->description ?? ''"
-                            :icon="$item->icon ?? 'arrow-right'"
-                            :color="$item->color"
-                            :href="$item->href ?? '#'"
-                        />
+                        @if (filled($item->prompt))
+                            <flux:button
+                                type="button"
+                                class="col-span-12 justify-start sm:col-span-6 xl:col-span-4"
+                                icon="sparkles"
+                                x-on:click="$dispatch('sam-suggestion', { text: @js($item->prompt) }); $dispatch('sam-open')"
+                            >
+                                {{ $item->label }}
+                            </flux:button>
+                        @else
+                            <x-lnx-ui::tool-card
+                                class="col-span-12 sm:col-span-6 xl:col-span-4"
+                                :title="$item->label"
+                                :description="$item->description ?? ''"
+                                :icon="$item->icon ?? 'arrow-right'"
+                                :color="$item->color"
+                                :href="$item->href ?? '#'"
+                            />
+                        @endif
                     @endforeach
                 </div>
             @endif

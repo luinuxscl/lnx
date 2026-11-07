@@ -395,11 +395,16 @@ final class SamProposal
         public readonly string $summary,
         public readonly array $changes,
         public readonly string $status,
-        public readonly ?CarbonInterface $expiresAt,
-        public readonly ?string $recordUrl,
-        public readonly bool $canConfirm,
+        public readonly ?CarbonInterface $expiresAt = null,
+        public readonly ?string $recordUrl = null,
+        public readonly ?string $reviewUrl = null,
+        public readonly bool $canConfirm = false,
+        public readonly bool $canReject = false,
+        public readonly ?string $rejectUrl = null,
         public readonly SamRisk $risk = SamRisk::Reversible,
         public readonly bool $requiresPhrase = true,
+        public readonly bool $canUndo = false,
+        public readonly ?CarbonInterface $undoExpiresAt = null,
     ) {}
 }
 
@@ -417,6 +422,14 @@ interface SamProposalPresenter
     /** @return list<SamProposal> */
     public function forCorrelation(string $correlationId, User $actor): array;
 
+    /**
+     * Cola permanente del dashboard: borradores pendientes del actor, sin
+     * correlación. El módulo acota por actor y por vigencia.
+     *
+     * @return list<SamProposal>
+     */
+    public function pendingFor(User $actor, int $limit = 5): array;
+
     public function confirm(SamProposal $proposal, User $actor, string $phrase): SamProposalResult;
 }
 ```
@@ -433,6 +446,8 @@ interface SamBriefPresenter
 `SamBriefPresenter` **no ejecuta nada**: compone observaciones y acciones ya aprobadas y responde `null` cuando el actor no puede ver el registro.
 
 `SamProposalPresenter` **delega en la acción de confirmación del módulo**; nunca escribe directo. El runtime comprueba el actor y la vigencia antes de llamarlo, y trata `duplicate`, `failed` y `expired` sin presentarlos como éxito.
+
+**Cola de aprobaciones y descarte.** `SamRuntime::pendingProposals()` agrega `pendingFor()` de todos los módulos y acota el resultado; la sección Sam del dashboard la pinta como cola permanente. `canReject` y `rejectUrl` los declara el módulo dueño del borrador: la superficie solo publica un formulario hacia esa URL, nunca conoce sus rutas ni ejecuta el rechazo. Descartar es **terminal y auditado en el módulo**; el runtime no escribe nada.
 
 Responsabilidades del runtime del kit:
 

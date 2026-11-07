@@ -56,6 +56,35 @@ it('returns the drafts of a correlation for the actor', function (): void {
         ->and($proposals[0]->id)->toBe('draft-1');
 });
 
+it('returns the pending drafts of every module for the actor', function (): void {
+    $presenter = fakePresenter();
+    $presenter->pending = [proposalFor('corr-1'), proposalFor('corr-2')];
+
+    grantSamPermission();
+
+    $proposals = app(SamRuntime::class)->pendingProposals(User::factory()->create(), 5);
+
+    expect($proposals)->toHaveCount(2);
+});
+
+it('bounds the pending queue to the requested limit', function (): void {
+    $presenter = fakePresenter();
+    $presenter->pending = [proposalFor('corr-1'), proposalFor('corr-2'), proposalFor('corr-3')];
+
+    grantSamPermission();
+
+    $proposals = app(SamRuntime::class)->pendingProposals(User::factory()->create(), 1);
+
+    expect($proposals)->toHaveCount(1);
+});
+
+it('returns no pending drafts to an unauthorized identity', function (): void {
+    $presenter = fakePresenter();
+    $presenter->pending = [proposalFor()];
+
+    expect(app(SamRuntime::class)->pendingProposals(User::factory()->create(), 5))->toBe([]);
+});
+
 it('returns no drafts to an unauthorized identity', function (): void {
     $presenter = fakePresenter();
     $presenter->proposals['corr-1'] = [proposalFor()];

@@ -12,6 +12,7 @@ final class WidgetItem
         public readonly ?string $description = null,
         public readonly ?string $meta = null,
         public readonly ?string $href = null,
+        public readonly ?string $prompt = null,
         public readonly ?string $icon = null,
         public readonly ?string $badge = null,
         public readonly string $color = 'accent',
