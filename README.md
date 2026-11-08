@@ -98,6 +98,14 @@ Un proyecto sin `lnx_version` es anterior a este esquema y se considera desactua
 2. Añade la entrada correspondiente en `CHANGELOG.md` (y en `.ai/CHANGELOG.md` si cambió el kit para agentes).
 3. Commitea en `develop`, mergea `--no-ff` a `main` y publica: `git tag -a vX.Y.Z -m "lnx vX.Y.Z"`, `git push origin main`, `git push origin vX.Y.Z`.
 
+### Actualizar un proyecto derivado
+
+Una release puede exigir cambios que el proyecto derivado aplica a mano en su
+propia aplicación. Viven en [`docs/UPGRADE.md`](docs/UPGRADE.md), una entrada por
+release, con el orden de los pasos y la verificación que la cierra. El kit para
+agentes se actualiza con `scripts/update-agent-kit.py`; el código de la
+aplicación, no.
+
 ## Identidad y valores por defecto
 
 lnx define su identidad por defecto en capas, de modo que una instalación nueva se ve como LNX sin configurar nada:
