@@ -15,6 +15,7 @@ final class SamSignal
         public readonly string $name,
         public readonly string|int|bool $value,
         public readonly ?string $evidence = null,
+        public readonly bool $proactive = false,
     ) {}
 
     /**
