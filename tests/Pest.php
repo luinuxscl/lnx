@@ -5,6 +5,7 @@ use App\Ai\Sam\SamTurn;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use Tests\Fixtures\Sam\CapabilitySamContributor;
 use Tests\Fixtures\Sam\FakeProposeTool;
 use Tests\Fixtures\Sam\FakeReadTool;
 use Tests\Fixtures\Sam\FakeSamContributor;
@@ -101,6 +102,7 @@ function resetSamFixtures(): void
     FakeSamContributor::$rowContext = null;
     FakeSamContributor::$signals = [];
 
+    CapabilitySamContributor::$mode = 'ok';
     app(SamRegistry::class)->flush();
     SamTurn::clear();
 }
