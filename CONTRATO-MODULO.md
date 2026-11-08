@@ -290,7 +290,7 @@ public function boot(): void
 
 ### 3.9 Contribuciones al agente (Sam) (runtime implementado)
 
-> **Destino normativo:** [ADR 0002](../docs/adr/0002-capacidades-y-empaquetado-del-runtime.md) decide que una capacidad se declara **una vez** y la leen todas las superficies (Sam, MCP, API y UI), y que el runtime se empaqueta como `luinuxscl/lnx-sam` (MIT). El paquete está publicado (`v0.1.0`) y `lnx`, `crm-app`, `sam` y `crm` ya lo consumen; las reglas de capacidades entran en vigor al declarar el manifiesto.
+> **Normativo desde 2026-11-08.** [ADR 0002](../docs/adr/0002-capacidades-y-empaquetado-del-runtime.md) decide que una capacidad se declara **una vez** y la leen todas las superficies (Sam, MCP, API y UI), y que el runtime se empaqueta como `luinuxscl/lnx-sam` (MIT). El paquete está publicado (`v0.2.0`) y `lnx`, `crm-app`, `sam` y `crm` ya lo consumen, así que estas reglas obligan a todo módulo que exponga herramientas a Sam.
 
 El **runtime del agente** es el paquete MIT `luinuxscl/lnx-sam` (namespace `Luinuxscl\LnxSam`) y un paquete de producto —`luinuxscl/sam`, AGPL-3.0-or-later— aporta su identidad y su superficie. Un módulo no construye su propio chat: declara **qué sabe Sam de su dominio y qué operaciones puede ejecutar**. Nada se expone por estar el paquete en `vendor/`; la declaración es explícita y se valida.
 
@@ -355,11 +355,10 @@ interface SamContributor
 - **Confirmación proporcional.** El módulo genera y valida la frase; el runtime re-resuelve la propuesta por correlación, actor y `source`, comprueba `canConfirm` y la caducidad, exige la frase cuando la propuesta la requiere, delega en `SamProposalPresenter::confirm()` y audita el resultado (`confirmed`, `duplicate`, `failed`, `expired`). La frase se redacta antes de persistir cualquier respuesta y un mensaje que sea solo la frase no se guarda como turno.
 - **API del runtime.** `SamRuntime` expone `enabled()`, `ready()`, `canUse()`, `ceilingFor()`, `modeFor()`, `surface()`, `conversations()`, `conversationFor()`, `findConversation()`, `findForActor()`, `startConversation()`, `messages()`, `send()`, `deleteConversation()`, `forgetAll()`, `toolsFor()`, `contextFor()`, `contextForRow()`, `briefFor()`, `suggestions()`, `proposals()`, `confirm()` y `undo()`. La cuota se aplica con la aplicación `sam.turn` (declarada por el paquete con `AiApplicationRegistry`; sin declaración, aplica el límite por defecto).
 
-#### Capacidades declaradas una vez (ADR 0002, runtime en el kit)
+#### Capacidades declaradas una vez (ADR 0002)
 
-Una capacidad se declara una vez y la leen Sam, MCP, la API y la UI. El kit ya
-publica el manifiesto, la validación y la introspección; los módulos adoptan la
-declaración en la migración de su propio ADR.
+Una capacidad se declara una vez y la leen Sam, MCP, la API y la UI. El paquete
+`luinuxscl/lnx-sam` publica el manifiesto, la validación y la introspección.
 
 ```php
 use Luinuxscl\LnxSam\SamCapability;
@@ -396,10 +395,21 @@ class CrmSamContributor implements SamContributor, SamCapabilityProvider
 }
 ```
 
-- **`SamCapabilityProvider` es opcional.** Un contribuidor que no lo implemente
-  sigue funcionando como hoy y `sam:doctor` lo reporta como pendiente de
-  migración; uno que lo implemente pasa a ser la fuente única de permiso, riesgo,
-  modo mínimo y confirmación de sus capacidades.
+- **`SamCapabilityProvider` es opcional en el tipo, obligatorio en la práctica.**
+  Un contribuidor que no lo implemente sigue funcionando y `sam:doctor` lo
+  reporta como pendiente; todo módulo publicado declara su manifiesto, y uno que
+  exponga herramientas sin capacidad queda marcado como drift en CI.
+- **Una llamada rechazada se audita como rechazo.** Un módulo que se niega a
+  leer o a proponer por permiso, alcance o validación lanza
+  `Luinuxscl\LnxSam\Tools\SamToolDenied` con su motivo (`forbidden`,
+  `out_of_scope`, `validation`, `failed`) y el mensaje que debe leer el modelo.
+  El runtime registra `denied` con ese motivo; nunca un éxito sin payload.
+- **Motivos de la auditoría.** `unauthenticated`, `disabled`, `forbidden`
+  (identidad o módulo sin permiso), `mode` (por debajo del modo mínimo),
+  `validation`, `out_of_scope` (el registro no es del actor o no existe),
+  `duplicate_name` y `not_declared` (herramienta no declarada con las bases del
+  runtime). El alcance no se revela: un registro fuera del alcance responde igual
+  que uno inexistente.
 - **La clave es global y lleva el prefijo del módulo.** Un prefijo ajeno, una
   clave repetida o un `handler` inexistente lanzan `InvalidArgumentException` al
   registrar, no en el turno.

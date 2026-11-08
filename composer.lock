@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d567ba20a5c4b1830b8a80f3f06e7fc1",
+    "content-hash": "568d0863c3d3d3956d1b61086a790819",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -2731,16 +2731,16 @@
         },
         {
             "name": "luinuxscl/lnx-sam",
-            "version": "v0.1.0",
+            "version": "v0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/luinuxscl/lnx-sam.git",
-                "reference": "93d51a654ec5b2d4108b0a2efa4484f007c0744f"
+                "reference": "195f0211f768f2ec3edf251d7fbfc4119c3ffef1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/luinuxscl/lnx-sam/zipball/93d51a654ec5b2d4108b0a2efa4484f007c0744f",
-                "reference": "93d51a654ec5b2d4108b0a2efa4484f007c0744f",
+                "url": "https://api.github.com/repos/luinuxscl/lnx-sam/zipball/195f0211f768f2ec3edf251d7fbfc4119c3ffef1",
+                "reference": "195f0211f768f2ec3edf251d7fbfc4119c3ffef1",
                 "shasum": ""
             },
             "require": {
@@ -2800,10 +2800,10 @@
                 "mcp"
             ],
             "support": {
-                "source": "https://github.com/luinuxscl/lnx-sam/tree/v0.1.0",
+                "source": "https://github.com/luinuxscl/lnx-sam/tree/v0.2.0",
                 "issues": "https://github.com/luinuxscl/lnx-sam/issues"
             },
-            "time": "2026-11-08T16:35:00+00:00"
+            "time": "2026-11-08T17:27:18+00:00"
         },
         {
             "name": "luinuxscl/lnx-ui",
