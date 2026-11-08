@@ -808,7 +808,7 @@ El resto de esta sección documenta ese componente heredado.
 
 ## Sam: runtime y contrato de agente
 
-El kit aloja el **runtime** del agente de la plataforma y el **contrato** con el que los módulos contribuyen conocimiento y operaciones. La identidad (nombre, declaración, persona) y el panel global son producto: los aporta el paquete AGPL `luinuxscl/sam` (#85). El runtime vive en `App\Ai\Sam\*` y no conoce la marca ni el dominio de ningún módulo. Decisión: [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md); contrato completo: [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
+El kit aloja el **runtime** del agente de la plataforma y el **contrato** con el que los módulos contribuyen conocimiento y operaciones. La identidad (nombre, declaración, persona) y el panel global son producto: los aporta el paquete AGPL `luinuxscl/sam` (#85). El runtime vive en `App\Ai\Sam\*` y no conoce la marca ni el dominio de ningún módulo. Decisiones: [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md) y [`docs/adr/0002-capacidades-y-empaquetado-del-runtime.md`](docs/adr/0002-capacidades-y-empaquetado-del-runtime.md); contrato completo: [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
 
 ### Registro y declaración
 
@@ -989,7 +989,7 @@ Esta sección es la entrada canónica para agentes en lnx. Laravel Boost genera 
 | Centro de ayuda (plan y etapas) | [CENTRO-AYUDA.md](CENTRO-AYUDA.md); decisiones, arquitectura, contrato de extensión, issues y orden para retomar la implementación |
 | Análisis del roadmap | skill `.ai/skills/analyze-roadmap/SKILL.md`; contrasta el roadmap con el tracker real y el estado de Git, detecta desalineaciones y propone el próximo trabajo |
 | Contrato de módulo | [CONTRATO-MODULO.md](CONTRATO-MODULO.md); qué puede declarar un paquete, el estándar de escritura por MCP (Etapa 10) y las contribuciones al agente (diseñado) |
-| Decisiones de plataforma | [docs/adr/](docs/adr/); el ADR 0001 define Sam como agente de plataforma |
+| Decisiones de plataforma | [docs/adr/](docs/adr/); el ADR 0001 define Sam como agente de plataforma y el ADR 0002, las capacidades declaradas una vez y el empaquetado del runtime |
 | Versiones PHP instaladas | `composer show --direct` |
 | Dependencias JS | `package.json` y `npm ls --depth=0` |
 | Módulos, rutas y estructura | `app/`, `routes/`, `resources/`; `php artisan route:list --except-vendor` |
