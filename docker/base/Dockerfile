@@ -21,4 +21,13 @@ USER root
 
 RUN install-php-extensions intl bcmath gd
 
+# `wget` para la sonda de salud del despliegue: la imagen ya trae `curl`, pero
+# Coolify comprueba el contenedor con `wget -q -O /dev/null <url>` y sin el
+# binario cada intento falla con `/bin/sh: 1: wget: not found`, así que el
+# despliegue espera al estado de Docker (arranque completo) en vez de cortar en
+# el primer `/up` que responde. Medido: ~15 s por despliegue.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends wget \
+    && rm -rf /var/lib/apt/lists/*
+
 USER www-data
