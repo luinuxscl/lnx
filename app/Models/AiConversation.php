@@ -63,11 +63,18 @@ class AiConversation extends Model
     /**
      * Last message of the thread, used by the conversation list.
      *
+     * It orders instead of using `latestOfMany()`: `ai_messages.id` is a UUID
+     * and PostgreSQL has no `max(uuid)`, so the aggregate that `latestOfMany()`
+     * builds per column only works on SQLite. Lazy loading keeps `limit 1`, and
+     * on a mixed-precision timestamp the ordered UUID breaks the tie.
+     *
      * @return HasOne<AiChatMessage, $this>
      */
     public function latestMessage(): HasOne
     {
-        return $this->hasOne(AiChatMessage::class, 'conversation_id')->latestOfMany();
+        return $this->hasOne(AiChatMessage::class, 'conversation_id')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
     }
 
     /**
