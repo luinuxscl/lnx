@@ -20,4 +20,14 @@ interface SamAmbientSignals
      * @return list<SamRowSignals>
      */
     public function signalsForRows(User $actor, string $resource, array $ids): array;
+
+    /**
+     * Freshness of records on the current screen, used before computing signals.
+     *
+     * Only ids the actor may see are returned. Missing ids are treated as absent.
+     *
+     * @param  list<string>  $ids
+     * @return array<string, ?string> map of record id to `updated_at` (Atom) or null
+     */
+    public function ambientRowVersions(User $actor, string $resource, array $ids): array;
 }

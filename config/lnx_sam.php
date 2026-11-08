@@ -89,6 +89,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | List filter analysis
+    |--------------------------------------------------------------------------
+    |
+    | Aggregate proactive counts for the current list filters. Rows beyond the
+    | cap are skipped and the analysis is marked truncated.
+    |
+    */
+
+    'filter_max_rows' => (int) env('SAM_FILTER_MAX_ROWS', 5000),
+
+    'filter_cache_ttl' => (int) env('SAM_FILTER_CACHE_TTL', 120),
+
+    /*
+    |--------------------------------------------------------------------------
     | Turn bounds
     |--------------------------------------------------------------------------
     |
