@@ -63,7 +63,7 @@ class McpToolRegistry
     {
         $tools = [];
 
-        foreach ($this->tools as $registered) {
+        foreach ($this->registered() as $registered) {
             foreach ($registered as $tool) {
                 if (! in_array($tool, $tools, true)) {
                     $tools[] = $tool;
@@ -72,5 +72,26 @@ class McpToolRegistry
         }
 
         return $tools;
+    }
+
+    /**
+     * Registered tools keyed by the package source that declared them.
+     *
+     * `sam:doctor` uses it to tell a module pending migration from one that
+     * registered a tool and forgot to declare its capability.
+     *
+     * @return array<string, list<class-string>>
+     */
+    public function bySource(): array
+    {
+        return $this->registered();
+    }
+
+    /**
+     * @return array<string, list<class-string<Tool>>>
+     */
+    private function registered(): array
+    {
+        return $this->tools;
     }
 }

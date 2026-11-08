@@ -41,6 +41,7 @@ final class SamCapability
         public readonly bool $undoable,       // solo si hay undo de verdad
         public readonly string $auditAction,  // read | propose | confirm | undo
         public readonly array $surfaces,      // ['sam', 'mcp', 'api', 'ui']
+        public readonly array $handlers,      // herramientas que la implementan
     ) {}
 }
 ```
@@ -49,7 +50,7 @@ final class SamCapability
 - `risk` y `requiresPhrase` son coherentes por construcción: irreversible y bulk siempre piden frase; reversible solo puede relajarla declarando `undoable = true`. Un `risk` reversible sin undo es un error detectable.
 - `surfaces` es informativo y se valida contra las superficies instaladas: declarar `mcp` sin herramienta MCP registrada falla en `sam:doctor`, no en el turno.
 
-Un `SamContributor` gana `capabilities(): array`. Es obligatorio: un módulo que expone herramientas sin capacidad declarada no las publica, y el runtime audita `tool_rejected` con `reason: capability_missing`.
+Un módulo declara su manifiesto implementando `SamCapabilityProvider` (`capabilities(): array`). Durante la migración el contrato es **opcional**: un contribuidor sin manifiesto sigue funcionando y `sam:doctor` lo reporta como pendiente, de modo que las suites de los módulos no se rompen por el orden de despliegue. Cuando todos los módulos publicados declaren, el manifiesto pasa a obligatorio y un módulo que expone herramientas sin capacidad no las publica: el runtime audita `tool_rejected` con `reason: capability_missing`.
 
 ### 2. La matriz capacidad × superficie
 
@@ -119,7 +120,7 @@ Todos devuelven código de salida distinto de cero cuando encuentran un problema
 
 ## Migración, en orden
 
-1. `lnx`: `SamCapability`, validación en `SamRegistry`, catálogo y los cuatro comandos de solo lectura, con pruebas.
+1. `lnx`: `SamCapability`, validación en `SamRegistry`, catálogo y los cuatro comandos de solo lectura, con pruebas. — **implementado (2026-11-08)**, portado a `crm-app`.
 2. `crm`: `capabilities()` en `CrmSamContributor` para sus lecturas y sus ocho propuestas; `DraftWriteTool` y `SamProposeTool` leen de ahí. **Sin cambio de comportamiento**: la suite del módulo debe seguir verde sin tocar expectativas.
 3. Crear `luinuxscl/lnx-sam` (MIT), mover el runtime con sus pruebas y publicar la primera versión.
 4. `lnx`, `crm-app` y `sam` requieren el paquete; `crm-app` retira la copia y actualiza el lock. Alias de compatibilidad activos.

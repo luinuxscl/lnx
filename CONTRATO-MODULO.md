@@ -355,35 +355,75 @@ interface SamContributor
 - **Confirmación proporcional.** El módulo genera y valida la frase; el runtime re-resuelve la propuesta por correlación, actor y `source`, comprueba `canConfirm` y la caducidad, exige la frase cuando la propuesta la requiere, delega en `SamProposalPresenter::confirm()` y audita el resultado (`confirmed`, `duplicate`, `failed`, `expired`). La frase se redacta antes de persistir cualquier respuesta y un mensaje que sea solo la frase no se guarda como turno.
 - **API del runtime.** `SamRuntime` expone `enabled()`, `ready()`, `canUse()`, `ceilingFor()`, `modeFor()`, `surface()`, `conversations()`, `conversationFor()`, `findConversation()`, `findForActor()`, `startConversation()`, `messages()`, `send()`, `deleteConversation()`, `forgetAll()`, `toolsFor()`, `contextFor()`, `contextForRow()`, `briefFor()`, `suggestions()`, `proposals()`, `confirm()` y `undo()`. La cuota se aplica con la aplicación `sam.turn` (declarada por el paquete con `AiApplicationRegistry`; sin declaración, aplica el límite por defecto).
 
-#### Capacidades declaradas una vez (ADR 0002, en migración)
+#### Capacidades declaradas una vez (ADR 0002, runtime en el kit)
 
-Hoy el riesgo, el permiso y el modo mínimo se escriben en tres sitios —`SamProposeTool`, `DraftWriteTool`/`WritesData` y los endpoints de la API—. El ADR 0002 los unifica en un manifiesto por módulo:
+Una capacidad se declara una vez y la leen Sam, MCP, la API y la UI. El kit ya
+publica el manifiesto, la validación y la introspección; los módulos adoptan la
+declaración en la migración de su propio ADR.
 
 ```php
-public function capabilities(): array
+use App\Ai\Sam\SamCapability;
+use App\Ai\Sam\SamCapabilityKind;
+use App\Ai\Sam\SamCapabilityProvider;
+use App\Ai\Sam\SamMode;
+use App\Ai\Sam\SamRisk;
+
+class CrmSamContributor implements SamContributor, SamCapabilityProvider
 {
-    return [
-        new SamCapability(
-            key: 'crm.archive_contact',
-            source: 'crm',
-            label: 'Archivar contacto',
-            kind: SamCapabilityKind::Propose,
-            permission: 'crm.manage_contact',
-            risk: SamRisk::Reversible,
-            minMode: SamMode::Draft,
-            requiresPhrase: false,
-            undoable: true,
-            auditAction: 'propose',
-            surfaces: ['sam', 'mcp', 'api', 'ui'],
-        ),
-    ];
+    /** @return list<SamCapability> */
+    public function capabilities(): array
+    {
+        return [
+            SamCapability::read(
+                key: 'crm.get_contact',
+                source: 'crm',
+                label: 'Leer un contacto',
+                permission: 'crm.view_contact',
+                handlers: [GetContactTool::class],
+            ),
+            SamCapability::propose(
+                key: 'crm.archive_contact',
+                source: 'crm',
+                label: 'Archivar contacto',
+                risk: SamRisk::Reversible,
+                undoable: true,
+                permission: 'crm.manage_contact',
+                surfaces: ['sam', 'mcp', 'api', 'ui'],
+                handlers: [ProposeArchiveContactTool::class, ArchiveContactTool::class],
+            ),
+        ];
+    }
 }
 ```
 
-- La **autorización no se delega a la superficie**: cada capa vuelve a comprobar permiso y alcance por registro.
-- La **confirmación solo se endurece**: MCP y API exigen siempre la frase; Sam la relaja únicamente cuando el riesgo es reversible y existe undo real.
-- Un `risk` reversible sin `undoable` es un error de declaración, y una capacidad sin herramienta (o al revés) se reporta con `sam:doctor`.
-- La introspección es de solo lectura: `sam:capabilities`, `sam:describe <clave>`, `sam:run <clave> --dry-run` y `sam:doctor`, con código de salida distinto de cero cuando encuentran drift.
+- **`SamCapabilityProvider` es opcional.** Un contribuidor que no lo implemente
+  sigue funcionando como hoy y `sam:doctor` lo reporta como pendiente de
+  migración; uno que lo implemente pasa a ser la fuente única de permiso, riesgo,
+  modo mínimo y confirmación de sus capacidades.
+- **La clave es global y lleva el prefijo del módulo.** Un prefijo ajeno, una
+  clave repetida o un `handler` inexistente lanzan `InvalidArgumentException` al
+  registrar, no en el turno.
+- **`handlers` son las herramientas que implementan la capacidad.** Aceptan
+  `SamReadTool`/`SamProposeTool` y herramientas MCP; `sam:doctor` comprueba que
+  el tipo coincide con `kind` y que `WritesData` (permiso y `RISK`) no
+  contradice la capacidad.
+- La **autorización no se delega a la superficie**: cada capa vuelve a comprobar
+  permiso y alcance por registro.
+- La **confirmación solo se endurece**: MCP y API exigen siempre la frase; Sam la
+  relaja únicamente cuando el riesgo es reversible y existe undo real. Un `risk`
+  reversible sin `undoable` es un error de construcción del DTO.
+- La introspección es de solo lectura y devuelve código de salida distinto de
+  cero cuando encuentra drift:
+  - `sam:capabilities [--source=] [--json] [--strict]` — catálogo por módulo.
+  - `sam:describe <clave>` — detalle y herramientas que la implementan.
+  - `sam:run <clave> --actor=<email|id> --dry-run [--input=<json>]` — comprueba
+    interruptor, permiso, modo y resolución del handler; una propuesta solo se
+    previsualiza si su herramienta implementa `SamDraftPreview` y nunca se crea
+    el borrador.
+  - `sam:doctor [--actor=<email|id>]` — capacidades sin herramienta, herramientas
+    sin capacidad, `WritesData` que no coincide y módulos sin manifiesto. El
+    inventario de herramientas de Sam requiere actor porque el runtime las filtra
+    por identidad; sin `--actor` solo se comprueban capacidades y MCP.
 
 
 DTOs compartidos:
