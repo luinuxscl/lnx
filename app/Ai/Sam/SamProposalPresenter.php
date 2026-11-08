@@ -21,7 +21,20 @@ interface SamProposalPresenter
     public function forCorrelation(string $correlationId, User $actor): array;
 
     /**
-     * Confirm a draft after the person wrote the one-time phrase.
+     * Pending drafts of this module, visible to the actor, newest first.
+     *
+     * It is the read model behind the permanent approvals queue of the
+     * dashboard: it is not tied to a conversation or a correlation.
+     *
+     * @return list<SamProposal>
+     */
+    public function pendingFor(User $actor, int $limit = 5): array;
+
+    /**
+     * Confirm a draft after the person confirmed it.
+     *
+     * The phrase is required by the runtime only for irreversible or bulk
+     * drafts; the module re-checks its own policy.
      */
     public function confirm(SamProposal $proposal, User $actor, string $phrase): SamProposalResult;
 }

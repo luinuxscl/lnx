@@ -30,6 +30,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Mode ceiling
+    |--------------------------------------------------------------------------
+    |
+    | Highest mode any identity may reach in this deployment: `read_only` lets
+    | Sam read and explain but not propose, `draft` lets it propose drafts and
+    | `assisted` lets the owning module execute reversible actions after
+    | confirmation. A role may lower the ceiling with a `sam_mode_ceilings`
+    | row; the effective mode is always the lowest of both, root included.
+    |
+    */
+
+    'max_mode' => (string) env('SAM_MAX_MODE', 'read_only'),
+
+    /*
+    |--------------------------------------------------------------------------
     | AI application
     |--------------------------------------------------------------------------
     |
@@ -59,6 +74,32 @@ return [
     'brief_max_tokens' => (int) env('SAM_BRIEF_MAX_TOKENS', 900),
 
     'brief_cache_ttl' => (int) env('SAM_BRIEF_CACHE_TTL', 3600),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ambient proactive cache
+    |--------------------------------------------------------------------------
+    |
+    | Short-lived cache for batched row signals used by the ambient badge. Keys
+    | include the actor, module source, resource, record id and `updated_at`.
+    |
+    */
+
+    'ambient_cache_ttl' => (int) env('SAM_AMBIENT_CACHE_TTL', 60),
+
+    /*
+    |--------------------------------------------------------------------------
+    | List filter analysis
+    |--------------------------------------------------------------------------
+    |
+    | Aggregate proactive counts for the current list filters. Rows beyond the
+    | cap are skipped and the analysis is marked truncated.
+    |
+    */
+
+    'filter_max_rows' => (int) env('SAM_FILTER_MAX_ROWS', 5000),
+
+    'filter_cache_ttl' => (int) env('SAM_FILTER_CACHE_TTL', 120),
 
     /*
     |--------------------------------------------------------------------------

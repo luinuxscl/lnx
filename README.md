@@ -480,13 +480,15 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 
 ## Panel por rol
 
-`/dashboard` (`dashboard`) mantiene los middleware `auth` y `verified`. La bienvenida muestra el nombre escapado. El panel es un componente Livewire de clase que comprueba los roles y las policies en cada renderizado; sus datos se pasan solo a la vista, sin conservarlos en propiedades públicas.
+`/dashboard` (`dashboard`) mantiene los middleware `auth` y `verified`. La bienvenida muestra el nombre escapado y la fecha localizada en la zona horaria del actor. El dashboard es un **host de widgets**: no contiene datos cableados, sino que recoge los widgets que cada paquete registra en `DashboardRegistry` y los pinta en tres secciones fijas —**Sam**, **Stats** y **Accesos**—. El host comprueba `visible()` antes de resolver cada widget, así que un widget sin permiso no ejecuta su consulta. Añadir un widget no requiere tocar la vista ni el componente.
 
-**root**: el dashboard es un panel de acceso a herramientas mediante tarjetas-enlace (`x-lnx-ui::tool-card`). La sección principal **Administración** reúne las herramientas de root —Soporte, Usuarios, Actividad, Configuración, Checklist e IA— y la sección secundaria **Herramientas de la app** enlaza Chat, RAG y Document AI. Cada tarjeta navega a la página de detalle del área; el dashboard no muestra cifras ni resúmenes (queda abierto a añadir métricas o widgets de root más adelante). El detalle de cada área, incluido el consumo de IA, vive en su propia pantalla.
+El kit registra tres widgets:
 
-**admin**: el dashboard abre con un panel de métricas (`x-lnx-ui::statistics-panel` con tarjetas `x-lnx-ui::stat-card`), cada una enlazando a su vista filtrada de usuarios: totales, activos (`suspended_at` nulo), suspendidos (`suspended_at` presente), sin verificar (`email_verified_at` nulo, `verified=unverified`), administradores (`role=admin`) y altas de los últimos 7 días (`sort=registered&dir=desc`), más las invitaciones pendientes. Los conteos incluyen **todas las cuentas**, también las de root y admin. El panel ofrece el acceso directo a **Invitar usuario** (según policy) y una sección **Accesos directos** con Usuarios y Soporte (sus propias solicitudes). Las invitaciones pendientes son las no aceptadas ni revocadas cuyo vencimiento es futuro, aunque haya fallado el envío; si no hay ninguna, el panel lo indica expresamente. También ve sus accesos de cuenta (perfil y seguridad).
+- **Usuarios** (`lnx.users`, sección Stats): panel de métricas para admin —totales, activos, suspendidos, sin verificar, administradores, altas de 7 días e invitaciones pendientes—, cada cifra enlazada a su lista filtrada, con **Ver usuarios** e **Invitar usuario** según policy. Root no lo ve.
+- **Herramientas de root** (`lnx.root_tools`, sección Accesos): tarjetas de Soporte, Usuarios, Actividad, Configuración, Checklist, IA, RAG y Document AI. Solo root.
+- **Tu cuenta** (`lnx.account`, sección Accesos): perfil, seguridad y solicitudes propias de soporte. Todos los actores.
 
-El usuario normal ve, además de sus accesos de cuenta (perfil, seguridad y sus solicitudes de soporte), una métrica de **notificaciones sin leer** que enlaza al centro de notificaciones; no ve ningún dato administrativo. El dashboard ya no ejecuta diagnósticos ni la sonda de almacenamiento; el checklist y sus comprobaciones viven en `/admin/setup` (`App\Actions\DiagnoseSetup`).
+El contrato de widgets vive en [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.10. La presentación reutilizable es `x-lnx-ui::widget`; los tipos soportados son `Stat`, `Stats`, `Series`, `List`, `Approvals`, `Action`, `Timeline` y `Text`. Un producto puede añadir sus propios widgets sin modificar el kit.
 
 ## Checklist de puesta en marcha
 
@@ -826,12 +828,18 @@ app(SamRegistry::class)->registerSurface('sam', SamPanel::class);      // panel 
 
 - Solo se aceptan herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`: re-comprueban el interruptor y el permiso de superficie, capturan la denegación por autorización/validación y auditan cada invocación. Cualquier otro `Tool` se descarta y se audita como `tool_rejected` (`not_declared`); un nombre de herramienta repetido entre módulos se audita como `duplicate_name`.
 - No existen herramientas de confirmación, borrado, fusión ni envío. La confirmación es una acción humana que ejecuta el módulo.
-- La auditoría reutiliza `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`) y el `correlation_id` del turno; ese id también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events`. La vista de actividad del módulo puede reconstruir el ciclo completo.
+- Cada herramienta de propuesta declara `RISK` (`reversible`, `irreversible` o `bulk`) y `MIN_MODE` (por defecto `draft`). El runtime no la ofrece por debajo del modo efectivo y la herramienta vuelve a comprobarlo al invocarse, auditando `denied` con `reason = mode`. Una propuesta confirma con la frase salvo que su módulo declare `requiresPhrase = false`, que solo debe hacer cuando la acción sea reversible y tenga undo.
+- Un módulo que conserva el estado previo implementa además `SamProposalUndoer` y marca `canUndo`/`undoExpiresAt` en `SamProposal`. `SamRuntime::undo()` re-resuelve la propuesta por correlación, actor y `source`, delega en el módulo y audita `sam_undo`; el módulo revalida propiedad, ventana y frescura, y el undo es de un solo uso.
+- La auditoría reutiliza `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`, `undo`) y el `correlation_id` del turno; ese id también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events`. La vista de actividad del módulo puede reconstruir el ciclo completo.
 - `SamRuntime::confirm()` re-resuelve la propuesta por correlación, actor y `source`, comprueba vigencia y `canConfirm`, delega en `SamProposalPresenter::confirm()` y audita `confirmed`, `duplicate`, `failed` o `expired`. El kit nunca escribe por su cuenta.
+
+### Modo y techo
+
+El modo ordena qué puede hacer Sam, no qué puede ver. `read_only` lee y explica; `draft` propone borradores; `assisted` permite al módulo ejecutar acciones reversibles tras la confirmación. `SAM_MAX_MODE` fija el techo del despliegue y nace en `read_only`; una fila de `sam_mode_ceilings` (`role`, `mode`) puede bajarlo por rol, nunca subirlo. La persona puede bajarlo otra vez con `SamPreferences::$mode`, que el producto guarda sin recortar y el runtime recorta al resolver. El modo efectivo es el mínimo de los tres y se resuelve en `SamAccess::modeFor()` / `SamModeResolver`; `ceilingFor()` devuelve el mínimo del despliegue y del rol, sin la preferencia. Root tampoco se salta el techo. Un rol sin fila hereda el techo global, así que no hace falta sembrar la tabla. `/admin/sam` (solo root) muestra el techo del despliegue como dato y una fila por rol de Spatie: «heredar» borra la fila y cualquier otro valor la guarda tal cual, aunque el techo global lo ignore hasta que suba. Cada cambio queda en la actividad administrativa.
 
 ### Persistencia, cuota y redacción
 
-- Una conversación `profile = sam` por actor; el historial se acota con `SAM_MAX_CONTEXT_MESSAGES`. Migraciones: `ai_conversations.profile` y `ai_messages.correlation_id`.
+- Varias conversaciones por actor (`profile = sam`); el historial se acota con `SAM_MAX_CONTEXT_MESSAGES`. Migraciones: `ai_conversations.profile`, `ai_messages.correlation_id` y `ai_messages.context`.
 - Cada turno pasa por `AiGateway::prompt()` con la aplicación `sam.turn`: la cuota se aplica con la declaración del paquete en `AiApplicationRegistry` (o el límite por defecto) y el consumo queda en `ai_usage_events`.
 - La frase `CONFIRM …` se redacta antes de persistir una respuesta y un mensaje que sea solo la frase no se guarda como turno. La genera y valida el módulo.
 
@@ -841,6 +849,7 @@ app(SamRegistry::class)->registerSurface('sam', SamPanel::class);      // panel 
 | --- | --- | --- |
 | `SAM_ENABLED` | `false` | Enciende el runtime; sin esto no se publica la superficie |
 | `SAM_PERMISSION` | `sam.use` | Permiso de superficie; los módulos conservan los suyos |
+| `SAM_MAX_MODE` | `read_only` | Techo de modo del despliegue: `read_only`, `draft` o `assisted` |
 | `SAM_APPLICATION` | `sam.turn` | Aplicación de IA para cuota y consumo |
 | `SAM_MAX_INPUT_CHARS` | `2000` | Tope de entrada por turno |
 | `SAM_MAX_CONTEXT_MESSAGES` | `20` | Turnos previos enviados como contexto |
@@ -858,11 +867,11 @@ La retención se aplica con `php artisan sam:prune-conversations` (programado a 
 
 - `SamRuntime::narrateBrief()` pide al modelo una narrativa corta del brief con verificación de grounding, timeout, caché saneada y una aplicación de cuota propia (`sam.brief`), separada del turno. El fallback determinista del módulo se pinta siempre primero y nunca se bloquea por el modelo.
 - `send()` y `retry()` aceptan un callback de streaming que entrega deltas de texto y el nombre de la tool en uso; nunca sus argumentos ni resultados. Las citas de la respuesta se guardan en `ai_messages.citations`.
-- El runtime lee las preferencias del actor desde el presentador que registre el producto con `SamRegistry::registerPreferences()` y añade la sección `[Preferencias de la persona]` a las instrucciones del turno.
+- El runtime lee las preferencias del actor desde el presentador que registre el producto con `SamRegistry::registerPreferences()` y añade la sección `[Preferencias de la persona]` a las instrucciones del turno. `mode` viaja en el mismo presentador y no entra en esas instrucciones: `sanitized()` no lo incluye. Un presentador no debe llamar a `modeFor()` para calcularlo; si lo hace, esa llamada anidada ignora la preferencia para no entrar en bucle.
 
 ### Estado
 
-El runtime está cubierto por la suite con un contributor, un perfil y una superficie falsos. La capacidad no se anuncia como disponible hasta que el paquete `luinuxscl/sam` (#85) y el primer contributor real (CRM #7) pasen sus pruebas.
+El runtime está cubierto por la suite con un contributor, un perfil y una superficie falsos, y con el contributor real del CRM. El corte de lectura de Sam (presencia, contexto por vista y por fila, brief, traza y streaming) está cerrado. La escritura controlada ya resuelve el modo efectivo, el techo por rol, la preferencia de la persona y la pantalla `/admin/sam`; el selector del panel y la confirmación proporcional siguen en los paquetes.
 
 ## Extracción de documentos con IA y revisión
 
@@ -1032,7 +1041,7 @@ La biblioteca del paquete incluye `x-lnx-ui::stat` (`label`, `value`, `icon` Flu
 
 `x-lnx-ui::resource-card` es una tarjeta de catálogo para un ítem (skill, paquete o herramienta) y tiene un ejemplo aprobado en `/admin/packages/lnx-ui`. Recibe `title`, `description`, `icon` (icono Flux), `eyebrow` (etiqueta corta junto al icono), `href`, `external` y `color` (las mismas variantes que `x-lnx-ui::stat`), y los slots `badges` (cabecera) y `tags`, `meta` y `actions` (pie). La descripción se recorta a dos líneas. El enlace es adaptativo: toda la tarjeta enlaza con `wire:navigate` cuando hay `href` y no se aportan acciones de pie; si hay acciones, solo el título enlaza, para no anidar elementos interactivos. El contenedor asigna su ancho, normalmente `col-span-12 md:col-span-6 xl:col-span-3` (cuatro por fila) o `col-span-12 sm:col-span-6 xl:col-span-4` (tres por fila).
 
-El dashboard de admin usa `x-lnx-ui::stat` dentro de las tarjetas de usuarios que incluyen acciones; el dashboard de root usa `x-lnx-ui::tool-card` para enlazar las herramientas de root y las de la app. Los estados vacíos y los enlaces siguen en la pantalla; `x-lnx-ui::trend-card` se reserva para datos que tengan una serie histórica real.
+El dashboard es un host de widgets: `x-lnx-ui::widget` es la carcasa común y el host elige `stat-card`, `chart-card`, `timeline` o `tool-card` según el tipo declarado por el paquete. Los estados vacíos y los enlaces siguen en la pantalla; `x-lnx-ui::trend-card` se reserva para datos que tengan una serie histórica real.
 
 `x-lnx-ui::mail-list-item`, `x-lnx-ui::attachment-card`, `x-lnx-ui::presence-list` y `x-lnx-ui::mail-viewer` componen una pantalla tipo cliente de correo y tienen ejemplos aprobados en `/admin/packages/lnx-ui`. `mail-list-item` es la fila de mensaje (avatar, remitente, asunto, vista previa, hora, badge, estados `unread`/`starred`/`selected` y enlace opcional, con slots `select` y `star` para conectar la interacción del consumidor); `attachment-card` es la tarjeta de un archivo (`name`, `size`, `icon`, `color`, `href`); `presence-list` lista personas en línea (`users`); `mail-viewer` es el panel de detalle con slots `actions`, `attachments`, `reply` y `footer`. Son presentacionales —el consumidor aporta datos y textos ya traducidos— y el contenedor asigna el ancho desde una grilla de 12 columnas.
 

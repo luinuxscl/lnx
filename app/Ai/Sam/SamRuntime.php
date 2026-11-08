@@ -11,6 +11,7 @@ use App\Ai\Exceptions\UnsupportedCapabilityException;
 use App\Ai\Sam\Tools\SamProposeTool;
 use App\Ai\Sam\Tools\SamReadTool;
 use App\Ai\Sam\Tools\SamTool;
+use App\Jobs\WarmSamFilterSignalsJob;
 use App\Models\AiChatMessage;
 use App\Models\AiConversation;
 use App\Models\User;
@@ -69,6 +70,22 @@ class SamRuntime
     public function permission(): string
     {
         return $this->access->permission();
+    }
+
+    /**
+     * Ceiling the actor can reach before their own preference.
+     */
+    public function ceilingFor(User $actor): SamMode
+    {
+        return $this->access->ceilingFor($actor);
+    }
+
+    /**
+     * Effective mode of the actor, for the surface and the tools of the turn.
+     */
+    public function modeFor(User $actor): SamMode
+    {
+        return $this->access->modeFor($actor);
     }
 
     public function application(): string
@@ -612,6 +629,7 @@ class SamRuntime
 
         $tools = [];
         $names = [];
+        $mode = $this->access->modeFor($actor);
 
         foreach ($this->registry->contributors() as $source => $contributor) {
             foreach ($contributor->readTools($actor) as $tool) {
@@ -623,11 +641,20 @@ class SamRuntime
             }
 
             foreach ($contributor->proposeTools($actor) as $tool) {
-                if ($tool instanceof SamProposeTool) {
-                    $this->addTool($tools, $names, $actor, $source, $tool);
-                } else {
+                if (! $tool instanceof SamProposeTool) {
                     $this->rejectTool($actor, $source, $tool);
+
+                    continue;
                 }
+
+                // A proposal above the effective mode is not offered at all:
+                // filtering is a deployment decision, not a failed attempt, so
+                // it is not written to the turn trace as a denial.
+                if (! $mode->allows($tool->minimumMode())) {
+                    continue;
+                }
+
+                $this->addTool($tools, $names, $actor, $source, $tool);
             }
         }
 
@@ -704,6 +731,283 @@ class SamRuntime
         }
 
         return null;
+    }
+
+    /**
+     * Proactive signals for records visible on the current screen.
+     *
+     * Only contributors that declare `SamAmbientSignals` participate. Ids are
+     * capped, results are cached per actor and record and never cross actors.
+     *
+     * @param  list<string|int>  $ids
+     * @return list<SamRowSignals>
+     */
+    public function ambientSignalsForRows(User $actor, string $resource, array $ids): array
+    {
+        if (! $this->canUse($actor)) {
+            return [];
+        }
+
+        $resource = trim($resource);
+
+        if ($resource === '') {
+            return [];
+        }
+
+        $ids = array_values(array_unique(array_filter(array_map(
+            static fn (mixed $id): string => trim((string) $id),
+            $ids,
+        ), static fn (string $id): bool => $id !== '')));
+
+        $ids = array_slice($ids, 0, 100);
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $ttl = max(1, (int) config('lnx_sam.ambient_cache_ttl', 60));
+
+        foreach ($this->registry->contributors() as $contributor) {
+            if (! $contributor instanceof SamAmbientSignals) {
+                continue;
+            }
+
+            if ($contributor->source() === '') {
+                continue;
+            }
+
+            $versions = $contributor->ambientRowVersions($actor, $resource, $ids);
+            $cached = [];
+            $missIds = [];
+
+            foreach ($ids as $id) {
+                if (! isset($versions[$id])) {
+                    continue;
+                }
+
+                $version = $versions[$id] ?? 'none';
+                $cacheKey = sprintf(
+                    'sam.ambient.%s.%s.%s.%s.%s',
+                    (string) $actor->getKey(),
+                    $contributor->source(),
+                    $resource,
+                    $id,
+                    $version,
+                );
+
+                $hit = Cache::get($cacheKey);
+
+                if (is_array($hit)) {
+                    $cached[] = new SamRowSignals(
+                        $id,
+                        $this->hydrateAmbientSignals($hit),
+                        $versions[$id],
+                    );
+
+                    continue;
+                }
+
+                $missIds[] = $id;
+            }
+
+            if ($missIds !== []) {
+                foreach ($contributor->signalsForRows($actor, $resource, $missIds) as $row) {
+                    $version = $row->updatedAt ?? ($versions[$row->id] ?? 'none');
+                    $cacheKey = sprintf(
+                        'sam.ambient.%s.%s.%s.%s.%s',
+                        (string) $actor->getKey(),
+                        $contributor->source(),
+                        $resource,
+                        $row->id,
+                        $version,
+                    );
+
+                    Cache::put($cacheKey, $this->dehydrateAmbientSignals($row->signals), now()->addSeconds($ttl));
+                    $cached[] = $row;
+                }
+            }
+
+            return $cached;
+        }
+
+        return [];
+    }
+
+    /**
+     * Aggregate signals for the current list filters when proactive alerts are on.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function signalsForFilter(User $actor, string $source, string $resource, array $filters): ?SamFilterAnalysis
+    {
+        if (! $this->canUse($actor) || ! $this->proactiveEnabled($actor)) {
+            return null;
+        }
+
+        return $this->resolveFilterAnalysis($actor, trim($source), trim($resource), $filters, force: false);
+    }
+
+    /**
+     * Refreshes the cached list-filter analysis for one actor.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function warmFilterSignals(User $actor, string $source, string $resource, array $filters): void
+    {
+        if (! $this->canUse($actor) || ! $this->proactiveEnabled($actor)) {
+            return;
+        }
+
+        $this->resolveFilterAnalysis($actor, trim($source), trim($resource), $filters, force: true);
+    }
+
+    /**
+     * Queue a background refresh of list-filter signals.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function queueFilterSignalsWarmup(User $actor, string $source, string $resource, array $filters): void
+    {
+        if (! $this->canUse($actor) || ! $this->proactiveEnabled($actor)) {
+            return;
+        }
+
+        WarmSamFilterSignalsJob::dispatch(
+            (int) $actor->getKey(),
+            trim($source),
+            trim($resource),
+            $this->normalizeFilters($filters),
+        );
+    }
+
+    public function proactiveEnabled(User $actor): bool
+    {
+        return $this->registry->preferencesFor($actor)->proactive;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function resolveFilterAnalysis(
+        User $actor,
+        string $source,
+        string $resource,
+        array $filters,
+        bool $force,
+    ): ?SamFilterAnalysis {
+        if ($source === '' || $resource === '') {
+            return null;
+        }
+
+        $filters = $this->normalizeFilters($filters);
+        $ttl = max(1, (int) config('lnx_sam.filter_cache_ttl', 120));
+        $cacheKey = sprintf(
+            'sam.filter.%s.%s.%s.%s',
+            (string) $actor->getKey(),
+            $source,
+            $resource,
+            sha1(json_encode($filters, JSON_THROW_ON_ERROR)),
+        );
+
+        if (! $force) {
+            $cached = Cache::get($cacheKey);
+
+            if ($cached instanceof SamFilterAnalysis) {
+                return $cached;
+            }
+        }
+
+        foreach ($this->registry->contributors() as $contributor) {
+            if (! $contributor instanceof SamListSignals) {
+                continue;
+            }
+
+            if ($contributor->source() !== $source) {
+                continue;
+            }
+
+            $analysis = $contributor->signalsForFilter($actor, $resource, $filters);
+
+            if (! $analysis instanceof SamFilterAnalysis) {
+                continue;
+            }
+
+            Cache::put($cacheKey, $analysis, now()->addSeconds($ttl));
+
+            return $analysis;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    private function normalizeFilters(array $filters): array
+    {
+        ksort($filters);
+
+        return array_map(function (mixed $value): mixed {
+            if (is_string($value)) {
+                return mb_substr(trim($value), 0, 200);
+            }
+
+            if (is_int($value) || is_float($value) || is_bool($value)) {
+                return $value;
+            }
+
+            return null;
+        }, array_filter($filters, static fn (mixed $value): bool => $value !== null && $value !== ''));
+    }
+
+    /**
+     * @param  list<SamSignal>  $signals
+     * @return list<array{name: string, value: string|int|bool, evidence: ?string, proactive: bool}>
+     */
+    private function dehydrateAmbientSignals(array $signals): array
+    {
+        return array_map(
+            static fn (SamSignal $signal): array => [
+                'name' => $signal->name,
+                'value' => $signal->value,
+                'evidence' => $signal->evidence,
+                'proactive' => $signal->proactive,
+            ],
+            $signals,
+        );
+    }
+
+    /**
+     * @param  array<mixed, mixed>  $payload
+     * @return list<SamSignal>
+     */
+    private function hydrateAmbientSignals(array $payload): array
+    {
+        $signals = [];
+
+        foreach ($payload as $item) {
+            if (! is_array($item) || ! isset($item['name']) || ! is_string($item['name'])) {
+                continue;
+            }
+
+            $value = $item['value'] ?? null;
+
+            if (! is_string($value) && ! is_int($value) && ! is_bool($value)) {
+                continue;
+            }
+
+            $evidence = $item['evidence'] ?? null;
+
+            $signals[] = new SamSignal(
+                $item['name'],
+                $value,
+                is_string($evidence) ? $evidence : null,
+                proactive: (bool) ($item['proactive'] ?? false),
+            );
+        }
+
+        return $signals;
     }
 
     /**
@@ -969,6 +1273,39 @@ class SamRuntime
     }
 
     /**
+     * Pending drafts of every module, visible to the actor, newest first.
+     *
+     * The dashboard uses it to keep an approvals queue that is not tied to a
+     * conversation. Each module resolves its own drafts and scopes them to the
+     * actor; the runtime only aggregates and bounds the result.
+     *
+     * @return list<SamProposal>
+     */
+    public function pendingProposals(User $actor, int $limit = 5): array
+    {
+        if (! $this->canUse($actor)) {
+            return [];
+        }
+
+        $limit = max(1, min($limit, 20));
+        $proposals = [];
+
+        foreach ($this->registry->contributors() as $contributor) {
+            $presenter = $contributor->proposals();
+
+            if ($presenter === null) {
+                continue;
+            }
+
+            foreach ($presenter->pendingFor($actor, $limit) as $proposal) {
+                $proposals[] = $proposal;
+            }
+        }
+
+        return array_slice($proposals, 0, $limit);
+    }
+
+    /**
      * Confirm a draft through its owning module.
      *
      * The proposal is resolved again by correlation, actor and source, so a
@@ -981,12 +1318,6 @@ class SamRuntime
             $this->auditConfirmation($actor, $proposal, 'denied', ['reason' => 'forbidden']);
 
             return SamProposalResult::failed(__('You cannot confirm this proposal.'));
-        }
-
-        if (trim($phrase) === '') {
-            $this->auditConfirmation($actor, $proposal, 'denied', ['reason' => 'phrase_required']);
-
-            return SamProposalResult::failed(__('The confirmation phrase is required.'));
         }
 
         $resolved = $this->resolveProposal($actor, $proposal);
@@ -1011,6 +1342,15 @@ class SamRuntime
             return SamProposalResult::expired(__('This proposal has expired.'));
         }
 
+        // The resolved proposal decides: a reversible change may be confirmed
+        // without the phrase once its module implements undo, while an
+        // irreversible or bulk one always requires it.
+        if ($current->requiresPhrase && trim($phrase) === '') {
+            $this->auditConfirmation($actor, $current, 'denied', ['reason' => 'phrase_required']);
+
+            return SamProposalResult::failed(__('The confirmation phrase is required.'));
+        }
+
         try {
             $result = $presenter->confirm($current, $actor, $phrase);
         } catch (Throwable $exception) {
@@ -1022,6 +1362,55 @@ class SamRuntime
         }
 
         $this->auditConfirmation($actor, $current, $result->status);
+
+        return $result;
+    }
+
+    /**
+     * Undo a confirmed change through its owning module.
+     *
+     * The proposal is resolved again by correlation, actor and source, so a
+     * forged DTO cannot undo anything. Only a module that implements the
+     * optional {@see SamProposalUndoer} capability answers here: the runtime
+     * never invents a reversal for a presenter that cannot keep the previous
+     * state. The module revalidates ownership, the window and freshness; the
+     * runtime audits the attempt and its outcome.
+     */
+    public function undo(User $actor, SamProposal $proposal): SamProposalResult
+    {
+        if (! $this->canUse($actor)) {
+            $this->auditUndo($actor, $proposal, 'denied', ['reason' => 'forbidden']);
+
+            return SamProposalResult::failed(__('You cannot undo this change.'));
+        }
+
+        $resolved = $this->resolveProposal($actor, $proposal);
+
+        if ($resolved === null) {
+            $this->auditUndo($actor, $proposal, 'denied', ['reason' => 'not_found']);
+
+            return SamProposalResult::failed(__('This change is no longer available.'));
+        }
+
+        [$presenter, $current] = $resolved;
+
+        if (! $presenter instanceof SamProposalUndoer) {
+            $this->auditUndo($actor, $current, 'denied', ['reason' => 'not_undoable']);
+
+            return SamProposalResult::failed(__('This change cannot be undone.'));
+        }
+
+        try {
+            $result = $presenter->undo($current, $actor);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->auditUndo($actor, $current, 'failed', ['reason' => 'error']);
+
+            return SamProposalResult::failed(__('The undo could not be completed.'));
+        }
+
+        $this->auditUndo($actor, $current, $result->status);
 
         return $result;
     }
@@ -1108,6 +1497,9 @@ class SamRuntime
         );
     }
 
+    /**
+     * @return list<Message>
+     */
     private function contextMessages(AiConversation $conversation): array
     {
         $messages = $conversation->messages()
@@ -1191,6 +1583,28 @@ class SamRuntime
                 'channel' => 'sam',
                 'source' => $proposal->source,
                 'action' => 'confirm',
+                'proposal_id' => $proposal->id,
+            ], $context),
+        );
+    }
+
+    /**
+     * Audit one undo attempt: identity, proposal and outcome, never content.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    private function auditUndo(User $actor, SamProposal $proposal, string $status, array $context = []): void
+    {
+        app(RecordMcpInvocation::class)->handle(
+            $actor,
+            'sam_undo',
+            $status,
+            $proposal->correlationId !== '' ? $proposal->correlationId : SamTurn::correlationId(),
+            null,
+            array_merge([
+                'channel' => 'sam',
+                'source' => $proposal->source,
+                'action' => 'undo',
                 'proposal_id' => $proposal->id,
             ], $context),
         );

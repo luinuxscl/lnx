@@ -14,6 +14,11 @@ class FakeProposalPresenter implements SamProposalPresenter
      */
     public array $proposals = [];
 
+    /**
+     * @var list<SamProposal>
+     */
+    public array $pending = [];
+
     public ?SamProposalResult $result = null;
 
     public int $confirmCalls = 0;
@@ -21,6 +26,11 @@ class FakeProposalPresenter implements SamProposalPresenter
     public function forCorrelation(string $correlationId, User $actor): array
     {
         return $this->proposals[$correlationId] ?? [];
+    }
+
+    public function pendingFor(User $actor, int $limit = 5): array
+    {
+        return array_slice($this->pending, 0, max(1, $limit));
     }
 
     public function confirm(SamProposal $proposal, User $actor, string $phrase): SamProposalResult

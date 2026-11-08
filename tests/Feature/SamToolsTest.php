@@ -15,6 +15,10 @@ use Tests\Fixtures\Sam\PlainTool;
 
 beforeEach(function (): void {
     resetSamFixtures();
+
+    // This suite exercises the proposal tools, so the deployment ceiling is
+    // high enough to offer them; the ceiling itself is covered in SamModeTest.
+    config()->set('lnx_sam.max_mode', 'draft');
 });
 
 it('audits an authorized read with the turn correlation', function (): void {

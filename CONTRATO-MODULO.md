@@ -346,10 +346,12 @@ interface SamContributor
 - **`suggestions` respeta permisos y alcance.** Son arranques de conversación, no promesas: no ofrecen una capacidad que el actor no pueda ejecutar.
 - **`proposals` es opcional.** Si el módulo propone escrituras, implementa `SamProposalPresenter` para que el runtime pueda pintar sus borradores y delegar la confirmación.
 - **Bases de herramienta obligatorias.** El runtime solo acepta herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`. Ambas re-comprueban `SAM_ENABLED` y el permiso de superficie, capturan autorización/validación y auditan la invocación; cualquier otro `Tool` se descarta y queda auditado como `tool_rejected` (`reason: not_declared`). Los nombres de herramienta son globales en el turno: un nombre ya expuesto se rechaza con `reason: duplicate_name`. Así el runtime no puede ejecutar confirmación, borrado, fusión ni envío aunque un módulo los declare por error.
-- **Auditoría común.** Cada lectura, propuesta y confirmación se registra en `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`, `tool_rejected`) y el `correlation_id` del turno, que también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events` por la misma correlación. La auditoría de ciclo de vida del borrador sigue siendo del módulo.
+- **Modo y riesgo de una propuesta.** Cada `SamProposeTool` declara `RISK` (`SamRisk`: `reversible`, `irreversible` o `bulk`) y `MIN_MODE` (`SamMode`, por defecto `draft`). El modo efectivo del actor es el mínimo entre `SAM_MAX_MODE`, el techo de su rol (`sam_mode_ceilings`) y `SamPreferences::$mode`. La preferencia se guarda sin recortar y se recorta al resolver, así que un techo que suba después aplica sin reescribirla; `null` no cambia el resultado. `SamRuntime::ceilingFor()` devuelve el mínimo del despliegue y del rol, sin la preferencia, para que el panel pueda deshabilitar lo que la persona no puede alcanzar. El presentador registrado con `registerPreferences()` no debe llamar a `modeFor()` para calcular el modo: una llamada anidada ignora la preferencia y evita el bucle. El runtime no ofrece una propuesta por debajo de su `MIN_MODE` y la herramienta lo vuelve a comprobar al invocarse, auditando `denied` con `reason: mode`. Una propuesta reversible puede confirmarse sin frase solo cuando su módulo declara `requiresPhrase = false`, lo que exige que exista undo; irreversible y bulk siempre piden frase. Un rol no puede superar el techo del despliegue: `/admin/sam` lo muestra como dato y advierte antes de guardar un techo que el despliegue va a ignorar.
+- **Undo opcional y de un solo uso.** Un módulo que conserva el estado previo implementa además `SamProposalUndoer` (`undo(SamProposal, User)`). El presentador marca en la propuesta `canUndo` y, si tiene ventana, `undoExpiresAt`; el runtime solo ofrece el undo de un presentador que implementa el contrato y re-resuelve la propuesta por correlación, actor y `source` antes de delegar. El módulo vuelve a validar propiedad, ventana y frescura, y rechaza la segunda ejecución; el runtime audita `sam_undo` con `action: undo` y el mismo vocabulario (`confirmed`, `duplicate`, `failed`, `expired`).
+- **Auditoría común.** Cada lectura, propuesta y confirmación se registra en `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`, `undo`, `tool_rejected`) y el `correlation_id` del turno, que también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events` por la misma correlación. La auditoría de ciclo de vida del borrador sigue siendo del módulo.
 - **Persistencia y aislamiento.** Varias conversaciones `profile = sam` por actor: el runtime las crea (`startConversation()`), las lista (`conversations()`) y permite elegir el hilo de cada turno (`send()` con `AiConversation`); sin hilo elegido se usa el más reciente, creado en la primera interacción. Cada mensaje del actor guarda el `SamContext` saneado del turno en `ai_messages.context` y el título se deriva del primer mensaje sin llamar al modelo (`SAM_TITLE_CHARS`). `deleteConversation()` borra un hilo y `forgetAll()` todos los del actor, siempre con auditoría de conteos y nunca del contenido. El historial se acota con `SAM_MAX_CONTEXT_MESSAGES` y se purga con `sam:prune-conversations` según `SAM_RETENTION_DAYS`. El runtime nunca lee ni escribe la conversación de otra identidad: un id ajeno se trata como inexistente.
-- **Confirmación con frase.** El módulo genera y valida la frase; el runtime re-resuelve la propuesta por correlación, actor y `source`, comprueba `canConfirm` y la caducidad, delega en `SamProposalPresenter::confirm()` y audita el resultado (`confirmed`, `duplicate`, `failed`, `expired`). La frase se redacta antes de persistir cualquier respuesta y un mensaje que sea solo la frase no se guarda como turno.
-- **API del runtime.** `SamRuntime` expone `enabled()`, `ready()`, `canUse()`, `surface()`, `conversations()`, `conversationFor()`, `findConversation()`, `findForActor()`, `startConversation()`, `messages()`, `send()`, `deleteConversation()`, `forgetAll()`, `toolsFor()`, `contextFor()`, `contextForRow()`, `briefFor()`, `suggestions()`, `proposals()` y `confirm()`. La cuota se aplica con la aplicación `sam.turn` (declarada por el paquete con `AiApplicationRegistry`; sin declaración, aplica el límite por defecto).
+- **Confirmación proporcional.** El módulo genera y valida la frase; el runtime re-resuelve la propuesta por correlación, actor y `source`, comprueba `canConfirm` y la caducidad, exige la frase cuando la propuesta la requiere, delega en `SamProposalPresenter::confirm()` y audita el resultado (`confirmed`, `duplicate`, `failed`, `expired`). La frase se redacta antes de persistir cualquier respuesta y un mensaje que sea solo la frase no se guarda como turno.
+- **API del runtime.** `SamRuntime` expone `enabled()`, `ready()`, `canUse()`, `ceilingFor()`, `modeFor()`, `surface()`, `conversations()`, `conversationFor()`, `findConversation()`, `findForActor()`, `startConversation()`, `messages()`, `send()`, `deleteConversation()`, `forgetAll()`, `toolsFor()`, `contextFor()`, `contextForRow()`, `briefFor()`, `suggestions()`, `proposals()`, `confirm()` y `undo()`. La cuota se aplica con la aplicación `sam.turn` (declarada por el paquete con `AiApplicationRegistry`; sin declaración, aplica el límite por defecto).
 
 DTOs compartidos:
 
@@ -393,9 +395,16 @@ final class SamProposal
         public readonly string $summary,
         public readonly array $changes,
         public readonly string $status,
-        public readonly ?CarbonInterface $expiresAt,
-        public readonly ?string $recordUrl,
-        public readonly bool $canConfirm,
+        public readonly ?CarbonInterface $expiresAt = null,
+        public readonly ?string $recordUrl = null,
+        public readonly ?string $reviewUrl = null,
+        public readonly bool $canConfirm = false,
+        public readonly bool $canReject = false,
+        public readonly ?string $rejectUrl = null,
+        public readonly SamRisk $risk = SamRisk::Reversible,
+        public readonly bool $requiresPhrase = true,
+        public readonly bool $canUndo = false,
+        public readonly ?CarbonInterface $undoExpiresAt = null,
     ) {}
 }
 
@@ -413,6 +422,14 @@ interface SamProposalPresenter
     /** @return list<SamProposal> */
     public function forCorrelation(string $correlationId, User $actor): array;
 
+    /**
+     * Cola permanente del dashboard: borradores pendientes del actor, sin
+     * correlación. El módulo acota por actor y por vigencia.
+     *
+     * @return list<SamProposal>
+     */
+    public function pendingFor(User $actor, int $limit = 5): array;
+
     public function confirm(SamProposal $proposal, User $actor, string $phrase): SamProposalResult;
 }
 ```
@@ -429,6 +446,8 @@ interface SamBriefPresenter
 `SamBriefPresenter` **no ejecuta nada**: compone observaciones y acciones ya aprobadas y responde `null` cuando el actor no puede ver el registro.
 
 `SamProposalPresenter` **delega en la acción de confirmación del módulo**; nunca escribe directo. El runtime comprueba el actor y la vigencia antes de llamarlo, y trata `duplicate`, `failed` y `expired` sin presentarlos como éxito.
+
+**Cola de aprobaciones y descarte.** `SamRuntime::pendingProposals()` agrega `pendingFor()` de todos los módulos y acota el resultado; la sección Sam del dashboard la pinta como cola permanente. `canReject` y `rejectUrl` los declara el módulo dueño del borrador: la superficie solo publica un formulario hacia esa URL, nunca conoce sus rutas ni ejecuta el rechazo. Descartar es **terminal y auditado en el módulo**; el runtime no escribe nada.
 
 Responsabilidades del runtime del kit:
 
@@ -477,6 +496,79 @@ Criterios de aceptación:
 - El contrato se cubre con un contributor falso en la suite del kit antes de conectar el CRM.
 
 > **Estado:** runtime implementado en `lnx` el 2026-11-03 (issue #84), paquete `luinuxscl/sam` implementado (issue #85) con identidad, panel y tarjeta de propuesta, y conversaciones múltiples con contexto por mensaje implementadas el 2026-11-04 (issue #88, portadas a `crm-app`). El runtime del kit está cubierto con contributor, perfil y superficie falsos; la suite del paquete corre en una app derivada. La capacidad no se anuncia como disponible hasta que el primer contributor real pase sus pruebas.
+
+### 3.10 Contribuciones al dashboard (implementado)
+
+El dashboard es un **host de widgets**: el kit fija las secciones y la presentación,
+y cada paquete declara qué aporta. Un paquete no devuelve HTML ni Blade: devuelve
+**datos tipados** y el host decide cómo se ven.
+
+**Registro.** En el `register()` o `boot()` del `ServiceProvider` del paquete:
+
+```php
+use App\Support\Dashboard\DashboardRegistry;
+
+$this->app->make(DashboardRegistry::class)->register('crm', [
+    CrmContactsWidget::class,
+    CrmCompaniesWidget::class,
+]);
+```
+
+**Contrato.** Un widget extiende `App\Support\Dashboard\Widget` (o implementa
+`DashboardWidget`) y declara:
+
+| Método | Regla |
+| --- | --- |
+| `id()` | Único y prefijado con el `source`: `crm.contacts` |
+| `section()` | `Sam`, `Stats` o `Access`; son fijas |
+| `type()` | `Stat`, `Stats`, `Series`, `List`, `Approvals`, `Action`, `Timeline` o `Text` |
+| `title()` / `description()` | Textos ya traducidos por el paquete |
+| `permission()` | Ability simple, o `null` |
+| `visible(User $actor)` | Por defecto comprueba `permission()`; se sobrescribe para policies de modelo |
+| `order()` | Orden dentro de la sección; los empates se resuelven por `id` |
+| `span()` | Ancho de 1 a 12 columnas |
+| `resolve(User $actor)` | Devuelve el DTO del tipo o `null` para ocultar el widget |
+
+**DTOs** (en `App\Support\Dashboard`):
+
+| Tipo | DTO | Uso |
+| --- | --- | --- |
+| `Stat` | `StatData` | Una cifra con delta, icono y enlace |
+| `Stats` | `StatsData` | Un grupo de cifras en un panel |
+| `Series` | `SeriesData` | Serie temporal real (12 meses, 8 semanas) |
+| `List` | `ListData` | Lista corta de elementos |
+| `Approvals` | `ApprovalsData` | Cola de borradores por confirmar |
+| `Action` | `ActionData` | Accesos o acciones frecuentes |
+| `Timeline` | `TimelineData` | Eventos recientes |
+| `Text` | `TextData` | Texto breve, como el brief del agente |
+
+**Reglas:**
+
+- El host comprueba `visible()` **antes** de llamar a `resolve()`: un widget sin
+  permiso no ejecuta su consulta.
+- `resolve()` devuelve `null` para ocultar el widget; datos vacíos muestran estado
+  vacío.
+- El paquete acota cada consulta al actor (`accessibleTo`, policies). El host no
+  conoce su dominio.
+- Registrar dos veces el mismo `source` reemplaza sus widgets (idempotente); un
+  `id` duplicado dentro de una declaración es un error.
+- El dashboard es igual para todos los actores; la diferencia es qué widgets ven.
+  No hay personalización por usuario en este corte.
+- Sin caché ni polling: los datos se calculan en cada visita y cada widget debe ser
+  una consulta acotada.
+
+Criterios de aceptación:
+
+- Un paquete registrado aparece en su sección sin tocar la vista ni el componente
+  del host.
+- Un widget sin permiso no ejecuta su consulta; uno que devuelve `null` no se pinta.
+- Un id duplicado o sin el prefijo del `source` falla al registrar.
+- La suite del kit cubre registry, host y un widget de ejemplo.
+
+> **Estado:** implementado en `lnx` el 2026-11-06 (issue #93). La carcasa visual
+> `x-lnx-ui::widget` vive en `lnx-ui` (issue #5) y el host pinta las secciones
+> `Sam`, `Stats` y `Access`. Los widgets de producto (CRM y Sam) llegan en las
+> issues `crm#26` y `sam#6`.
 
 ## 4. Escritura por MCP (implementado)
 
