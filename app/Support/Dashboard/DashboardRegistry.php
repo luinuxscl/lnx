@@ -93,7 +93,7 @@ class DashboardRegistry
     }
 
     /**
-     * @param  class-string<DashboardWidget>  $widget
+     * @param  class-string  $widget
      */
     private function resolve(string $widget): DashboardWidget
     {

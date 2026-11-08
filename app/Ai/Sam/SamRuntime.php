@@ -792,7 +792,7 @@ class SamRuntime
                     $contributor->source(),
                     $resource,
                     $id,
-                    $version ?? 'none',
+                    $version,
                 );
 
                 $hit = Cache::get($cacheKey);
@@ -819,7 +819,7 @@ class SamRuntime
                         $contributor->source(),
                         $resource,
                         $row->id,
-                        $version ?? 'none',
+                        $version,
                     );
 
                     Cache::put($cacheKey, $this->dehydrateAmbientSignals($row->signals), now()->addSeconds($ttl));
@@ -979,20 +979,35 @@ class SamRuntime
     }
 
     /**
-     * @param  list<array{name: string, value: string|int|bool, evidence: ?string, proactive?: bool}>  $payload
+     * @param  array<mixed, mixed>  $payload
      * @return list<SamSignal>
      */
     private function hydrateAmbientSignals(array $payload): array
     {
-        return array_map(
-            static fn (array $item): SamSignal => new SamSignal(
-                (string) $item['name'],
-                $item['value'],
-                isset($item['evidence']) ? (string) $item['evidence'] : null,
+        $signals = [];
+
+        foreach ($payload as $item) {
+            if (! is_array($item) || ! isset($item['name']) || ! is_string($item['name'])) {
+                continue;
+            }
+
+            $value = $item['value'] ?? null;
+
+            if (! is_string($value) && ! is_int($value) && ! is_bool($value)) {
+                continue;
+            }
+
+            $evidence = $item['evidence'] ?? null;
+
+            $signals[] = new SamSignal(
+                $item['name'],
+                $value,
+                is_string($evidence) ? $evidence : null,
                 proactive: (bool) ($item['proactive'] ?? false),
-            ),
-            $payload,
-        );
+            );
+        }
+
+        return $signals;
     }
 
     /**

@@ -163,7 +163,7 @@ class UsersWidget extends Widget
             $items,
             actions: $actions,
             description: $pendingInvitations === 0
-                ? __('No invitations are awaiting acceptance.')
+                ? (string) __('No invitations are awaiting acceptance.')
                 : null,
         );
     }
