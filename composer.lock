@@ -2731,16 +2731,16 @@
         },
         {
             "name": "luinuxscl/lnx-sam",
-            "version": "v0.2.0",
+            "version": "v0.2.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/luinuxscl/lnx-sam.git",
-                "reference": "195f0211f768f2ec3edf251d7fbfc4119c3ffef1"
+                "url": "git@github.com:luinuxscl/lnx-sam.git",
+                "reference": "7c9c28f0748d558844c61ad11cf69c72f6ca3ec3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/luinuxscl/lnx-sam/zipball/195f0211f768f2ec3edf251d7fbfc4119c3ffef1",
-                "reference": "195f0211f768f2ec3edf251d7fbfc4119c3ffef1",
+                "url": "https://api.github.com/repos/luinuxscl/lnx-sam/zipball/7c9c28f0748d558844c61ad11cf69c72f6ca3ec3",
+                "reference": "7c9c28f0748d558844c61ad11cf69c72f6ca3ec3",
                 "shasum": ""
             },
             "require": {
@@ -2799,11 +2799,7 @@
                 "laravel",
                 "mcp"
             ],
-            "support": {
-                "source": "https://github.com/luinuxscl/lnx-sam/tree/v0.2.0",
-                "issues": "https://github.com/luinuxscl/lnx-sam/issues"
-            },
-            "time": "2026-11-08T17:27:18+00:00"
+            "time": "2026-11-08T18:29:55+00:00"
         },
         {
             "name": "luinuxscl/lnx-ui",
