@@ -733,6 +733,79 @@ class SamRuntime
     }
 
     /**
+     * Proactive signals for records visible on the current screen.
+     *
+     * Only contributors that declare `SamAmbientSignals` participate. Ids are
+     * capped, results are cached per actor and record and never cross actors.
+     *
+     * @param  list<string|int>  $ids
+     * @return list<SamRowSignals>
+     */
+    public function ambientSignalsForRows(User $actor, string $resource, array $ids): array
+    {
+        if (! $this->canUse($actor)) {
+            return [];
+        }
+
+        $resource = trim($resource);
+
+        if ($resource === '') {
+            return [];
+        }
+
+        $ids = array_values(array_unique(array_filter(array_map(
+            static fn (mixed $id): string => trim((string) $id),
+            $ids,
+        ), static fn (string $id): bool => $id !== '')));
+
+        $ids = array_slice($ids, 0, 100);
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $ttl = max(1, (int) config('lnx_sam.ambient_cache_ttl', 60));
+
+        foreach ($this->registry->contributors() as $contributor) {
+            if (! $contributor instanceof SamAmbientSignals) {
+                continue;
+            }
+
+            if ($contributor->source() === '') {
+                continue;
+            }
+
+            $rows = $contributor->signalsForRows($actor, $resource, $ids);
+
+            $cached = [];
+
+            foreach ($rows as $row) {
+                $version = $row->updatedAt ?? 'none';
+                $cacheKey = sprintf(
+                    'sam.ambient.%s.%s.%s.%s.%s',
+                    (string) $actor->getKey(),
+                    $contributor->source(),
+                    $resource,
+                    $row->id,
+                    $version,
+                );
+
+                $signals = Cache::remember(
+                    $cacheKey,
+                    now()->addSeconds($ttl),
+                    static fn (): array => $row->signals,
+                );
+
+                $cached[] = new SamRowSignals($row->id, $signals, $row->updatedAt);
+            }
+
+            return $cached;
+        }
+
+        return [];
+    }
+
+    /**
      * Attach the deterministic signals the module declares for the context.
      *
      * They are computed by the module and only carried here: the runtime never

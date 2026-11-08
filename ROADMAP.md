@@ -1,10 +1,16 @@
 # Roadmap de prioridades
 
-Última revisión: 2026-11-06. Priorización acordada con el mantenedor.
+Última revisión: 2026-11-08. Priorización acordada con el mantenedor.
 
 Este documento conserva el orden global de trabajo. GitHub es la fuente del estado y los criterios de aceptación de cada issue; los órdenes parciales escritos en ellas se concilian aquí. Las etapas no son compromisos de fecha. El esfuerzo es comparativo por alcance, no una estimación de duración.
 
 ## Próximo trabajo
+
+**Sam — Fase 3a (badge ambiental, 2026-11-08):** contrato `SamAmbientSignals`,
+caché por actor en `SamRuntime::ambientSignalsForRows()`, badge en
+`lnx-ui` v1.28.0, preferencia opt-in y silencios en `sam`, lote proactivo en
+`crm` y verificación en `crm-app`. **Siguiente:** Fase 3b (análisis del filtro,
+jobs; push condicionado a métricas), según el vault `roadmap-sam.md`.
 
 **Prioridad vigente (2026-11-06): Etapa 17 — Sam como agente de plataforma.** Es el trabajo que se abre ahora y bloquea la replanificación del resto. Orden: [#84](https://github.com/luinuxscl/lnx/issues/84) → [#85](https://github.com/luinuxscl/lnx/issues/85) → [#88](https://github.com/luinuxscl/lnx/issues/88) → [lnx-ui #2](https://github.com/luinuxscl/lnx-ui/issues/2) → [crm #7](https://github.com/luinuxscl/crm/issues/7) → [crm-app #6](https://github.com/luinuxscl/crm-app/issues/6). El corte de lectura de Sam está cerrado (presencia, contexto por vista y por fila, brief, traza y streaming). La **Fase 2 — escritura controlada** ya tiene el modo efectivo y el techo en el runtime (2a, 2026-11-05) y la preferencia por persona con la pantalla de techos ([#90](https://github.com/luinuxscl/lnx/issues/90), 2b-1). El siguiente corte del panel es [sam#3](https://github.com/luinuxscl/sam/issues/3). Los demás frentes —producto CRM, mejoras del kit y de las apps derivadas— se revisan y se reordenan cuando Sam esté integrado y verificado.
 

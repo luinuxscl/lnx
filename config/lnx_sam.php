@@ -77,6 +77,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Ambient proactive cache
+    |--------------------------------------------------------------------------
+    |
+    | Short-lived cache for batched row signals used by the ambient badge. Keys
+    | include the actor, module source, resource, record id and `updated_at`.
+    |
+    */
+
+    'ambient_cache_ttl' => (int) env('SAM_AMBIENT_CACHE_TTL', 60),
+
+    /*
+    |--------------------------------------------------------------------------
     | Turn bounds
     |--------------------------------------------------------------------------
     |
