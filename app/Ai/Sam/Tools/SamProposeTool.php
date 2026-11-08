@@ -3,7 +3,9 @@
 namespace App\Ai\Sam\Tools;
 
 use App\Ai\Sam\SamAccess;
+use App\Ai\Sam\SamCapability;
 use App\Ai\Sam\SamMode;
+use App\Ai\Sam\SamRegistry;
 use App\Ai\Sam\SamRisk;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -33,10 +35,15 @@ abstract class SamProposeTool extends SamTool
 
     /**
      * Risk of confirming the draft this tool proposes.
+     *
+     * The declared capability wins over the tool constant; the constant stays
+     * as the fallback of a module that has not migrated its manifest yet.
      */
     public function risk(): SamRisk
     {
-        return static::RISK;
+        $capability = app(SamRegistry::class)->capabilityForHandler(static::class);
+
+        return $capability instanceof SamCapability ? $capability->risk : static::RISK;
     }
 
     /**
@@ -44,7 +51,9 @@ abstract class SamProposeTool extends SamTool
      */
     public function minimumMode(): SamMode
     {
-        return static::MIN_MODE;
+        $capability = app(SamRegistry::class)->capabilityForHandler(static::class);
+
+        return $capability instanceof SamCapability ? $capability->minMode : static::MIN_MODE;
     }
 
     abstract protected function run(Request $request, User $user): string;

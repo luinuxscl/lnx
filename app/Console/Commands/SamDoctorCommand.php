@@ -42,7 +42,7 @@ class SamDoctorCommand extends Command
 
         foreach ($registry->contributors() as $source => $contributor) {
             if (! $registry->declaresCapabilities($source)) {
-                $this->warn("PENDING {$source}: the module declares no capability manifest.");
+                $this->warning("PENDING {$source}: the module declares no capability manifest.");
             }
         }
 
@@ -116,7 +116,7 @@ class SamDoctorCommand extends Command
                     continue;
                 }
 
-                $this->warn("PENDING {$source}: the write tool [{$tool}] has no capability manifest yet.");
+                $this->warning("PENDING {$source}: the write tool [{$tool}] has no capability manifest yet.");
             }
         }
     }
@@ -182,7 +182,7 @@ class SamDoctorCommand extends Command
                     continue;
                 }
 
-                $this->warn("PENDING {$source}: the Sam tool [{$class}] has no capability manifest yet.");
+                $this->warning("PENDING {$source}: the Sam tool [{$class}] has no capability manifest yet.");
             }
 
             // A capability declared for the Sam surface must be reachable by
@@ -195,8 +195,8 @@ class SamDoctorCommand extends Command
                 $missing = array_diff($capability->handlers, $classes);
 
                 if (count($missing) === count($capability->handlers)) {
-                    $this->warn(
-                        "WARN  {$capability->key}: no handler is exposed to {$actor->email} right now."
+                    $this->warning(
+                        "{$capability->key}: no handler is exposed to {$actor->email} right now."
                     );
                 }
             }
@@ -228,5 +228,11 @@ class SamDoctorCommand extends Command
     {
         $this->failures++;
         $this->error("FAIL  {$scope}: {$problem}");
+    }
+
+    private function warning(string $message): void
+    {
+        $this->warnings++;
+        $this->warn("WARN  {$message}");
     }
 }

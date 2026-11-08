@@ -4,6 +4,7 @@ namespace Tests\Fixtures\Sam;
 
 use App\Ai\Sam\SamCapability;
 use App\Ai\Sam\SamCapabilityProvider;
+use App\Ai\Sam\SamMode;
 use App\Ai\Sam\SamRisk;
 use Tests\Fixtures\Mcp\UpdateFooterTextTool;
 
@@ -35,6 +36,16 @@ class CapabilitySamContributor extends FakeSamContributor implements SamCapabili
                     permission: 'fake.other',
                     surfaces: ['sam', 'mcp'],
                     handlers: [FakeProposeTool::class, UpdateFooterTextTool::class],
+                ),
+            ],
+            'override' => [
+                SamCapability::propose(
+                    key: 'fake.propose',
+                    source: 'fake',
+                    label: 'Propose a bulk change',
+                    risk: SamRisk::Bulk,
+                    minMode: SamMode::Assisted,
+                    handlers: [FakeProposeTool::class],
                 ),
             ],
             'partial' => [

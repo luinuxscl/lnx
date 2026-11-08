@@ -194,6 +194,24 @@ class SamRegistry
     }
 
     /**
+     * Capability implemented by one tool class, when the module declared it.
+     *
+     * A tool derives its risk, its minimum mode and its undo from here, so the
+     * declaration wins. Without a manifest the tool keeps its own constants and
+     * `sam:doctor` reports the pending migration.
+     */
+    public function capabilityForHandler(string $handler): ?SamCapability
+    {
+        foreach ($this->capabilities as $capability) {
+            if (in_array($handler, $capability->handlers, true)) {
+                return $capability;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Whether a module already declares capabilities.
      *
      * `sam:doctor` uses it to tell a module pending migration from one that

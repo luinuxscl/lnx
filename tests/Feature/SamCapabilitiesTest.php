@@ -251,6 +251,26 @@ it('rejects an invalid json payload', function (): void {
         ->and($output)->toContain('not valid JSON');
 });
 
+it('derives the tool risk and minimum mode from the capability', function (): void {
+    CapabilitySamContributor::$mode = 'override';
+
+    registerCapabilityModule();
+
+    $tool = app(FakeProposeTool::class);
+
+    expect($tool->risk())->toBe(SamRisk::Bulk)
+        ->and($tool->minimumMode())->toBe(SamMode::Assisted);
+});
+
+it('keeps the tool constants when the module declares no capability', function (): void {
+    app(SamRegistry::class)->register('fake', FakeSamContributor::class);
+
+    $tool = app(FakeProposeTool::class);
+
+    expect($tool->risk())->toBe(SamRisk::Reversible)
+        ->and($tool->minimumMode())->toBe(SamMode::Draft);
+});
+
 it('exposes the declared manifest through the registry', function (): void {
     registerCapabilityModule();
 
