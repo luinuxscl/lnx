@@ -2,10 +2,10 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\SamCapability;
-use App\Ai\Sam\SamCapabilityProvider;
-use App\Ai\Sam\SamMode;
-use App\Ai\Sam\SamRisk;
+use Luinuxscl\LnxSam\SamCapability;
+use Luinuxscl\LnxSam\SamCapabilityProvider;
+use Luinuxscl\LnxSam\SamMode;
+use Luinuxscl\LnxSam\SamRisk;
 use Tests\Fixtures\Mcp\UpdateFooterTextTool;
 
 /**

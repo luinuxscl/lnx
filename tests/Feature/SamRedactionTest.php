@@ -1,12 +1,12 @@
 <?php
 
-use App\Ai\Sam\SamAgent;
-use App\Ai\Sam\SamRedactor;
-use App\Ai\Sam\SamRegistry;
-use App\Ai\Sam\SamRuntime;
 use App\Models\AiChatMessage;
 use App\Models\AiConversation;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamAgent;
+use Luinuxscl\LnxSam\SamRedactor;
+use Luinuxscl\LnxSam\SamRegistry;
+use Luinuxscl\LnxSam\SamRuntime;
 use Tests\Fixtures\Sam\FakeSamContributor;
 use Tests\Fixtures\Sam\FakeSamProfile;
 

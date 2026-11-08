@@ -1,12 +1,12 @@
 <?php
 
-use App\Ai\Sam\SamAgent;
-use App\Ai\Sam\SamContext;
-use App\Ai\Sam\SamRuntime;
 use App\Models\AiChatMessage;
 use App\Models\AiConversation;
 use App\Models\McpToolInvocation;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamAgent;
+use Luinuxscl\LnxSam\SamContext;
+use Luinuxscl\LnxSam\SamRuntime;
 
 beforeEach(function (): void {
     resetSamFixtures();

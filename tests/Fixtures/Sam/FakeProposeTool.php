@@ -2,10 +2,10 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\Tools\SamProposeTool;
 use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Tools\Request;
+use Luinuxscl\LnxSam\Tools\SamProposeTool;
 
 class FakeProposeTool extends SamProposeTool
 {

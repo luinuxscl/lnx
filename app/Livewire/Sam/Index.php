@@ -3,8 +3,6 @@
 namespace App\Livewire\Sam;
 
 use App\Actions\UpdateSamModeCeiling;
-use App\Ai\Sam\SamMode;
-use App\Ai\Sam\SamModeResolver;
 use App\Enums\Role;
 use App\Models\SamModeCeiling;
 use Flux\Flux;
@@ -13,6 +11,8 @@ use Illuminate\View\View;
 use InvalidArgumentException;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Luinuxscl\LnxSam\SamMode;
+use Luinuxscl\LnxSam\SamModeResolver;
 use RuntimeException;
 use Spatie\Permission\Models\Role as SpatieRole;
 

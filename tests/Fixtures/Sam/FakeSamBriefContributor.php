@@ -2,14 +2,14 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\SamBrief;
-use App\Ai\Sam\SamBriefPresenter;
-use App\Ai\Sam\SamContext;
-use App\Ai\Sam\SamContributor;
-use App\Ai\Sam\SamInsight;
-use App\Ai\Sam\SamProposalPresenter;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Luinuxscl\LnxSam\SamBrief;
+use Luinuxscl\LnxSam\SamBriefPresenter;
+use Luinuxscl\LnxSam\SamContext;
+use Luinuxscl\LnxSam\SamContributor;
+use Luinuxscl\LnxSam\SamInsight;
+use Luinuxscl\LnxSam\SamProposalPresenter;
 
 class FakeSamBriefContributor implements SamBriefPresenter, SamContributor
 {

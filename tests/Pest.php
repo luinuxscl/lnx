@@ -1,10 +1,10 @@
 <?php
 
-use App\Ai\Sam\SamRegistry;
-use App\Ai\Sam\SamTurn;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use Luinuxscl\LnxSam\SamRegistry;
+use Luinuxscl\LnxSam\SamTurn;
 use Tests\Fixtures\Sam\CapabilitySamContributor;
 use Tests\Fixtures\Sam\FakeProposeTool;
 use Tests\Fixtures\Sam\FakeReadTool;

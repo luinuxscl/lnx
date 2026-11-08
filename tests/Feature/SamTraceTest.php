@@ -1,10 +1,10 @@
 <?php
 
-use App\Ai\Sam\SamRegistry;
-use App\Ai\Sam\SamRuntime;
-use App\Ai\Sam\SamTraceEntry;
-use App\Ai\Sam\SamTurnTrace;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamRegistry;
+use Luinuxscl\LnxSam\SamRuntime;
+use Luinuxscl\LnxSam\SamTraceEntry;
+use Luinuxscl\LnxSam\SamTurnTrace;
 use Tests\Fixtures\Sam\FakeSamTraceContributor;
 
 beforeEach(function (): void {

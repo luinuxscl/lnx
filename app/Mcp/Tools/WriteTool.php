@@ -4,7 +4,6 @@ namespace App\Mcp\Tools;
 
 use App\Actions\RecordMcpInvocation;
 use App\Actions\RecordMcpWrite;
-use App\Ai\Sam\SamTurn;
 use App\Mcp\Attributes\WritesData;
 use App\Models\McpWriteOperation;
 use App\Models\User;
@@ -17,6 +16,7 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
+use Luinuxscl\LnxSam\SamTurn;
 use ReflectionClass;
 
 /**

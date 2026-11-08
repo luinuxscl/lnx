@@ -6,8 +6,6 @@ use App\Ai\AiApplicationRegistry;
 use App\Ai\OpenRouter\OpenRouterStreamCosts;
 use App\Ai\OpenRouter\StreamCostParser;
 use App\Ai\OpenRouter\UsageTrackingOpenRouterGateway;
-use App\Ai\Sam\SamAccess;
-use App\Ai\Sam\SamRegistry;
 use App\Enums\Role;
 use App\Mail\RecordingMailManager;
 use App\Mcp\McpToolRegistry;
@@ -52,8 +50,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(RecordAccessRegistry::class);
         $this->app->singleton(IdentitySeederRegistry::class);
-        $this->app->singleton(SamRegistry::class);
-        $this->app->singleton(SamAccess::class);
         $this->app->singleton(DashboardRegistry::class);
 
         $this->app->make(DashboardRegistry::class)->register('lnx', [

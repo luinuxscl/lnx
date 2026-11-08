@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use App\Ai\Sam\SamMode;
 use Database\Factories\SamModeCeilingFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Luinuxscl\LnxSam\SamMode;
 
 /**
  * Ceiling of the agent mode for one role.

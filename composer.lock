@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cc1fd536560b452663f65688806a3dba",
+    "content-hash": "d567ba20a5c4b1830b8a80f3f06e7fc1",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -2730,11 +2730,87 @@
             "time": "2026-10-21T12:53:46+00:00"
         },
         {
+            "name": "luinuxscl/lnx-sam",
+            "version": "v0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/luinuxscl/lnx-sam.git",
+                "reference": "93d51a654ec5b2d4108b0a2efa4484f007c0744f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/luinuxscl/lnx-sam/zipball/93d51a654ec5b2d4108b0a2efa4484f007c0744f",
+                "reference": "93d51a654ec5b2d4108b0a2efa4484f007c0744f",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/console": "^12.0|^13.0",
+                "illuminate/contracts": "^12.0|^13.0",
+                "illuminate/database": "^12.0|^13.0",
+                "illuminate/http": "^12.0|^13.0",
+                "illuminate/support": "^12.0|^13.0",
+                "laravel/ai": "^1.0",
+                "laravel/mcp": "^1.0",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.27",
+                "pestphp/pest": "^4.0"
+            },
+            "suggest": {
+                "livewire/livewire": "Required when a package registers a Sam surface (Livewire component)."
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Luinuxscl\\LnxSam\\LnxSamServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Luinuxscl\\LnxSam\\": "src/"
+                },
+                "files": [
+                    "src/aliases.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Luinuxscl\\LnxSam\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "lint": [
+                    "vendor/bin/pint"
+                ],
+                "test": [
+                    "vendor/bin/pest"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Runtime of the Sam platform agent: contributor registry, declared capabilities, read and proposal tools, and read-only introspection commands.",
+            "keywords": [
+                "agent",
+                "ai",
+                "laravel",
+                "mcp"
+            ],
+            "support": {
+                "source": "https://github.com/luinuxscl/lnx-sam/tree/v0.1.0",
+                "issues": "https://github.com/luinuxscl/lnx-sam/issues"
+            },
+            "time": "2026-11-08T16:35:00+00:00"
+        },
+        {
             "name": "luinuxscl/lnx-ui",
             "version": "v1.27.1",
             "source": {
                 "type": "git",
-                "url": "git@github.com:luinuxscl/lnx-ui.git",
+                "url": "https://github.com/luinuxscl/lnx-ui.git",
                 "reference": "80cdce20e97a92acd787e3940e25b01ecf4eaa3e"
             },
             "dist": {
@@ -7820,12 +7896,12 @@
             "version": "v5.7.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/vlucas/phpdotenv.git",
+                "url": "https://github.com/phpdotenv/phpdotenv.git",
                 "reference": "301c07936b16d88628b126b01d082ba153cf4c40"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vlucas/phpdotenv/zipball/301c07936b16d88628b126b01d082ba153cf4c40",
+                "url": "https://api.github.com/repos/phpdotenv/phpdotenv/zipball/301c07936b16d88628b126b01d082ba153cf4c40",
                 "reference": "301c07936b16d88628b126b01d082ba153cf4c40",
                 "shasum": ""
             },

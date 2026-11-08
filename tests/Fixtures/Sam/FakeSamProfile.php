@@ -2,7 +2,7 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\SamProfile;
+use Luinuxscl\LnxSam\SamProfile;
 
 class FakeSamProfile implements SamProfile
 {

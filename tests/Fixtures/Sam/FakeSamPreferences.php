@@ -2,9 +2,9 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\SamPreferences;
-use App\Ai\Sam\SamPreferencesPresenter;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamPreferences;
+use Luinuxscl\LnxSam\SamPreferencesPresenter;
 
 class FakeSamPreferences implements SamPreferencesPresenter
 {

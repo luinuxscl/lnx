@@ -1,8 +1,8 @@
 <?php
 
-use App\Ai\Sam\SamRegistry;
-use App\Ai\Sam\SamRuntime;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamRegistry;
+use Luinuxscl\LnxSam\SamRuntime;
 use Tests\Fixtures\Sam\AmbientFakeSamContributor;
 
 beforeEach(function (): void {

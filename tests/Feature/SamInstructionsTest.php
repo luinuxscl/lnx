@@ -1,10 +1,10 @@
 <?php
 
-use App\Ai\Sam\SamContext;
-use App\Ai\Sam\SamInstructions;
-use App\Ai\Sam\SamPreferences;
-use App\Ai\Sam\SamRegistry;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamContext;
+use Luinuxscl\LnxSam\SamInstructions;
+use Luinuxscl\LnxSam\SamPreferences;
+use Luinuxscl\LnxSam\SamRegistry;
 use Tests\Fixtures\Sam\FakeSamContributor;
 use Tests\Fixtures\Sam\FakeSamPreferences;
 use Tests\Fixtures\Sam\FakeSamProfile;

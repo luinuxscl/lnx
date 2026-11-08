@@ -1,8 +1,6 @@
 <?php
 
 use App\Actions\UpdateSamModeCeiling;
-use App\Ai\Sam\SamMode;
-use App\Ai\Sam\SamModeResolver;
 use App\Enums\AdministrativeAction;
 use App\Enums\Role;
 use App\Livewire\Sam\Index;
@@ -12,6 +10,8 @@ use App\Models\User;
 use Database\Seeders\NavigationSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Livewire\Livewire;
+use Luinuxscl\LnxSam\SamMode;
+use Luinuxscl\LnxSam\SamModeResolver;
 use Spatie\Permission\Models\Role as SpatieRole;
 
 beforeEach(function (): void {

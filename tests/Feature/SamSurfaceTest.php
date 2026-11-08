@@ -1,7 +1,7 @@
 <?php
 
-use App\Ai\Sam\SamRegistry;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamRegistry;
 use Tests\Fixtures\Sam\FakeSamPanel;
 
 beforeEach(function (): void {

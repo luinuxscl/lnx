@@ -2,11 +2,11 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\SamMode;
-use App\Ai\Sam\SamModeResolver;
-use App\Ai\Sam\SamPreferences;
-use App\Ai\Sam\SamPreferencesPresenter;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamMode;
+use Luinuxscl\LnxSam\SamModeResolver;
+use Luinuxscl\LnxSam\SamPreferences;
+use Luinuxscl\LnxSam\SamPreferencesPresenter;
 use RuntimeException;
 
 /**

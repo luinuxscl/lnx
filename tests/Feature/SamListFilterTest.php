@@ -1,12 +1,12 @@
 <?php
 
-use App\Ai\Sam\SamPreferences;
-use App\Ai\Sam\SamRegistry;
-use App\Ai\Sam\SamRuntime;
 use App\Jobs\WarmSamFilterSignalsJob;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
+use Luinuxscl\LnxSam\SamPreferences;
+use Luinuxscl\LnxSam\SamRegistry;
+use Luinuxscl\LnxSam\SamRuntime;
 use Tests\Fixtures\Sam\FakeSamPreferences;
 use Tests\Fixtures\Sam\ListFilterFakeSamContributor;
 

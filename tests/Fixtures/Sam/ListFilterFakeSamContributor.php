@@ -2,10 +2,10 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\SamFilterAnalysis;
-use App\Ai\Sam\SamListSignals;
-use App\Ai\Sam\SamSignal;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamFilterAnalysis;
+use Luinuxscl\LnxSam\SamListSignals;
+use Luinuxscl\LnxSam\SamSignal;
 
 class ListFilterFakeSamContributor extends FakeSamContributor implements SamListSignals
 {

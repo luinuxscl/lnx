@@ -2,12 +2,12 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\Tools\SamReadResult;
-use App\Ai\Sam\Tools\SamReadTool;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Tools\Request;
+use Luinuxscl\LnxSam\Tools\SamReadResult;
+use Luinuxscl\LnxSam\Tools\SamReadTool;
 
 class FakeReadTool extends SamReadTool
 {

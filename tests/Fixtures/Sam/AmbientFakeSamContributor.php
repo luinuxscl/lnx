@@ -2,10 +2,10 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\SamAmbientSignals;
-use App\Ai\Sam\SamRowSignals;
-use App\Ai\Sam\SamSignal;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamAmbientSignals;
+use Luinuxscl\LnxSam\SamRowSignals;
+use Luinuxscl\LnxSam\SamSignal;
 
 class AmbientFakeSamContributor extends FakeSamContributor implements SamAmbientSignals
 {
