@@ -79,7 +79,7 @@ Reglas de la matriz:
 ### 4. Empaquetado del runtime: `luinuxscl/lnx-sam` (MIT)
 
 `App\Ai\Sam` se extrae al paquete **MIT** [`luinuxscl/lnx-sam`](https://github.com/luinuxscl/lnx-sam)
-con namespace `Luinuxscl\LnxSam`, publicado como `v0.1.0` (2026-11-08):
+con namespace `Luinuxscl\LnxSam`, publicado como `v0.1.0` y hoy `v0.2.0` (2026-11-08):
 
 - Lo requieren `lnx` (MIT), `crm-app` (AGPL-3.0-or-later), `luinuxscl/sam` y `luinuxscl/crm` (AGPL-3.0-or-later). Un paquete AGPL no puede ser dependencia del kit MIT, así que **no** se mete en `sam`.
 - El paquete contiene el runtime, el contrato, los DTO, la auditoría, las cuotas y la puerta de confirmación. **No** contiene identidad, marca, panel, ni conocimiento de dominio.
@@ -127,7 +127,7 @@ Todos devuelven código de salida distinto de cero cuando encuentran un problema
 3. Crear `luinuxscl/lnx-sam` (MIT), mover el runtime con sus pruebas y publicar la primera versión. — **implementado (2026-11-08)**: `v0.1.0`, 26 pruebas, CI propio en `main` y `develop`.
 4. `lnx`, `crm-app`, `sam` y `crm` requieren el paquete; `crm-app` retira la copia y actualiza el lock. Alias de compatibilidad activos. — **implementado (2026-11-08)**.
 5. `sam` deja de importar `App\Ai\Sam\*`; el paquete pasa a ser su única dependencia de runtime. — **implementado (2026-11-08)**: `sam`, `crm`, `lnx` y `crm-app` importan `Luinuxscl\LnxSam\*`; las cuatro suites quedan verdes.
-6. `CONTRATO-MODULO.md` §3.9 pasa a normativo con el manifiesto, la matriz y los comandos. — **pendiente**.
+6. `CONTRATO-MODULO.md` §3.9 pasa a normativo con el manifiesto, la matriz y los comandos. — **implementado (2026-11-08)**.
 
 ## Cuestiones abiertas
 
