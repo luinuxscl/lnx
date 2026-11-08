@@ -290,12 +290,12 @@ public function boot(): void
 
 ### 3.9 Contribuciones al agente (Sam) (runtime implementado)
 
-> **Destino normativo:** [ADR 0002](../docs/adr/0002-capacidades-y-empaquetado-del-runtime.md) decide que una capacidad se declara **una vez** y la leen todas las superficies (Sam, MCP, API y UI), y que el runtime se empaqueta como `luinuxscl/lnx-sam` (MIT). Las reglas de capacidades entran en vigor al cerrar la migración de ese ADR; hasta entonces esta sección describe el contrato vigente.
+> **Destino normativo:** [ADR 0002](../docs/adr/0002-capacidades-y-empaquetado-del-runtime.md) decide que una capacidad se declara **una vez** y la leen todas las superficies (Sam, MCP, API y UI), y que el runtime se empaqueta como `luinuxscl/lnx-sam` (MIT). El paquete está publicado (`v0.1.0`) y `lnx`, `crm-app`, `sam` y `crm` ya lo consumen; las reglas de capacidades entran en vigor al declarar el manifiesto.
 
-El kit aloja el **runtime del agente** y un paquete de producto —`luinuxscl/sam`, AGPL-3.0-or-later— aporta su identidad y su superficie. Un módulo no construye su propio chat: declara **qué sabe Sam de su dominio y qué operaciones puede ejecutar**. Nada se expone por estar el paquete en `vendor/`; la declaración es explícita y se valida.
+El **runtime del agente** es el paquete MIT `luinuxscl/lnx-sam` (namespace `Luinuxscl\LnxSam`) y un paquete de producto —`luinuxscl/sam`, AGPL-3.0-or-later— aporta su identidad y su superficie. Un módulo no construye su propio chat: declara **qué sabe Sam de su dominio y qué operaciones puede ejecutar**. Nada se expone por estar el paquete en `vendor/`; la declaración es explícita y se valida.
 
 ```php
-use App\Ai\Sam\SamRegistry;
+use Luinuxscl\LnxSam\SamRegistry;
 
 public function boot(): void
 {
@@ -311,7 +311,7 @@ public function boot(): void
 Un `SamContributor` declara:
 
 ```php
-namespace App\Ai\Sam;
+namespace Luinuxscl\LnxSam;
 
 use App\Models\User;
 use Carbon\CarbonInterface;
@@ -347,7 +347,7 @@ interface SamContributor
 - **`brief` e `insight` son la lectura determinista del registro.** Un módulo que quiera explicar la ficha en foco implementa también `SamBriefPresenter` (`brief()` e `insight()`). Ambos devuelven `SamBrief`/`SamInsight` compuestos por el módulo a partir de sus propias señales: observaciones ya redactadas y acciones que apuntan a pantallas existentes (`SamAction`), sin ejecutar nada. El runtime no inventa texto: si el módulo devuelve `null` (registro fuera de alcance o sin fila en foco), el panel no muestra brief. `SamRuntime::briefFor()` solo transporta el DTO; la narrativa del modelo, cuando exista, se añade encima y el fallback determinista sigue siendo útil sin proveedor.
 - **`suggestions` respeta permisos y alcance.** Son arranques de conversación, no promesas: no ofrecen una capacidad que el actor no pueda ejecutar.
 - **`proposals` es opcional.** Si el módulo propone escrituras, implementa `SamProposalPresenter` para que el runtime pueda pintar sus borradores y delegar la confirmación.
-- **Bases de herramienta obligatorias.** El runtime solo acepta herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`. Ambas re-comprueban `SAM_ENABLED` y el permiso de superficie, capturan autorización/validación y auditan la invocación; cualquier otro `Tool` se descarta y queda auditado como `tool_rejected` (`reason: not_declared`). Los nombres de herramienta son globales en el turno: un nombre ya expuesto se rechaza con `reason: duplicate_name`. Así el runtime no puede ejecutar confirmación, borrado, fusión ni envío aunque un módulo los declare por error.
+- **Bases de herramienta obligatorias.** El runtime solo acepta herramientas que extiendan `Luinuxscl\LnxSam\Tools\SamReadTool` o `SamProposeTool`. Ambas re-comprueban `SAM_ENABLED` y el permiso de superficie, capturan autorización/validación y auditan la invocación; cualquier otro `Tool` se descarta y queda auditado como `tool_rejected` (`reason: not_declared`). Los nombres de herramienta son globales en el turno: un nombre ya expuesto se rechaza con `reason: duplicate_name`. Así el runtime no puede ejecutar confirmación, borrado, fusión ni envío aunque un módulo los declare por error.
 - **Modo y riesgo de una propuesta.** Cada `SamProposeTool` declara `RISK` (`SamRisk`: `reversible`, `irreversible` o `bulk`) y `MIN_MODE` (`SamMode`, por defecto `draft`). El modo efectivo del actor es el mínimo entre `SAM_MAX_MODE`, el techo de su rol (`sam_mode_ceilings`) y `SamPreferences::$mode`. La preferencia se guarda sin recortar y se recorta al resolver, así que un techo que suba después aplica sin reescribirla; `null` no cambia el resultado. `SamRuntime::ceilingFor()` devuelve el mínimo del despliegue y del rol, sin la preferencia, para que el panel pueda deshabilitar lo que la persona no puede alcanzar. El presentador registrado con `registerPreferences()` no debe llamar a `modeFor()` para calcular el modo: una llamada anidada ignora la preferencia y evita el bucle. El runtime no ofrece una propuesta por debajo de su `MIN_MODE` y la herramienta lo vuelve a comprobar al invocarse, auditando `denied` con `reason: mode`. Una propuesta reversible puede confirmarse sin frase solo cuando su módulo declara `requiresPhrase = false`, lo que exige que exista undo; irreversible y bulk siempre piden frase. Un rol no puede superar el techo del despliegue: `/admin/sam` lo muestra como dato y advierte antes de guardar un techo que el despliegue va a ignorar.
 - **Undo opcional y de un solo uso.** Un módulo que conserva el estado previo implementa además `SamProposalUndoer` (`undo(SamProposal, User)`). El presentador marca en la propuesta `canUndo` y, si tiene ventana, `undoExpiresAt`; el runtime solo ofrece el undo de un presentador que implementa el contrato y re-resuelve la propuesta por correlación, actor y `source` antes de delegar. El módulo vuelve a validar propiedad, ventana y frescura, y rechaza la segunda ejecución; el runtime audita `sam_undo` con `action: undo` y el mismo vocabulario (`confirmed`, `duplicate`, `failed`, `expired`).
 - **Auditoría común.** Cada lectura, propuesta y confirmación se registra en `mcp_tool_invocations` con `context.channel = sam`, `source`, `action` (`read`, `propose`, `confirm`, `undo`, `tool_rejected`) y el `correlation_id` del turno, que también se guarda en `ai_messages.correlation_id`. El modelo del turno se reconstruye desde `ai_usage_events` por la misma correlación. La auditoría de ciclo de vida del borrador sigue siendo del módulo.
@@ -362,11 +362,11 @@ publica el manifiesto, la validación y la introspección; los módulos adoptan 
 declaración en la migración de su propio ADR.
 
 ```php
-use App\Ai\Sam\SamCapability;
-use App\Ai\Sam\SamCapabilityKind;
-use App\Ai\Sam\SamCapabilityProvider;
-use App\Ai\Sam\SamMode;
-use App\Ai\Sam\SamRisk;
+use Luinuxscl\LnxSam\SamCapability;
+use Luinuxscl\LnxSam\SamCapabilityKind;
+use Luinuxscl\LnxSam\SamCapabilityProvider;
+use Luinuxscl\LnxSam\SamMode;
+use Luinuxscl\LnxSam\SamRisk;
 
 class CrmSamContributor implements SamContributor, SamCapabilityProvider
 {
