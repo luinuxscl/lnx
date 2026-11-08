@@ -3,7 +3,6 @@
 namespace App\Mcp\Tools;
 
 use App\Actions\RecordMcpInvocation;
-use App\Ai\Sam\SamTurn;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -12,6 +11,7 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
+use Luinuxscl\LnxSam\SamTurn;
 
 #[IsReadOnly]
 abstract class ReadOnlyTool extends Tool

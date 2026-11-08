@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Ai\Sam\SamMode;
 use App\Enums\Role;
 use App\Models\SamModeCeiling;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Luinuxscl\LnxSam\SamMode;
 
 /**
  * @extends Factory<SamModeCeiling>

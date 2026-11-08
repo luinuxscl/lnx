@@ -1,13 +1,13 @@
 <?php
 
-use App\Ai\Sam\SamProposal;
-use App\Ai\Sam\SamProposalResult;
-use App\Ai\Sam\SamRegistry;
-use App\Ai\Sam\SamRisk;
-use App\Ai\Sam\SamRuntime;
 use App\Models\McpToolInvocation;
 use App\Models\User;
 use Carbon\CarbonInterface;
+use Luinuxscl\LnxSam\SamProposal;
+use Luinuxscl\LnxSam\SamProposalResult;
+use Luinuxscl\LnxSam\SamRegistry;
+use Luinuxscl\LnxSam\SamRisk;
+use Luinuxscl\LnxSam\SamRuntime;
 use Tests\Fixtures\Sam\FakeProposalPresenter;
 use Tests\Fixtures\Sam\FakeSamContributor;
 use Tests\Fixtures\Sam\FakeUndoablePresenter;

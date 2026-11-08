@@ -2,8 +2,8 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\SamCapability;
-use App\Ai\Sam\SamCapabilityProvider;
+use Luinuxscl\LnxSam\SamCapability;
+use Luinuxscl\LnxSam\SamCapabilityProvider;
 
 /**
  * Contributor registered as `fake` that declares a capability of another

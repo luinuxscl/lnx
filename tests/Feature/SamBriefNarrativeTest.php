@@ -1,12 +1,12 @@
 <?php
 
-use App\Ai\Sam\SamBrief;
-use App\Ai\Sam\SamBriefNarrativeAgent;
-use App\Ai\Sam\SamRuntime;
-use App\Ai\Sam\SamSignal;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Ai\Exceptions\InsufficientCreditsException;
+use Luinuxscl\LnxSam\SamBrief;
+use Luinuxscl\LnxSam\SamBriefNarrativeAgent;
+use Luinuxscl\LnxSam\SamRuntime;
+use Luinuxscl\LnxSam\SamSignal;
 
 beforeEach(function (): void {
     resetSamFixtures();

@@ -1,11 +1,11 @@
 <?php
 
-use App\Ai\Sam\SamContext;
-use App\Ai\Sam\SamInstructions;
-use App\Ai\Sam\SamRegistry;
-use App\Ai\Sam\SamRuntime;
-use App\Ai\Sam\SamSignal;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamContext;
+use Luinuxscl\LnxSam\SamInstructions;
+use Luinuxscl\LnxSam\SamRegistry;
+use Luinuxscl\LnxSam\SamRuntime;
+use Luinuxscl\LnxSam\SamSignal;
 use Tests\Fixtures\Sam\FakeSamContributor;
 
 beforeEach(function (): void {

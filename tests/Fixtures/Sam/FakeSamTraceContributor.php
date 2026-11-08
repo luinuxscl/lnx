@@ -2,13 +2,13 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\SamContext;
-use App\Ai\Sam\SamContributor;
-use App\Ai\Sam\SamProposalPresenter;
-use App\Ai\Sam\SamTracePresenter;
-use App\Ai\Sam\SamTurnTrace;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Luinuxscl\LnxSam\SamContext;
+use Luinuxscl\LnxSam\SamContributor;
+use Luinuxscl\LnxSam\SamProposalPresenter;
+use Luinuxscl\LnxSam\SamTracePresenter;
+use Luinuxscl\LnxSam\SamTurnTrace;
 
 class FakeSamTraceContributor implements SamContributor, SamTracePresenter
 {

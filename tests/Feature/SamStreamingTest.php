@@ -1,13 +1,13 @@
 <?php
 
 use App\Ai\Knowledge\HelpSearchService;
-use App\Ai\Sam\SamAgent;
-use App\Ai\Sam\SamContext;
-use App\Ai\Sam\SamInstructions;
-use App\Ai\Sam\SamRegistry;
-use App\Ai\Sam\SamRuntime;
 use App\Models\AiChatMessage;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamAgent;
+use Luinuxscl\LnxSam\SamContext;
+use Luinuxscl\LnxSam\SamInstructions;
+use Luinuxscl\LnxSam\SamRegistry;
+use Luinuxscl\LnxSam\SamRuntime;
 use Tests\Fixtures\Sam\FakeSamContributor;
 
 beforeEach(function (): void {

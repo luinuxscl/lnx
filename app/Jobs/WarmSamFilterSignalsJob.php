@@ -2,10 +2,10 @@
 
 namespace App\Jobs;
 
-use App\Ai\Sam\SamRuntime;
 use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Luinuxscl\LnxSam\SamRuntime;
 
 /**
  * Pre-computes list-filter signals for one actor when proactive alerts are on.

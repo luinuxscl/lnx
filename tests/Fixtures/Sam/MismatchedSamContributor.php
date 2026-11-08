@@ -2,11 +2,11 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\SamContext;
-use App\Ai\Sam\SamContributor;
-use App\Ai\Sam\SamProposalPresenter;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Luinuxscl\LnxSam\SamContext;
+use Luinuxscl\LnxSam\SamContributor;
+use Luinuxscl\LnxSam\SamProposalPresenter;
 
 class MismatchedSamContributor implements SamContributor
 {

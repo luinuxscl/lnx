@@ -1,6 +1,6 @@
 <?php
 
-use App\Ai\Sam\SamRegistry;
+use Luinuxscl\LnxSam\SamRegistry;
 use Tests\Fixtures\Sam\FakeSamContributor;
 use Tests\Fixtures\Sam\FakeSamPanel;
 use Tests\Fixtures\Sam\FakeSamProfile;

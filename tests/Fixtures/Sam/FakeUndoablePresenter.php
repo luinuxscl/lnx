@@ -2,10 +2,10 @@
 
 namespace Tests\Fixtures\Sam;
 
-use App\Ai\Sam\SamProposal;
-use App\Ai\Sam\SamProposalResult;
-use App\Ai\Sam\SamProposalUndoer;
 use App\Models\User;
+use Luinuxscl\LnxSam\SamProposal;
+use Luinuxscl\LnxSam\SamProposalResult;
+use Luinuxscl\LnxSam\SamProposalUndoer;
 
 /**
  * Presenter that also keeps an undo, so the runtime can route one.

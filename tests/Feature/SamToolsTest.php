@@ -1,12 +1,12 @@
 <?php
 
-use App\Ai\Sam\SamRegistry;
-use App\Ai\Sam\SamRuntime;
-use App\Ai\Sam\SamTurn;
 use App\Models\AiChatMessage;
 use App\Models\McpToolInvocation;
 use App\Models\User;
 use Laravel\Ai\Tools\Request;
+use Luinuxscl\LnxSam\SamRegistry;
+use Luinuxscl\LnxSam\SamRuntime;
+use Luinuxscl\LnxSam\SamTurn;
 use Tests\Fixtures\Sam\DuplicateToolContributor;
 use Tests\Fixtures\Sam\FakeProposeTool;
 use Tests\Fixtures\Sam\FakeReadTool;

@@ -1,18 +1,18 @@
 <?php
 
-use App\Ai\Sam\SamAccess;
-use App\Ai\Sam\SamMode;
-use App\Ai\Sam\SamModeResolver;
-use App\Ai\Sam\SamPreferences;
-use App\Ai\Sam\SamRegistry;
-use App\Ai\Sam\SamRisk;
-use App\Ai\Sam\SamRuntime;
 use App\Enums\Role;
 use App\Models\McpToolInvocation;
 use App\Models\SamModeCeiling;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Laravel\Ai\Tools\Request;
+use Luinuxscl\LnxSam\SamAccess;
+use Luinuxscl\LnxSam\SamMode;
+use Luinuxscl\LnxSam\SamModeResolver;
+use Luinuxscl\LnxSam\SamPreferences;
+use Luinuxscl\LnxSam\SamRegistry;
+use Luinuxscl\LnxSam\SamRisk;
+use Luinuxscl\LnxSam\SamRuntime;
 use Tests\Fixtures\Sam\FakeProposeTool;
 use Tests\Fixtures\Sam\FakeSamContributor;
 use Tests\Fixtures\Sam\FakeSamPreferences;

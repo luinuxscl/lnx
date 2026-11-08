@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Ai\Sam\SamRuntime;
 use App\Models\AiChatMessage;
 use App\Models\AiConversation;
 use Illuminate\Console\Command;
+use Luinuxscl\LnxSam\SamRuntime;
 
 class PruneSamConversations extends Command
 {

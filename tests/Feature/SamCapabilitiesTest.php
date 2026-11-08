@@ -1,14 +1,14 @@
 <?php
 
-use App\Ai\Sam\SamCapability;
-use App\Ai\Sam\SamCapabilityKind;
-use App\Ai\Sam\SamMode;
-use App\Ai\Sam\SamRegistry;
-use App\Ai\Sam\SamRisk;
 use App\Mcp\McpToolRegistry;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Gate;
+use Luinuxscl\LnxSam\SamCapability;
+use Luinuxscl\LnxSam\SamCapabilityKind;
+use Luinuxscl\LnxSam\SamMode;
+use Luinuxscl\LnxSam\SamRegistry;
+use Luinuxscl\LnxSam\SamRisk;
 use Tests\Fixtures\Mcp\UpdateFooterTextTool;
 use Tests\Fixtures\Sam\CapabilitySamContributor;
 use Tests\Fixtures\Sam\DuplicateCapabilityContributor;

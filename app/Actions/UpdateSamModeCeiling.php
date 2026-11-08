@@ -2,12 +2,12 @@
 
 namespace App\Actions;
 
-use App\Ai\Sam\SamMode;
 use App\Enums\AdministrativeAction;
 use App\Models\SamModeCeiling;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use Luinuxscl\LnxSam\SamMode;
 use Spatie\Permission\Models\Role;
 
 /**
