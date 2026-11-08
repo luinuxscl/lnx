@@ -113,7 +113,7 @@
 
         <livewire:support.panel />
 
-        @php($samSurface = app(\App\Ai\Sam\SamRuntime::class)->surface())
+        @php($samSurface = app(\Luinuxscl\LnxSam\SamRuntime::class)->surface())
         @if ($samSurface)
             @livewire($samSurface)
         @endif
