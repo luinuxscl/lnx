@@ -78,12 +78,14 @@ Reglas de la matriz:
 
 ### 4. Empaquetado del runtime: `luinuxscl/lnx-sam` (MIT)
 
-`App\Ai\Sam` se extrae a un paquete **MIT** con namespace `Luinuxscl\LnxSam`:
+`App\Ai\Sam` se extrae al paquete **MIT** [`luinuxscl/lnx-sam`](https://github.com/luinuxscl/lnx-sam)
+con namespace `Luinuxscl\LnxSam`, publicado como `v0.1.0` (2026-11-08):
 
-- Lo requieren `lnx` (MIT), `crm-app` (AGPL-3.0-or-later) y `luinuxscl/sam` (AGPL-3.0-or-later). Un paquete AGPL no puede ser dependencia del kit MIT, así que **no** se mete en `sam`.
+- Lo requieren `lnx` (MIT), `crm-app` (AGPL-3.0-or-later), `luinuxscl/sam` y `luinuxscl/crm` (AGPL-3.0-or-later). Un paquete AGPL no puede ser dependencia del kit MIT, así que **no** se mete en `sam`.
 - El paquete contiene el runtime, el contrato, los DTO, la auditoría, las cuotas y la puerta de confirmación. **No** contiene identidad, marca, panel, ni conocimiento de dominio.
 - `lnx` deja de llevar `app/Ai/Sam` en el andamio y pasa a requerir el paquete; `crm-app` retira su copia y actualiza el lock.
-- Durante una versión menor el paquete registra alias `App\Ai\Sam\*` para no romper imports de módulos ya publicados; el alias se retira en la siguiente mayor.
+- **El namespace canónico es `Luinuxscl\LnxSam` y los consumidores lo importan.** El paquete registra alias perezosos `App\Ai\Sam\*` y `App\Console\Commands\Sam*` mientras el host retira su copia, pero un alias **no cubre declaraciones de tipo**: PHP no autoloada la clase del parámetro al comprobar el tipo, así que `function f(App\Ai\Sam\SamMode $m)` rechaza un `Luinuxscl\LnxSam\SamMode` aunque el alias exista (verificado). Los alias solo sirven para referencias resueltas en runtime y se retiran en la siguiente mayor.
+- Las claves del contenedor son cadenas: `app()->instance('App\Ai\Sam\SamInstructions', …)` no afecta a `Luinuxscl\LnxSam\SamInstructions`. Por eso la migración reescribe imports en lugar de confiar en los alias.
 - El comando de sincronización del andamio (`scripts/update-agent-kit.py`) deja de portar `app/Ai/Sam` porque ya no existe en el kit.
 
 ### 5. Introspección de solo lectura
@@ -121,17 +123,14 @@ Todos devuelven código de salida distinto de cero cuando encuentran un problema
 ## Migración, en orden
 
 1. `lnx`: `SamCapability`, validación en `SamRegistry`, catálogo y los cuatro comandos de solo lectura, con pruebas. — **implementado (2026-11-08)**, portado a `crm-app`.
-2. `crm`: `capabilities()` en `CrmSamContributor` para sus lecturas y sus ocho propuestas; `DraftWriteTool` y `SamProposeTool` leen de ahí. **Sin cambio de comportamiento**: la suite del módulo debe seguir verde sin tocar expectativas.
-3. Crear `luinuxscl/lnx-sam` (MIT), mover el runtime con sus pruebas y publicar la primera versión.
-4. `lnx`, `crm-app` y `sam` requieren el paquete; `crm-app` retira la copia y actualiza el lock. Alias de compatibilidad activos.
-5. `sam` deja de importar `App\Ai\Sam\*`; el paquete pasa a ser su única dependencia de runtime.
-6. `CONTRATO-MODULO.md` §3.9 pasa a normativo con el manifiesto, la matriz y los comandos.
+2. `crm`: `capabilities()` en `CrmSamContributor` para sus lecturas y sus ocho propuestas; `DraftWriteTool` y `SamProposeTool` leen de ahí. **Sin cambio de comportamiento**: la suite del módulo debe seguir verde sin tocar expectativas. — **implementado (2026-11-08)**: 19 capacidades (5 lecturas y 14 propuestas), `sam:doctor` sin drift.
+3. Crear `luinuxscl/lnx-sam` (MIT), mover el runtime con sus pruebas y publicar la primera versión. — **implementado (2026-11-08)**: `v0.1.0`, 26 pruebas, CI propio en `main` y `develop`.
+4. `lnx`, `crm-app`, `sam` y `crm` requieren el paquete; `crm-app` retira la copia y actualiza el lock. Alias de compatibilidad activos. — **implementado (2026-11-08)**.
+5. `sam` deja de importar `App\Ai\Sam\*`; el paquete pasa a ser su única dependencia de runtime. — **implementado (2026-11-08)**: `sam`, `crm`, `lnx` y `crm-app` importan `Luinuxscl\LnxSam\*`; las cuatro suites quedan verdes.
+6. `CONTRATO-MODULO.md` §3.9 pasa a normativo con el manifiesto, la matriz y los comandos. — **pendiente**.
 
 ## Cuestiones abiertas
 
-- Nombre definitivo y namespace del paquete (`lnx-sam` / `Luinuxscl\LnxSam` son la propuesta).
-- Si las lecturas se declaran como capacidad (`kind: read`) o solo las propuestas. La propuesta es declararlas: el catálogo debe responder qué puede leer Sam sin abrir el código.
-- Si el catálogo alimenta también la navegación o el panel de permisos.
 - Cuánto dura la ventana de alias `App\Ai\Sam\*` antes de la versión mayor.
 
 ## Aprobación
