@@ -781,7 +781,7 @@ Define tu habilidad (por ejemplo una policy) y pásala en `ability`; coloca `<li
 
 ## Chat interactivo (heredado; superficie retirada)
 
-> **Decisión 2026-11-03:** esta superficie se generaliza como **Sam**, el agente de la plataforma. El runtime y el contrato de contribución viven en el kit (`App\Ai\Sam\*`, issue #84); la identidad y la superficie, en el paquete AGPL `luinuxscl/sam` (#85). Ver [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md) y [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
+> **Decisión 2026-11-03:** esta superficie se generaliza como **Sam**, el agente de la plataforma. El runtime y el contrato de contribución viven en el paquete MIT `luinuxscl/lnx-sam` (`Luinuxscl\LnxSam\*`, [ADR 0002](docs/adr/0002-capacidades-y-empaquetado-del-runtime.md)); la identidad y la superficie, en el paquete AGPL `luinuxscl/sam` (#85). Ver [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md) y [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
 
 La ruta `/chat` (`chat`) ya **no es una superficie de usuario**: sale de la navegación y redirige a `dashboard?sam=open`, donde el paquete Sam abre su panel global si está habilitado. El componente Livewire `App\Livewire\Ai\Chat`, `ChatService`, `ChatAgent` y sus conversaciones se conservan como datos y base de streaming hasta la limpieza mayor que retire el código heredado; los enlaces antiguos no se rompen.
 
@@ -808,14 +808,14 @@ El resto de esta sección documenta ese componente heredado.
 
 ## Sam: runtime y contrato de agente
 
-El kit aloja el **runtime** del agente de la plataforma y el **contrato** con el que los módulos contribuyen conocimiento y operaciones. La identidad (nombre, declaración, persona) y el panel global son producto: los aporta el paquete AGPL `luinuxscl/sam` (#85). El runtime vive en `App\Ai\Sam\*` y no conoce la marca ni el dominio de ningún módulo. Decisiones: [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md) y [`docs/adr/0002-capacidades-y-empaquetado-del-runtime.md`](docs/adr/0002-capacidades-y-empaquetado-del-runtime.md); contrato completo: [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
+El kit aloja el **runtime** del agente de la plataforma y el **contrato** con el que los módulos contribuyen conocimiento y operaciones. La identidad (nombre, declaración, persona) y el panel global son producto: los aporta el paquete AGPL `luinuxscl/sam` (#85). El runtime es el paquete MIT `luinuxscl/lnx-sam` (`Luinuxscl\LnxSam\*`) y no conoce la marca ni el dominio de ningún módulo. Decisiones: [`docs/adr/0001-sam-agente-de-plataforma.md`](docs/adr/0001-sam-agente-de-plataforma.md) y [`docs/adr/0002-capacidades-y-empaquetado-del-runtime.md`](docs/adr/0002-capacidades-y-empaquetado-del-runtime.md); contrato completo: [`CONTRATO-MODULO.md`](CONTRATO-MODULO.md) §3.9.
 
 ### Registro y declaración
 
 Un paquete declara, en el `boot()` de su provider:
 
 ```php
-use App\Ai\Sam\SamRegistry;
+use Luinuxscl\LnxSam\SamRegistry;
 
 app(SamRegistry::class)->register('crm', CrmSamContributor::class);   // conocimiento y herramientas
 app(SamRegistry::class)->registerProfile('sam', SamProfile::class);    // identidad del agente
@@ -826,7 +826,7 @@ app(SamRegistry::class)->registerSurface('sam', SamPanel::class);      // panel 
 
 ### Herramientas y auditoría
 
-- Solo se aceptan herramientas que extiendan `App\Ai\Sam\Tools\SamReadTool` o `SamProposeTool`: re-comprueban el interruptor y el permiso de superficie, capturan la denegación por autorización/validación y auditan cada invocación. Cualquier otro `Tool` se descarta y se audita como `tool_rejected` (`not_declared`); un nombre de herramienta repetido entre módulos se audita como `duplicate_name`.
+- Solo se aceptan herramientas que extiendan `Luinuxscl\LnxSam\Tools\SamReadTool` o `SamProposeTool`: re-comprueban el interruptor y el permiso de superficie, capturan la denegación por autorización/validación y auditan cada invocación. Cualquier otro `Tool` se descarta y se audita como `tool_rejected` (`not_declared`); un nombre de herramienta repetido entre módulos se audita como `duplicate_name`.
 - No existen herramientas de confirmación, borrado, fusión ni envío. La confirmación es una acción humana que ejecuta el módulo.
 - Cada herramienta de propuesta declara `RISK` (`reversible`, `irreversible` o `bulk`) y `MIN_MODE` (por defecto `draft`). El runtime no la ofrece por debajo del modo efectivo y la herramienta vuelve a comprobarlo al invocarse, auditando `denied` con `reason = mode`. Una propuesta confirma con la frase salvo que su módulo declare `requiresPhrase = false`, que solo debe hacer cuando la acción sea reversible y tenga undo.
 - Un módulo que conserva el estado previo implementa además `SamProposalUndoer` y marca `canUndo`/`undoExpiresAt` en `SamProposal`. `SamRuntime::undo()` re-resuelve la propuesta por correlación, actor y `source`, delega en el módulo y audita `sam_undo`; el módulo revalida propiedad, ventana y frescura, y el undo es de un solo uso.
