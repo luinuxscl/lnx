@@ -145,4 +145,17 @@ return [
 
     'retention_days' => (int) env('SAM_RETENTION_DAYS', 0),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Badge metrics ledger
+    |--------------------------------------------------------------------------
+    |
+    | Directory of the JSONL ledger that keeps the aggregated badge metrics
+    | alive when the schema is rebuilt. The events live in the database; the
+    | export appends one bucket here before the demo reset wipes them.
+    |
+    */
+
+    'metrics_path' => env('SAM_METRICS_PATH'),
+
 ];

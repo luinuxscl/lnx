@@ -11,3 +11,4 @@ Artisan::command('inspire', function () {
 Schedule::command('mcp:prune-invocations')->daily();
 Schedule::command('ai:prune-usage')->daily();
 Schedule::command('sam:prune-conversations')->daily();
+Schedule::command('sam:prune-badge-events')->daily();
