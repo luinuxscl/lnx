@@ -38,7 +38,7 @@ Un **módulo** es un paquete Composer que aporta funcionalidad a cualquier app d
 | 7 | **Skills del módulo vía Boost** | ✅ Documentado (§3.3) |
 | 8 | **Identidad por defecto**: el paquete aporta sus defaults de marca con prioridad sobre el kit | ✅ Implementado (§3.7) |
 | 9 | **Documentación y FAQ**: el paquete publica guías y preguntas frecuentes en el Centro de ayuda, filtradas por rol | ✅ Implementado (§3.8) |
-| 10 | **Contribuciones al agente (Sam)**: el paquete declara conocimiento, lecturas, propuestas, contexto y sugerencias para Sam | 🟢 Runtime implementado (§3.9) |
+| 10 | **Contribuciones al agente (Sam)**: el paquete declara conocimiento, lecturas, propuestas, contexto y sugerencias para Sam | 🟢 Runtime implementado (§3.9); capacidades unificadas en migración ([ADR 0002](docs/adr/0002-capacidades-y-empaquetado-del-runtime.md)) |
 
 ### 3.1 Permisos propios (implementado)
 
@@ -290,6 +290,8 @@ public function boot(): void
 
 ### 3.9 Contribuciones al agente (Sam) (runtime implementado)
 
+> **Destino normativo:** [ADR 0002](../docs/adr/0002-capacidades-y-empaquetado-del-runtime.md) decide que una capacidad se declara **una vez** y la leen todas las superficies (Sam, MCP, API y UI), y que el runtime se empaqueta como `luinuxscl/lnx-sam` (MIT). Las reglas de capacidades entran en vigor al cerrar la migración de ese ADR; hasta entonces esta sección describe el contrato vigente.
+
 El kit aloja el **runtime del agente** y un paquete de producto —`luinuxscl/sam`, AGPL-3.0-or-later— aporta su identidad y su superficie. Un módulo no construye su propio chat: declara **qué sabe Sam de su dominio y qué operaciones puede ejecutar**. Nada se expone por estar el paquete en `vendor/`; la declaración es explícita y se valida.
 
 ```php
@@ -352,6 +354,37 @@ interface SamContributor
 - **Persistencia y aislamiento.** Varias conversaciones `profile = sam` por actor: el runtime las crea (`startConversation()`), las lista (`conversations()`) y permite elegir el hilo de cada turno (`send()` con `AiConversation`); sin hilo elegido se usa el más reciente, creado en la primera interacción. Cada mensaje del actor guarda el `SamContext` saneado del turno en `ai_messages.context` y el título se deriva del primer mensaje sin llamar al modelo (`SAM_TITLE_CHARS`). `deleteConversation()` borra un hilo y `forgetAll()` todos los del actor, siempre con auditoría de conteos y nunca del contenido. El historial se acota con `SAM_MAX_CONTEXT_MESSAGES` y se purga con `sam:prune-conversations` según `SAM_RETENTION_DAYS`. El runtime nunca lee ni escribe la conversación de otra identidad: un id ajeno se trata como inexistente.
 - **Confirmación proporcional.** El módulo genera y valida la frase; el runtime re-resuelve la propuesta por correlación, actor y `source`, comprueba `canConfirm` y la caducidad, exige la frase cuando la propuesta la requiere, delega en `SamProposalPresenter::confirm()` y audita el resultado (`confirmed`, `duplicate`, `failed`, `expired`). La frase se redacta antes de persistir cualquier respuesta y un mensaje que sea solo la frase no se guarda como turno.
 - **API del runtime.** `SamRuntime` expone `enabled()`, `ready()`, `canUse()`, `ceilingFor()`, `modeFor()`, `surface()`, `conversations()`, `conversationFor()`, `findConversation()`, `findForActor()`, `startConversation()`, `messages()`, `send()`, `deleteConversation()`, `forgetAll()`, `toolsFor()`, `contextFor()`, `contextForRow()`, `briefFor()`, `suggestions()`, `proposals()`, `confirm()` y `undo()`. La cuota se aplica con la aplicación `sam.turn` (declarada por el paquete con `AiApplicationRegistry`; sin declaración, aplica el límite por defecto).
+
+#### Capacidades declaradas una vez (ADR 0002, en migración)
+
+Hoy el riesgo, el permiso y el modo mínimo se escriben en tres sitios —`SamProposeTool`, `DraftWriteTool`/`WritesData` y los endpoints de la API—. El ADR 0002 los unifica en un manifiesto por módulo:
+
+```php
+public function capabilities(): array
+{
+    return [
+        new SamCapability(
+            key: 'crm.archive_contact',
+            source: 'crm',
+            label: 'Archivar contacto',
+            kind: SamCapabilityKind::Propose,
+            permission: 'crm.manage_contact',
+            risk: SamRisk::Reversible,
+            minMode: SamMode::Draft,
+            requiresPhrase: false,
+            undoable: true,
+            auditAction: 'propose',
+            surfaces: ['sam', 'mcp', 'api', 'ui'],
+        ),
+    ];
+}
+```
+
+- La **autorización no se delega a la superficie**: cada capa vuelve a comprobar permiso y alcance por registro.
+- La **confirmación solo se endurece**: MCP y API exigen siempre la frase; Sam la relaja únicamente cuando el riesgo es reversible y existe undo real.
+- Un `risk` reversible sin `undoable` es un error de declaración, y una capacidad sin herramienta (o al revés) se reporta con `sam:doctor`.
+- La introspección es de solo lectura: `sam:capabilities`, `sam:describe <clave>`, `sam:run <clave> --dry-run` y `sam:doctor`, con código de salida distinto de cero cuando encuentran drift.
+
 
 DTOs compartidos:
 
