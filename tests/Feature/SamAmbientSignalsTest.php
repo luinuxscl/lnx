@@ -7,6 +7,7 @@ use Tests\Fixtures\Sam\AmbientFakeSamContributor;
 
 beforeEach(function (): void {
     AmbientFakeSamContributor::$lastIds = [];
+    AmbientFakeSamContributor::$signalsForRowsCalls = 0;
     resetSamFixtures();
 });
 
@@ -39,4 +40,22 @@ it('caps ambient row ids at one hundred', function (): void {
     app(SamRuntime::class)->ambientSignalsForRows($actor, 'contact', array_map('strval', range(1, 150)));
 
     expect(AmbientFakeSamContributor::$lastIds)->toHaveCount(100);
+});
+
+it('reuses the ambient cache without recomputing row signals', function (): void {
+    configureSam();
+    grantSamPermission();
+
+    $actor = User::factory()->create();
+
+    app(SamRegistry::class)->register('fake', AmbientFakeSamContributor::class);
+
+    $this->actingAs($actor);
+
+    $runtime = app(SamRuntime::class);
+
+    $runtime->ambientSignalsForRows($actor, 'contact', ['42']);
+    $runtime->ambientSignalsForRows($actor, 'contact', ['42']);
+
+    expect(AmbientFakeSamContributor::$signalsForRowsCalls)->toBe(1);
 });

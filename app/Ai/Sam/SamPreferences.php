@@ -22,6 +22,7 @@ final class SamPreferences
         public readonly bool $showWhy = true,
         public readonly bool $showSources = true,
         public readonly ?SamMode $mode = null,
+        public readonly bool $proactive = false,
     ) {}
 
     public static function defaults(): self

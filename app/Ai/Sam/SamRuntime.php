@@ -11,6 +11,7 @@ use App\Ai\Exceptions\UnsupportedCapabilityException;
 use App\Ai\Sam\Tools\SamProposeTool;
 use App\Ai\Sam\Tools\SamReadTool;
 use App\Ai\Sam\Tools\SamTool;
+use App\Jobs\WarmSamFilterSignalsJob;
 use App\Models\AiChatMessage;
 use App\Models\AiConversation;
 use App\Models\User;
@@ -775,34 +776,223 @@ class SamRuntime
                 continue;
             }
 
-            $rows = $contributor->signalsForRows($actor, $resource, $ids);
-
+            $versions = $contributor->ambientRowVersions($actor, $resource, $ids);
             $cached = [];
+            $missIds = [];
 
-            foreach ($rows as $row) {
-                $version = $row->updatedAt ?? 'none';
+            foreach ($ids as $id) {
+                if (! isset($versions[$id])) {
+                    continue;
+                }
+
+                $version = $versions[$id] ?? 'none';
                 $cacheKey = sprintf(
                     'sam.ambient.%s.%s.%s.%s.%s',
                     (string) $actor->getKey(),
                     $contributor->source(),
                     $resource,
-                    $row->id,
-                    $version,
+                    $id,
+                    $version ?? 'none',
                 );
 
-                $signals = Cache::remember(
-                    $cacheKey,
-                    now()->addSeconds($ttl),
-                    static fn (): array => $row->signals,
-                );
+                $hit = Cache::get($cacheKey);
 
-                $cached[] = new SamRowSignals($row->id, $signals, $row->updatedAt);
+                if (is_array($hit)) {
+                    $cached[] = new SamRowSignals(
+                        $id,
+                        $this->hydrateAmbientSignals($hit),
+                        $versions[$id],
+                    );
+
+                    continue;
+                }
+
+                $missIds[] = $id;
+            }
+
+            if ($missIds !== []) {
+                foreach ($contributor->signalsForRows($actor, $resource, $missIds) as $row) {
+                    $version = $row->updatedAt ?? ($versions[$row->id] ?? 'none');
+                    $cacheKey = sprintf(
+                        'sam.ambient.%s.%s.%s.%s.%s',
+                        (string) $actor->getKey(),
+                        $contributor->source(),
+                        $resource,
+                        $row->id,
+                        $version ?? 'none',
+                    );
+
+                    Cache::put($cacheKey, $this->dehydrateAmbientSignals($row->signals), now()->addSeconds($ttl));
+                    $cached[] = $row;
+                }
             }
 
             return $cached;
         }
 
         return [];
+    }
+
+    /**
+     * Aggregate signals for the current list filters when proactive alerts are on.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function signalsForFilter(User $actor, string $source, string $resource, array $filters): ?SamFilterAnalysis
+    {
+        if (! $this->canUse($actor) || ! $this->proactiveEnabled($actor)) {
+            return null;
+        }
+
+        return $this->resolveFilterAnalysis($actor, trim($source), trim($resource), $filters, force: false);
+    }
+
+    /**
+     * Refreshes the cached list-filter analysis for one actor.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function warmFilterSignals(User $actor, string $source, string $resource, array $filters): void
+    {
+        if (! $this->canUse($actor) || ! $this->proactiveEnabled($actor)) {
+            return;
+        }
+
+        $this->resolveFilterAnalysis($actor, trim($source), trim($resource), $filters, force: true);
+    }
+
+    /**
+     * Queue a background refresh of list-filter signals.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function queueFilterSignalsWarmup(User $actor, string $source, string $resource, array $filters): void
+    {
+        if (! $this->canUse($actor) || ! $this->proactiveEnabled($actor)) {
+            return;
+        }
+
+        WarmSamFilterSignalsJob::dispatch(
+            (int) $actor->getKey(),
+            trim($source),
+            trim($resource),
+            $this->normalizeFilters($filters),
+        );
+    }
+
+    public function proactiveEnabled(User $actor): bool
+    {
+        return $this->registry->preferencesFor($actor)->proactive;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function resolveFilterAnalysis(
+        User $actor,
+        string $source,
+        string $resource,
+        array $filters,
+        bool $force,
+    ): ?SamFilterAnalysis {
+        if ($source === '' || $resource === '') {
+            return null;
+        }
+
+        $filters = $this->normalizeFilters($filters);
+        $ttl = max(1, (int) config('lnx_sam.filter_cache_ttl', 120));
+        $cacheKey = sprintf(
+            'sam.filter.%s.%s.%s.%s',
+            (string) $actor->getKey(),
+            $source,
+            $resource,
+            sha1(json_encode($filters, JSON_THROW_ON_ERROR)),
+        );
+
+        if (! $force) {
+            $cached = Cache::get($cacheKey);
+
+            if ($cached instanceof SamFilterAnalysis) {
+                return $cached;
+            }
+        }
+
+        foreach ($this->registry->contributors() as $contributor) {
+            if (! $contributor instanceof SamListSignals) {
+                continue;
+            }
+
+            if ($contributor->source() !== $source) {
+                continue;
+            }
+
+            $analysis = $contributor->signalsForFilter($actor, $resource, $filters);
+
+            if (! $analysis instanceof SamFilterAnalysis) {
+                continue;
+            }
+
+            Cache::put($cacheKey, $analysis, now()->addSeconds($ttl));
+
+            return $analysis;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    private function normalizeFilters(array $filters): array
+    {
+        ksort($filters);
+
+        return array_map(function (mixed $value): mixed {
+            if (is_string($value)) {
+                return mb_substr(trim($value), 0, 200);
+            }
+
+            if (is_int($value) || is_float($value) || is_bool($value)) {
+                return $value;
+            }
+
+            return null;
+        }, array_filter($filters, static fn (mixed $value): bool => $value !== null && $value !== ''));
+    }
+
+    /**
+     * @param  list<SamSignal>  $signals
+     * @return list<array{name: string, value: string|int|bool, evidence: ?string, proactive: bool}>
+     */
+    private function dehydrateAmbientSignals(array $signals): array
+    {
+        return array_map(
+            static fn (SamSignal $signal): array => [
+                'name' => $signal->name,
+                'value' => $signal->value,
+                'evidence' => $signal->evidence,
+                'proactive' => $signal->proactive,
+            ],
+            $signals,
+        );
+    }
+
+    /**
+     * @param  list<array{name: string, value: string|int|bool, evidence: ?string, proactive?: bool}>  $payload
+     * @return list<SamSignal>
+     */
+    private function hydrateAmbientSignals(array $payload): array
+    {
+        return array_map(
+            static fn (array $item): SamSignal => new SamSignal(
+                (string) $item['name'],
+                $item['value'],
+                isset($item['evidence']) ? (string) $item['evidence'] : null,
+                proactive: (bool) ($item['proactive'] ?? false),
+            ),
+            $payload,
+        );
     }
 
     /**
