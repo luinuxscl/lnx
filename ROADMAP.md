@@ -16,18 +16,19 @@ proactividad y push condicionado, según el vault `roadmap-sam.md`.
 **Etapa 19 — capacidades declaradas una vez (2026-11-08):** el [ADR
 0002](docs/adr/0002-capacidades-y-empaquetado-del-runtime.md) decide que una
 capacidad se declara una vez y la leen Sam, MCP, la API y la UI, y que el
-runtime (`App\Ai\Sam`) se extrae al paquete MIT `luinuxscl/lnx-sam`. Orden:
+runtime (`App\Ai\Sam`, hoy `Luinuxscl\LnxSam`) se extrae al paquete MIT `luinuxscl/lnx-sam`. Orden:
 manifiesto en `crm` sin cambiar comportamiento → publicación del paquete →
 corte de la copia en `crm-app` y `sam` → contrato y pruebas de política.
 
 Entregado (2026-11-08): `SamCapability`, `SamCapabilityProvider`, validación en
 `SamRegistry` y los cuatro comandos de introspección (`sam:capabilities`,
 `sam:describe`, `sam:run --dry-run`, `sam:doctor`) con pruebas, portados byte a
-byte a `crm-app`. Pendiente: manifiesto de `crm` derivando `RISK`/`MIN_MODE`,
-publicación de `luinuxscl/lnx-sam` (requiere decisión del mantenedor) y retirada
-de la copia del runtime.
+byte a `crm-app`. También entregadas: la publicación de `luinuxscl/lnx-sam`
+(v0.2.x, consumida por `lnx`, `crm-app`, `sam` y `crm`) y la retirada de la copia
+del runtime del kit (ver CHANGELOG y `docs/UPGRADE.md`). Pendiente: manifiesto
+de `crm` derivando `RISK`/`MIN_MODE`.
 
-**Prioridad vigente (2026-11-06): Etapa 17 — Sam como agente de plataforma.** Es el trabajo que se abre ahora y bloquea la replanificación del resto. Orden: [#84](https://github.com/luinuxscl/lnx/issues/84) → [#85](https://github.com/luinuxscl/lnx/issues/85) → [#88](https://github.com/luinuxscl/lnx/issues/88) → [lnx-ui #2](https://github.com/luinuxscl/lnx-ui/issues/2) → [crm #7](https://github.com/luinuxscl/crm/issues/7) → [crm-app #6](https://github.com/luinuxscl/crm-app/issues/6). El corte de lectura de Sam está cerrado; la Fase 2 — escritura controlada cerró el 2026-11-06; el chip y selector de modo del panel cerraron en [sam#3](https://github.com/luinuxscl/sam/issues/3) (2b-2, 2026-11-06). Los demás frentes —producto CRM, mejoras del kit y de las apps derivadas— se revisan y se reordenan cuando Sam esté integrado y verificado.
+**Prioridad vigente (actualizada 2026-11-14).** La **Etapa 17 — Sam como agente de plataforma** quedó **cerrada e integrada**: todas sus issues ([#84](https://github.com/luinuxscl/lnx/issues/84), [#85](https://github.com/luinuxscl/lnx/issues/85), [#88](https://github.com/luinuxscl/lnx/issues/88), [lnx-ui #2](https://github.com/luinuxscl/lnx-ui/issues/2), [crm #7](https://github.com/luinuxscl/crm/issues/7), [crm-app #6](https://github.com/luinuxscl/crm-app/issues/6)) están cerradas y el runtime vive en el paquete `luinuxscl/lnx-sam` ([ADR 0002](docs/adr/0002-capacidades-y-empaquetado-del-runtime.md)). Las issues de la **Etapa 18 — Dashboard Sam-céntrico y contrato de widgets** ([lnx#93](https://github.com/luinuxscl/lnx/issues/93), [lnx-ui#5](https://github.com/luinuxscl/lnx-ui/issues/5), [crm-app#12](https://github.com/luinuxscl/crm-app/issues/12), [crm#26](https://github.com/luinuxscl/crm/issues/26), [crm#25](https://github.com/luinuxscl/crm/issues/25) y [sam#6](https://github.com/luinuxscl/sam/issues/6)) también están cerradas; el trabajo está acumulado en "[No publicado]" del CHANGELOG a la espera del etiquetado de la próxima release MAJOR. El frente actual es el **Próximo trabajo** de arriba: Sam — Fase 3b (análisis del filtro) y el manifiesto de `crm` derivando `RISK`/`MIN_MODE` (resto de la Etapa 19). Los demás frentes —producto CRM, mejoras del kit y de las apps derivadas— se revisan y se reordenan con el mantenedor.
 
 La **Etapa 18: Dashboard Sam-céntrico y contrato de widgets** se abre el
 2026-11-06 ([lnx#93](https://github.com/luinuxscl/lnx/issues/93),
