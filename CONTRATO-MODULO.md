@@ -290,7 +290,7 @@ public function boot(): void
 
 ### 3.9 Contribuciones al agente (Sam) (runtime implementado)
 
-> **Normativo desde 2026-11-08.** [ADR 0002](../docs/adr/0002-capacidades-y-empaquetado-del-runtime.md) decide que una capacidad se declara **una vez** y la leen todas las superficies (Sam, MCP, API y UI), y que el runtime se empaqueta como `luinuxscl/lnx-sam` (MIT). El paquete está publicado (`v0.2.0`) y `lnx`, `crm-app`, `sam` y `crm` ya lo consumen, así que estas reglas obligan a todo módulo que exponga herramientas a Sam.
+> **Normativo desde 2026-11-08.** [ADR 0002](../docs/adr/0002-capacidades-y-empaquetado-del-runtime.md) decide que una capacidad se declara **una vez** y la leen todas las superficies (Sam, MCP, API y UI), y que el runtime se empaqueta como `luinuxscl/lnx-sam` (MIT). El paquete está publicado (`v0.2.1`, adoptada en este kit el 2026-11-08) y `lnx`, `crm-app`, `sam` y `crm` ya lo consumen, así que estas reglas obligan a todo módulo que exponga herramientas a Sam.
 
 El **runtime del agente** es el paquete MIT `luinuxscl/lnx-sam` (namespace `Luinuxscl\LnxSam`) y un paquete de producto —`luinuxscl/sam`, AGPL-3.0-or-later— aporta su identidad y su superficie. Un módulo no construye su propio chat: declara **qué sabe Sam de su dominio y qué operaciones puede ejecutar**. Nada se expone por estar el paquete en `vendor/`; la declaración es explícita y se valida.
 

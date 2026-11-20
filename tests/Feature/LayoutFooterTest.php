@@ -19,7 +19,9 @@ it('renders the configured text once inside the content footer', function () {
     expect(substr_count($response->getContent(), 'A unique footer message'))->toBe(1);
 });
 
-it('renders the brand without configured text or an elevated role', function () {
+it('renders the brand without a version for a role-less user in production', function () {
+    config()->set('app.version', 'v0.1.0');
+    app()->detectEnvironment(fn () => 'production');
     $user = User::factory()->create();
 
     $this->actingAs($user)
@@ -27,11 +29,20 @@ it('renders the brand without configured text or an elevated role', function () 
         ->assertSee('Codeado con')
         ->assertSee('Like Innovación')
         ->assertSee('https://like.cl')
-        ->assertDontSee('LNX v0.1.0');
+        ->assertDontSee('v0.1.0');
+});
+
+it('renders the version to any user outside production', function () {
+    config()->set('app.version', 'v9.8.7');
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertSee('LNX v9.8.7');
 });
 
 it('renders the configured version for elevated roles', function (Role $role) {
-    config()->set('app.version', '9.8.7');
+    config()->set('app.version', 'v9.8.7');
     $user = User::factory()->create();
     $user->assignRole($role->value);
 
@@ -43,7 +54,20 @@ it('renders the configured version for elevated roles', function (Role $role) {
     'root' => Role::Root,
 ]);
 
+it('renders the configured app name in the version footer', function () {
+    config()->set('app.name', 'MiApp');
+    config()->set('app.version', 'v9.8.7');
+    $user = User::factory()->create();
+    $user->assignRole(Role::Admin->value);
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertSee('MiApp v9.8.7')
+        ->assertDontSee('LNX v');
+});
+
 it('translates the footer into English', function () {
+    config()->set('app.version', 'v0.1.0');
     $user = User::factory()->create();
     $user->assignRole(Role::Admin->value);
 

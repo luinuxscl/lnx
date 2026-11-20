@@ -354,7 +354,7 @@
     "Knowledge Documents": "Documentos de Conocimiento",
     "Knowledge document created and queued for indexing.": "Documento de conocimiento creado y encolado para indexación.",
     "Knowledge document deleted.": "Documento de conocimiento eliminado.",
-    "LNX v:version": "LNX v:version",
+    ":name :version": ":name :version",
     "Language": "Idioma",
     "Laracasts": "Laracasts",
     "Laravel has an incredibly rich ecosystem.": "Laravel tiene un ecosistema increíblemente rico.",

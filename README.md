@@ -115,12 +115,14 @@ lnx define su identidad por defecto en capas, de modo que una instalación nueva
 | Nombre de la app | `LNX` | `APP_NAME` (`config('app.name')`) |
 | Lema | `Base de desarrollo Laravel` | `APP_TAGLINE` (`config('app.tagline')`) |
 | Texto del footer | `Hecho por Like Innovación` | `APP_FOOTER_TEXT` (`config('app.footer_text')`) |
+| Versión | `0.0.0-dev` hasta resolver Git | tags Git vía `app:version`; escape hatch `APP_VERSION` |
 | Zona horaria | `America/Santiago` | `APP_TIMEZONE` (`config('app.timezone')`) |
 | Idioma | Español (`es`); inglés (`en`) disponible | `APP_LOCALE` / `APP_FALLBACK_LOCALE` |
 | Logo | `public/branding/lnx-logo.png` | `App\Models\Setting::DEFAULT_LOGO` |
 | Favicon / Apple touch icon | `public/favicon.png` / `public/apple-touch-icon.png` | `Setting::DEFAULT_FAVICON` / `Setting::DEFAULT_APPLE_TOUCH_ICON` |
 
 - La fila de `settings` **sobrescribe** estos valores: si el sitio define título, lema, footer, logo o favicon, se usan esos. Con los campos vacíos se aplican los defaults de arriba.
+- La **versión** (`config('app.version')`) la resuelve `App\Support\AppVersion`: si `APP_VERSION` está explícito en el entorno gana; si no, lee el cache `bootstrap/cache/app-version.php` que `php artisan app:version` escribe desde `git describe --tags --long --always --dirty` (corre en `post-autoload-dump`, así que cada `composer install` la refresca). Sin Git ni cache queda `0.0.0-dev`. Cada integración a `main` es un release: tag anotado `vX.Y.Z` sobre `main`, push y back-merge a `develop` (sin back-merge el tag no es alcanzable desde `develop`). El footer muestra la versión a admin/root y, fuera de producción, a cualquier usuario; los tickets de soporte y la configuración pública la reportan.
 - El **idioma** y la **zona horaria** del sitio también se guardan en la fila `settings` (`locale`, `timezone`) y se editan en **Configuración general**; sin valor se usa `APP_LOCALE` / `APP_TIMEZONE`. El idioma del sitio es el fallback de `SetLocale` (la preferencia por usuario sigue ganando) y la zona horaria alimenta `App\Support\Appearance::currentTimezone()`.
 - `App\Models\Setting` expone `title()`, `tagline()`, `footer()`, `logoUrl()`, `logoDarkUrl()`, `faviconUrl()` y `appleTouchIconUrl()` con esos fallbacks. `Setting::logoUrl()` siempre devuelve una URL (el logo del kit si no hay uno subido).
 - `new-project.sh` sustituye `APP_NAME` y `APP_URL`; el resto de defaults se pueden cambiar en `.env` o en **Configuración general** (`/admin/settings`).
