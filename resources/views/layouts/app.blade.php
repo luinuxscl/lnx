@@ -77,7 +77,7 @@
                     <a href="https://like.cl" target="_blank" rel="noopener noreferrer" class="font-medium text-zinc-600 underline-offset-2 hover:underline focus-visible:underline dark:text-zinc-300">{{ __('Like Innovación') }}</a>
                 </span>
 
-                @if (auth()->user()->hasAnyRole([\App\Enums\Role::Admin, \App\Enums\Role::Root]))
+                @if (auth()->user()->hasAnyRole([\App\Enums\Role::Admin, \App\Enums\Role::Root]) || ! app()->isProduction())
                     <span>{{ __(':name :version', ['name' => config('app.name'), 'version' => config('app.version')]) }}</span>
                 @endif
             </div>

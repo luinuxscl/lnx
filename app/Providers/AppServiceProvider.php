@@ -10,6 +10,7 @@ use App\Enums\Role;
 use App\Mail\RecordingMailManager;
 use App\Mcp\McpToolRegistry;
 use App\Models\User;
+use App\Support\AppVersion;
 use App\Support\Dashboard\DashboardRegistry;
 use App\Support\Dashboard\Widgets\AccountWidget;
 use App\Support\Dashboard\Widgets\RootToolsWidget;
@@ -40,6 +41,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        config(['app.version' => AppVersion::resolve()]);
+
         $this->app->singleton(AiApplicationRegistry::class);
         $this->app->singleton(OpenRouterStreamCosts::class);
         $this->app->singleton(StreamCostParser::class);
