@@ -78,7 +78,7 @@
                 </span>
 
                 @if (auth()->user()->hasAnyRole([\App\Enums\Role::Admin, \App\Enums\Role::Root]))
-                    <span>{{ __('LNX v:version', ['version' => config('app.version')]) }}</span>
+                    <span>{{ __(':name :version', ['name' => config('app.name'), 'version' => config('app.version')]) }}</span>
                 @endif
             </div>
         </footer>

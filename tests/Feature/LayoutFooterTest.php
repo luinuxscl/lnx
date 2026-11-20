@@ -31,7 +31,7 @@ it('renders the brand without configured text or an elevated role', function () 
 });
 
 it('renders the configured version for elevated roles', function (Role $role) {
-    config()->set('app.version', '9.8.7');
+    config()->set('app.version', 'v9.8.7');
     $user = User::factory()->create();
     $user->assignRole($role->value);
 
@@ -43,7 +43,20 @@ it('renders the configured version for elevated roles', function (Role $role) {
     'root' => Role::Root,
 ]);
 
+it('renders the configured app name in the version footer', function () {
+    config()->set('app.name', 'MiApp');
+    config()->set('app.version', 'v9.8.7');
+    $user = User::factory()->create();
+    $user->assignRole(Role::Admin->value);
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertSee('MiApp v9.8.7')
+        ->assertDontSee('LNX v');
+});
+
 it('translates the footer into English', function () {
+    config()->set('app.version', 'v0.1.0');
     $user = User::factory()->create();
     $user->assignRole(Role::Admin->value);
 

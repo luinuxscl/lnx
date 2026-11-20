@@ -320,7 +320,7 @@
     "Knowledge document deleted.": "Knowledge document deleted.",
     "Last checked: :time": "Last checked: :time",
     "Latest version": "Latest version",
-    "LNX v:version": "LNX v:version",
+    ":name :version": ":name :version",
     "Language": "Language",
     "Laracasts": "Laracasts",
     "Laravel has an incredibly rich ecosystem.": "Laravel has an incredibly rich ecosystem.",
