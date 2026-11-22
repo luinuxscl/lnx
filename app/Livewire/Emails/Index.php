@@ -25,6 +25,11 @@ class Index extends Component
     #[Url]
     public ?int $selected = null;
 
+    public int $perPage = 15;
+
+    /** @var array<int, int> */
+    public const PER_PAGE = [10, 15, 25, 50];
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -32,6 +37,18 @@ class Index extends Component
 
     public function updatedStatus(): void
     {
+        $this->resetPage();
+    }
+
+    public function hasActiveFilters(): bool
+    {
+        return $this->search !== ''
+            || $this->status !== 'all';
+    }
+
+    public function clearFilters(): void
+    {
+        $this->reset('search', 'status');
         $this->resetPage();
     }
 
@@ -53,6 +70,10 @@ class Index extends Component
             403,
         );
 
+        if (! in_array($this->perPage, self::PER_PAGE, true)) {
+            $this->perPage = self::PER_PAGE[1];
+        }
+
         $query = OutboundEmail::query()->with('user');
 
         if ($this->search !== '') {
@@ -73,7 +94,7 @@ class Index extends Component
             : OutboundEmail::query()->with('user')->find($this->selected);
 
         return view('livewire.emails.index', [
-            'emails' => $query->orderByDesc('id')->paginate(15),
+            'emails' => $query->orderByDesc('id')->paginate($this->perPage),
             'selectedEmail' => $selectedEmail,
             'timezone' => Appearance::currentTimezone($user),
         ])->layout('layouts.app');

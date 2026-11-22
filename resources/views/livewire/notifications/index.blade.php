@@ -12,6 +12,34 @@
         @endif
     </x-lnx-ui::page-header>
 
+    <x-lnx-ui::filter-bar>
+        <x-lnx-ui::filter-chip
+            name="status"
+            icon="bell"
+            :label="__('Status')"
+            :options="['unread' => __('Unread')]"
+            :any-label="__('All')"
+            :active="$status !== 'all'"
+        />
+
+        {{-- ms-auto en un wrapper: el ítem del flex es el wrapper del tooltip,
+            y una clase en el botón interior no empuja nada. --}}
+        <div class="ms-auto flex items-center gap-2">
+            @if ($this->hasActiveFilters())
+                <flux:button
+                    size="sm"
+                    square
+                    icon="funnel-x"
+                    :tooltip="__('Clear filters')"
+                    :aria-label="__('Clear filters')"
+                    wire:click="clearFilters"
+                />
+            @endif
+
+            <x-lnx-ui::table-per-page :options="[10, 25, 50]" :aria-label="__('Per page')" />
+        </div>
+    </x-lnx-ui::filter-bar>
+
     <div class="space-y-3">
         @forelse ($notifications as $notification)
             <article wire:key="notification-{{ $notification->id }}" class="rounded-lg border p-4 {{ $notification->read_at === null ? 'border-[var(--color-accent)] bg-zinc-50 dark:bg-zinc-900' : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900' }}">
@@ -37,7 +65,19 @@
                 </div>
             </article>
         @empty
-            <flux:card><flux:text>{{ __('You have no notifications yet.') }}</flux:text></flux:card>
+            <flux:card>
+                <div class="flex flex-col items-center gap-3 py-12 text-center">
+                    <span class="flex size-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800" aria-hidden="true">
+                        <flux:icon icon="bell" class="size-6 text-zinc-400" />
+                    </span>
+                    <flux:text class="font-medium">
+                        {{ $this->hasActiveFilters() ? __('No unread notifications.') : __('You have no notifications yet.') }}
+                    </flux:text>
+                    @if ($this->hasActiveFilters())
+                        <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearFilters">{{ __('Clear filters') }}</flux:button>
+                    @endif
+                </div>
+            </flux:card>
         @endforelse
     </div>
 

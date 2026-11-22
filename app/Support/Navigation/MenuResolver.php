@@ -203,6 +203,21 @@ class MenuResolver
             return null;
         }
 
+        // Clave 'can' del tag: permisos (uno o una lista) que debe tener la
+        // identidad para ver el ítem; sin ellos, enlace muerto a un 403.
+        $can = $tag['can'] ?? null;
+        $can = match (true) {
+            $can === null => [],
+            is_array($can) => $can,
+            default => [$can],
+        };
+
+        foreach ($can as $ability) {
+            if (! $user->can((string) $ability)) {
+                return null;
+            }
+        }
+
         $label = $this->resolveRouteLabel($tag, $item);
 
         if ($label === null) {

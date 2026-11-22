@@ -10,17 +10,65 @@
         </x-slot:actions>
     </x-lnx-ui::page-header>
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <flux:input wire:model.live.debounce.300ms="actor" :label="__('Actor')" :placeholder="__('Name, email or ID')" />
-        <flux:select wire:model.live="action" :label="__('Action')">
-            <flux:select.option value="">{{ __('All actions') }}</flux:select.option>
-            @foreach ($actions as $option)
-                <flux:select.option :value="$option->value" :key="$option->value">{{ __(Illuminate\Support\Str::headline($option->value)) }}</flux:select.option>
-            @endforeach
-        </flux:select>
-        <flux:input wire:model.live="from" type="date" :label="__('From')" />
-        <flux:input wire:model.live="to" type="date" :label="__('To')" />
-    </div>
+    <x-lnx-ui::filter-bar>
+        {{-- Texto libre (actor): no cabe en un chip-select, se queda inline (crm#16). --}}
+        <x-lnx-ui::filter-control width="w-56">
+            <flux:input
+                size="sm"
+                wire:model.live.debounce.300ms="actor"
+                :placeholder="__('Name, email or ID')"
+                icon="magnifying-glass"
+                :aria-label="__('Actor')"
+            />
+        </x-lnx-ui::filter-control>
+
+        <x-lnx-ui::filter-chip
+            name="action"
+            icon="adjustments-horizontal"
+            :label="__('Action')"
+            :options="collect($actions)->mapWithKeys(fn ($option) => [$option->value => __(Illuminate\Support\Str::headline($option->value))])"
+            :any-label="__('All actions')"
+            :active="$action !== ''"
+        />
+
+        {{-- Los rangos de fechas no caben en un chip-select: se quedan inline (crm#16). --}}
+        <x-lnx-ui::filter-control width="w-40">
+            <flux:input
+                size="sm"
+                wire:model.live="from"
+                type="date"
+                icon="calendar"
+                :aria-label="__('From')"
+            />
+        </x-lnx-ui::filter-control>
+
+        <x-lnx-ui::filter-control width="w-40">
+            <flux:input
+                size="sm"
+                wire:model.live="to"
+                type="date"
+                icon="calendar"
+                :aria-label="__('To')"
+            />
+        </x-lnx-ui::filter-control>
+
+        {{-- ms-auto en un wrapper: el ítem del flex es el wrapper del tooltip,
+            y una clase en el botón interior no empuja nada. --}}
+        <div class="ms-auto flex items-center gap-2">
+            @if ($this->hasActiveFilters())
+                <flux:button
+                    size="sm"
+                    square
+                    icon="funnel-x"
+                    :tooltip="__('Clear filters')"
+                    :aria-label="__('Clear filters')"
+                    wire:click="clearFilters"
+                />
+            @endif
+
+            <x-lnx-ui::table-per-page :options="[10, 25, 50]" :aria-label="__('Per page')" />
+        </div>
+    </x-lnx-ui::filter-bar>
     @error('action') <flux:callout variant="danger">{{ $message }}</flux:callout> @enderror
     @error('from') <flux:callout variant="danger">{{ $message }}</flux:callout> @enderror
     @error('to') <flux:callout variant="danger">{{ $message }}</flux:callout> @enderror
@@ -55,7 +103,17 @@
                 @endif
             </div>
         @empty
-            <flux:text>{{ __('No administrative activity found.') }}</flux:text>
+            <flux:card>
+                <div class="flex flex-col items-center gap-3 py-12 text-center">
+                    <span class="flex size-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800" aria-hidden="true">
+                        <flux:icon icon="clock" class="size-6 text-zinc-400" />
+                    </span>
+                    <flux:text class="font-medium">{{ __('No administrative activity found.') }}</flux:text>
+                    @if ($this->hasActiveFilters())
+                        <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearFilters">{{ __('Clear filters') }}</flux:button>
+                    @endif
+                </div>
+            </flux:card>
         @endforelse
     </div>
     {{ $activities->links() }}

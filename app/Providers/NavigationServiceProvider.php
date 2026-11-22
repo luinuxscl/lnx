@@ -19,6 +19,7 @@ class NavigationServiceProvider extends ServiceProvider
      *         'group_icon' => 'chart-bar',
      *         'audiences' => ['admin'],    // suggested audiences
      *         'roles' => ['admin'],        // allowed roles (omit for everyone)
+     *         'can' => 'reports.export',   // permission(s) required to see the item (string or list)
      *         'region' => 'main',          // sidebar region: main | bottom (default main)
      *         'auto' => true,              // autopublish in those audiences
      *         'order' => 2,                // default item order within the group

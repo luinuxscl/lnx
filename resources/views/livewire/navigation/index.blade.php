@@ -59,7 +59,11 @@
 
                     <div class="min-w-0 flex-1">
                         <flux:heading>{{ $group->label() ?? __('No heading') }}</flux:heading>
-                        @if ($group->label_key !== null)
+                        @if ($group->label() === null && $group->label_key === null)
+                            {{-- Un grupo sin etiqueta no pinta encabezado en el sidebar; sin la
+                                aclaración, «Sin título» parece una fila rota (crm#16). --}}
+                            <flux:text class="text-xs">{{ __('Groups without a label render their items without a heading in the sidebar.') }}</flux:text>
+                        @elseif ($group->label_key !== null)
                             <flux:text class="text-xs">{{ __('Translation key: :key', ['key' => $group->label_key]) }}</flux:text>
                         @endif
                     </div>

@@ -21,6 +21,30 @@ class Index extends Component
 {
     use WithPagination;
 
+    #[Url(as: 'status')]
+    public string $status = 'all';
+
+    public int $perPage = 10;
+
+    /** @var array<int, int> */
+    public const PER_PAGE = [10, 25, 50];
+
+    public function updatedStatus(): void
+    {
+        $this->resetPage();
+    }
+
+    public function hasActiveFilters(): bool
+    {
+        return $this->status !== 'all';
+    }
+
+    public function clearFilters(): void
+    {
+        $this->reset('status');
+        $this->resetPage();
+    }
+
     public function markAsRead(string $id): void
     {
         $notification = auth()->user()->notifications()->whereKey($id)->firstOrFail();
@@ -131,8 +155,18 @@ class Index extends Component
     {
         $user = auth()->user();
 
+        if (! in_array($this->perPage, self::PER_PAGE, true)) {
+            $this->perPage = self::PER_PAGE[0];
+        }
+
+        $query = $user->notifications()->reorder()->orderByDesc('created_at')->orderByDesc('id');
+
+        if ($this->status === 'unread') {
+            $query->whereNull('read_at');
+        }
+
         return view('livewire.notifications.index', [
-            'notifications' => $user->notifications()->reorder()->orderByDesc('created_at')->orderByDesc('id')->paginate(10),
+            'notifications' => $query->paginate($this->perPage),
             'unreadCount' => $user->unreadNotifications()->count(),
             'timezone' => Appearance::currentTimezone($user),
         ])->layout('layouts.app');

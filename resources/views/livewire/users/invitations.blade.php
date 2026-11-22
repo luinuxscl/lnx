@@ -76,38 +76,50 @@
 
         <x-lnx-ui::data-table :paginate="$invitations">
             <x-slot:toolbar>
-                <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                    <flux:select wire:model.live="status" class="sm:w-44" :aria-label="__('Status')">
-                        <flux:select.option value="all">{{ __('All statuses') }}</flux:select.option>
-                        <flux:select.option value="pending">{{ __('Pending') }}</flux:select.option>
-                        <flux:select.option value="accepted">{{ __('Accepted') }}</flux:select.option>
-                        <flux:select.option value="expired">{{ __('Expired') }}</flux:select.option>
-                        <flux:select.option value="revoked">{{ __('Revoked') }}</flux:select.option>
-                        <flux:select.option value="send_failed">{{ __('Send failed') }}</flux:select.option>
-                    </flux:select>
-
-                    <div class="w-full sm:w-64">
+                <x-lnx-ui::filter-bar>
+                    <x-lnx-ui::filter-control width="w-64">
                         <flux:input
+                            size="sm"
                             wire:model.live.debounce.300ms="search"
                             :placeholder="__('Search invitations...')"
                             icon="magnifying-glass"
+                            :aria-label="__('Search invitations...')"
                         />
-                    </div>
-                </div>
-            </x-slot:toolbar>
+                    </x-lnx-ui::filter-control>
 
-            <x-slot:actions>
-                @if ($this->hasActiveFilters())
-                    <flux:button icon="x-mark" wire:click="clearFilters">{{ __('Clear filters') }}</flux:button>
-                @endif
-                <div class="w-24">
-                    <flux:select wire:model.live="perPage" :aria-label="__('Per page')">
-                        @foreach ($perPageOptions as $option)
-                            <flux:select.option value="{{ $option }}">{{ $option }}</flux:select.option>
-                        @endforeach
-                    </flux:select>
-                </div>
-            </x-slot:actions>
+                    <x-lnx-ui::filter-chip
+                        name="status"
+                        icon="envelope"
+                        :label="__('Status')"
+                        :options="collect(['pending', 'accepted', 'expired', 'revoked', 'send_failed'])->mapWithKeys(fn ($state) => [$state => __([
+                            'pending' => 'Pending',
+                            'accepted' => 'Accepted',
+                            'expired' => 'Expired',
+                            'revoked' => 'Revoked',
+                            'send_failed' => 'Send failed',
+                        ][$state])])"
+                        :any-label="__('All statuses')"
+                        :active="$status !== 'all'"
+                    />
+
+                    {{-- ms-auto en un wrapper: el ítem del flex es el wrapper del tooltip,
+                        y una clase en el botón interior no empuja nada. --}}
+                    <div class="ms-auto flex items-center gap-2">
+                        @if ($this->hasActiveFilters())
+                            <flux:button
+                                size="sm"
+                                square
+                                icon="funnel-x"
+                                :tooltip="__('Clear filters')"
+                                :aria-label="__('Clear filters')"
+                                wire:click="clearFilters"
+                            />
+                        @endif
+
+                        <x-lnx-ui::table-per-page :options="$perPageOptions" :aria-label="__('Per page')" />
+                    </div>
+                </x-lnx-ui::filter-bar>
+            </x-slot:toolbar>
 
             <flux:table.columns>
                 <flux:table.column sortable :sorted="$sortBy === 'email'" :direction="$sortDirection" wire:click="sort('email')">{{ __('Email') }}</flux:table.column>
@@ -119,14 +131,16 @@
 
             <flux:table.rows>
                 @forelse ($invitations as $invitation)
+                    {{-- Esmeralda/rose como el resto de la paleta semántica del producto;
+                        green/red son el alias crudo de Flux (crm#16). --}}
                     @php
                         $state = $invitation->status();
                         $badgeColor = match ($state) {
-                            'Accepted' => 'green',
+                            'Accepted' => 'emerald',
                             'Pending' => 'blue',
                             'Expired' => 'amber',
                             'Revoked' => 'zinc',
-                            default => 'red',
+                            default => 'rose',
                         };
                     @endphp
                     <flux:table.row :key="$invitation->id">

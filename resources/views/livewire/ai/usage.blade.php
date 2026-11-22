@@ -61,38 +61,64 @@
         table-class="[&_th:first-child]:ps-3 [&_td:first-child]:ps-3 [&_th:last-child]:pe-3 [&_td:last-child]:pe-3"
     >
         <x-slot:filters>
+            {{-- Textos libres (búsqueda por usuario/modelo): no caben en un chip-select, se quedan inline (crm#16). --}}
             <div class="w-full sm:w-44">
-                <flux:input wire:model.live.debounce.300ms="user" :label="__('User')" :placeholder="__('Name, email or ID')" />
+                <flux:input
+                    size="sm"
+                    wire:model.live.debounce.300ms="user"
+                    :placeholder="__('Name, email or ID')"
+                    icon="magnifying-glass"
+                    :aria-label="__('User')"
+                />
             </div>
 
-            <div class="w-full sm:w-44">
-                <flux:select wire:model.live="application" :label="__('Application')">
-                    <flux:select.option value="">{{ __('All applications') }}</flux:select.option>
-                    @foreach ($applications as $option)
-                        <flux:select.option :value="$option" :key="$option">{{ $option }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-            </div>
+            <x-lnx-ui::filter-chip
+                name="application"
+                icon="rectangle-stack"
+                :label="__('Application')"
+                :options="collect($applications)->mapWithKeys(fn ($option) => [$option => $option])"
+                :any-label="__('All applications')"
+                :active="$application !== ''"
+            />
 
             <div class="w-full sm:w-44">
-                <flux:input wire:model.live.debounce.300ms="model" :label="__('Model')" :placeholder="__('Model identifier')" />
+                <flux:input
+                    size="sm"
+                    wire:model.live.debounce.300ms="model"
+                    :placeholder="__('Model identifier')"
+                    icon="cpu-chip"
+                    :aria-label="__('Model')"
+                />
+            </div>
+
+            <x-lnx-ui::filter-chip
+                name="status"
+                icon="adjustments-horizontal"
+                :label="__('Status')"
+                :options="collect($statuses)->mapWithKeys(fn ($option) => [$option => __(Illuminate\Support\Str::headline($option))])"
+                :any-label="__('All statuses')"
+                :active="$status !== ''"
+            />
+
+            {{-- Los rangos de fechas no caben en un chip-select: se quedan inline (crm#16). --}}
+            <div class="w-full sm:w-40">
+                <flux:input
+                    size="sm"
+                    wire:model.live="from"
+                    type="date"
+                    icon="calendar"
+                    :aria-label="__('From')"
+                />
             </div>
 
             <div class="w-full sm:w-40">
-                <flux:select wire:model.live="status" :label="__('Status')">
-                    <flux:select.option value="">{{ __('All statuses') }}</flux:select.option>
-                    @foreach ($statuses as $option)
-                        <flux:select.option :value="$option" :key="$option">{{ __(Illuminate\Support\Str::headline($option)) }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-            </div>
-
-            <div class="w-full sm:w-40">
-                <flux:input wire:model.live="from" type="date" :label="__('From')" />
-            </div>
-
-            <div class="w-full sm:w-40">
-                <flux:input wire:model.live="to" type="date" :label="__('To')" />
+                <flux:input
+                    size="sm"
+                    wire:model.live="to"
+                    type="date"
+                    icon="calendar"
+                    :aria-label="__('To')"
+                />
             </div>
 
             @if ($errors->any())
@@ -110,9 +136,19 @@
         </x-slot:filters>
 
         <x-slot:filtersActions>
+            {{-- ms-auto lo aporta el propio componente data-table-inline (sm:ms-auto en su wrapper). --}}
             @if ($this->hasActiveFilters())
-                <flux:button variant="ghost" icon="x-mark" wire:click="clearFilters">{{ __('Clear filters') }}</flux:button>
+                <flux:button
+                    size="sm"
+                    square
+                    icon="funnel-x"
+                    :tooltip="__('Clear filters')"
+                    :aria-label="__('Clear filters')"
+                    wire:click="clearFilters"
+                />
             @endif
+
+            <x-lnx-ui::table-per-page :options="[10, 15, 25, 50]" :aria-label="__('Per page')" />
 
             <flux:button icon="arrow-down-tray" :href="$this->exportUrl()">{{ __('Export CSV') }}</flux:button>
         </x-slot:filtersActions>
@@ -210,5 +246,5 @@
                 </flux:table.row>
             @endforelse
         </flux:table.rows>
-    </x-lnx-ui::data-table>
+    </x-lnx-ui::data-table-inline>
 </section>

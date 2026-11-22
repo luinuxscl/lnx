@@ -125,7 +125,7 @@
                                     name="code"
                                     wire:model="code"
                                     length="6"
-                                    label="OTP Code"
+                                    label="{{ __('OTP code') }}"
                                     label:sr-only
                                     class="mx-auto"
                                 />
@@ -229,7 +229,7 @@
                                             <flux:icon.check
                                                 x-show="copied"
                                                 variant="solid"
-                                                class="text-green-500"
+                                                class="text-emerald-500"
                                             ></flux:icon>
                                         </button>
                                     @endempty

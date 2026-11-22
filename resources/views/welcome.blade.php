@@ -30,6 +30,12 @@
         @include('partials.head')
     </head>
     <body class="relative flex h-svh flex-col overflow-hidden bg-white text-zinc-900 antialiased selection:bg-accent/20 dark:bg-zinc-950 dark:text-zinc-100">
+        {{-- Selector de idioma como en las pantallas auth: la landing es pública y
+            traducida, el visitante no debería tener que entrar al login para cambiarlo (crm#16). --}}
+        <div class="fixed top-4 end-4 z-50">
+            <livewire:locale-switcher />
+        </div>
+
         <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
             <div class="absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_45%,color-mix(in_oklab,var(--color-accent)_18%,transparent),transparent_72%)] dark:bg-[radial-gradient(ellipse_60%_55%_at_50%_45%,color-mix(in_oklab,var(--color-accent)_26%,transparent),transparent_72%)]"></div>
 
@@ -119,5 +125,9 @@
                 <a href="https://like.cl" target="_blank" rel="noopener noreferrer" class="font-medium text-zinc-500 underline-offset-2 hover:underline focus-visible:underline dark:text-zinc-400">{{ __('Like Innovación') }}</a>
             </span>
         </footer>
+
+        {{-- El selector de idioma es un flux:dropdown: sin @fluxScripts el botón
+            aparece pero el menú no se abre (crm#16). --}}
+        @fluxScripts
     </body>
 </html>
