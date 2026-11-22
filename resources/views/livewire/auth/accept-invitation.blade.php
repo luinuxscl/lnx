@@ -10,9 +10,11 @@
             <flux:text>{{ $invitation->email }}</flux:text>
             <form method="POST" action="{{ route('invitations.accept.store', ['invitation' => $invitation, 'token' => $token]) }}" class="flex flex-col gap-6">
                 @csrf
+                {{-- passwordrules como en registro y reset: iOS/macOS sugieren las mismas
+                    reglas de contraseña que valida el servidor (crm#16). --}}
                 <flux:input name="name" :label="__('Name')" :value="old('name')" required autofocus autocomplete="name" />
-                <flux:input name="password" :label="__('Password')" type="password" required autocomplete="new-password" viewable />
-                <flux:input name="password_confirmation" :label="__('Confirm password')" type="password" required autocomplete="new-password" />
+                <flux:input name="password" :label="__('Password')" type="password" required autocomplete="new-password" passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}" viewable />
+                <flux:input name="password_confirmation" :label="__('Confirm password')" type="password" required autocomplete="new-password" passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}" />
                 <flux:button type="submit" variant="primary">{{ __('Create account') }}</flux:button>
             </form>
         @endif

@@ -3,7 +3,9 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
+    {{-- Zinc, la paleta gris de la app (layouts/app usa dark:bg-zinc-800/900);
+        neutral era el outlier de auth (crm#16). --}}
+    <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-zinc-950 dark:to-zinc-900">
         <div class="fixed top-4 end-4 z-50">
             <livewire:locale-switcher />
         </div>
