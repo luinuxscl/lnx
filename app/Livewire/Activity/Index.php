@@ -30,6 +30,11 @@ class Index extends Component
     #[Url(as: 'to')]
     public string $to = '';
 
+    public int $perPage = 10;
+
+    /** @var array<int, int> */
+    public const PER_PAGE = [10, 25, 50];
+
     public function updatingActor(): void
     {
         $this->resetPage();
@@ -50,9 +55,27 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function hasActiveFilters(): bool
+    {
+        return $this->actor !== ''
+            || $this->action !== ''
+            || $this->from !== ''
+            || $this->to !== '';
+    }
+
+    public function clearFilters(): void
+    {
+        $this->reset('actor', 'action', 'from', 'to');
+        $this->resetPage();
+    }
+
     public function render(): View
     {
         $this->authorize('viewAny', AdministrativeActivity::class);
+
+        if (! in_array($this->perPage, self::PER_PAGE, true)) {
+            $this->perPage = self::PER_PAGE[0];
+        }
 
         try {
             $activities = app(ListAdministrativeActivity::class)->handle([
@@ -60,14 +83,14 @@ class Index extends Component
                 'action' => $this->action,
                 'from' => $this->from,
                 'to' => $this->to,
-            ]);
+            ], $this->perPage);
             $this->resetValidation();
         } catch (ValidationException $exception) {
             foreach ($exception->errors() as $field => $messages) {
                 $this->addError($field, $messages[0]);
             }
 
-            $activities = new LengthAwarePaginator([], 0, 10, $this->getPage());
+            $activities = new LengthAwarePaginator([], 0, $this->perPage, $this->getPage());
         }
 
         return view('livewire.activity.index', ['activities' => $activities, 'actions' => AdministrativeAction::cases()])

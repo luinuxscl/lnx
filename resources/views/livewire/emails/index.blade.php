@@ -6,14 +6,43 @@
         color="blue"
     />
 
-    <div class="mt-6 grid gap-3 sm:grid-cols-2">
-        <flux:input wire:model.live.debounce.300ms="search" :placeholder="__('Search emails...')" icon="magnifying-glass" />
-        <flux:select wire:model.live="status" :label="__('Status')">
-            <option value="all">{{ __('All') }}</option>
-            <option value="sent">{{ __('Sent') }}</option>
-            <option value="failed">{{ __('Failed') }}</option>
-        </flux:select>
-    </div>
+    <x-lnx-ui::filter-bar class="mt-6">
+        <x-lnx-ui::filter-control width="w-64">
+            <flux:input
+                size="sm"
+                wire:model.live.debounce.300ms="search"
+                :placeholder="__('Search emails...')"
+                icon="magnifying-glass"
+                :aria-label="__('Search emails...')"
+            />
+        </x-lnx-ui::filter-control>
+
+        <x-lnx-ui::filter-chip
+            name="status"
+            icon="envelope"
+            :label="__('Status')"
+            :options="['sent' => __('Sent'), 'failed' => __('Failed')]"
+            :any-label="__('All')"
+            :active="$status !== 'all'"
+        />
+
+        {{-- ms-auto en un wrapper: el ítem del flex es el wrapper del tooltip,
+            y una clase en el botón interior no empuja nada. --}}
+        <div class="ms-auto flex items-center gap-2">
+            @if ($this->hasActiveFilters())
+                <flux:button
+                    size="sm"
+                    square
+                    icon="funnel-x"
+                    :tooltip="__('Clear filters')"
+                    :aria-label="__('Clear filters')"
+                    wire:click="clearFilters"
+                />
+            @endif
+
+            <x-lnx-ui::table-per-page :options="[10, 15, 25, 50]" :aria-label="__('Per page')" />
+        </div>
+    </x-lnx-ui::filter-bar>
 
     {{-- These are outbound messages: the mail pieces' «sender» always maps to the recipient of the send. --}}
     <div class="mt-6 grid grid-cols-12 gap-4">
@@ -50,7 +79,15 @@
                         </x-lnx-ui::mail-list-item>
                     @empty
                         <div class="p-6">
-                            <flux:text>{{ __('No emails found.') }}</flux:text>
+                            <div class="flex flex-col items-center gap-3 py-8 text-center">
+                                <span class="flex size-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800" aria-hidden="true">
+                                    <flux:icon icon="envelope" class="size-6 text-zinc-400" />
+                                </span>
+                                <flux:text class="font-medium">{{ __('No emails found.') }}</flux:text>
+                                @if ($this->hasActiveFilters())
+                                    <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearFilters">{{ __('Clear filters') }}</flux:button>
+                                @endif
+                            </div>
                         </div>
                     @endforelse
                 </div>

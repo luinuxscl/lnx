@@ -38,7 +38,7 @@
                             class="px-3 transition-colors border-l cursor-pointer border-zinc-200 dark:border-zinc-700"
                         >
                             <flux:icon.document-duplicate x-show="!copied" variant="outline" />
-                            <flux:icon.check x-show="copied" variant="solid" class="text-green-500" />
+                            <flux:icon.check x-show="copied" variant="solid" class="text-emerald-500" />
                         </button>
                     </div>
 

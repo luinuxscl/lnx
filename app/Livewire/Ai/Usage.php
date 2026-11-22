@@ -39,9 +39,18 @@ class Usage extends Component
     #[Url(as: 'to')]
     public string $to = '';
 
+    public int $perPage = 15;
+
+    /** @var array<int, int> */
+    public const PER_PAGE = [10, 15, 25, 50];
+
     public function mount(): void
     {
         $this->authorizeRoot();
+
+        if (! in_array($this->perPage, self::PER_PAGE, true)) {
+            $this->perPage = self::PER_PAGE[1];
+        }
     }
 
     public function updatingUser(): void
@@ -121,8 +130,12 @@ class Usage extends Component
 
         $summary = null;
 
+        if (! in_array($this->perPage, self::PER_PAGE, true)) {
+            $this->perPage = self::PER_PAGE[1];
+        }
+
         try {
-            $events = app(ListAiUsage::class)->handle($filters);
+            $events = app(ListAiUsage::class)->handle($filters, $this->perPage);
             $summary = app(ListAiUsage::class)->summary($filters);
             $this->resetValidation();
         } catch (ValidationException $exception) {
@@ -130,7 +143,7 @@ class Usage extends Component
                 $this->addError($field, $messages[0]);
             }
 
-            $events = new LengthAwarePaginator([], 0, 15, $this->getPage());
+            $events = new LengthAwarePaginator([], 0, $this->perPage, $this->getPage());
         }
 
         return view('livewire.ai.usage', [

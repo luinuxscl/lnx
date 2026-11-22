@@ -71,47 +71,68 @@
             :paginate="$users"
         >
             <x-slot:toolbar>
-                <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                    <flux:select wire:model.live="status" class="sm:w-36" :aria-label="__('Status')">
-                        <flux:select.option value="all">{{ __('All') }}</flux:select.option>
-                        <flux:select.option value="active">{{ __('Active') }}</flux:select.option>
-                        <flux:select.option value="suspended">{{ __('Suspended') }}</flux:select.option>
-                    </flux:select>
-
-                    <flux:select wire:model.live="role" class="sm:w-44" :aria-label="__('Role')">
-                        <flux:select.option value="all">{{ __('All roles') }}</flux:select.option>
-                        <flux:select.option value="root">{{ __(\App\Enums\Role::Root->label()) }}</flux:select.option>
-                        <flux:select.option value="admin">{{ __(\App\Enums\Role::Admin->label()) }}</flux:select.option>
-                        <flux:select.option value="none">{{ __('Standard user') }}</flux:select.option>
-                    </flux:select>
-
-                    <flux:select wire:model.live="verification" class="sm:w-44" :aria-label="__('Email verification')">
-                        <flux:select.option value="all">{{ __('All') }}</flux:select.option>
-                        <flux:select.option value="verified">{{ __('Verified') }}</flux:select.option>
-                        <flux:select.option value="unverified">{{ __('Unverified') }}</flux:select.option>
-                    </flux:select>
-
-                    <div class="w-full sm:w-64">
+                <x-lnx-ui::filter-bar>
+                    <x-lnx-ui::filter-control width="w-64">
                         <flux:input
+                            size="sm"
                             wire:model.live.debounce.300ms="search"
                             :placeholder="__('Search users...')"
                             icon="magnifying-glass"
+                            :aria-label="__('Search users...')"
                         />
+                    </x-lnx-ui::filter-control>
+
+                    <x-lnx-ui::filter-chip
+                        name="status"
+                        icon="adjustments-horizontal"
+                        :label="__('Status')"
+                        :options="['active' => __('Active'), 'suspended' => __('Suspended')]"
+                        :any-label="__('All')"
+                        :active="$status !== 'all'"
+                    />
+
+                    <x-lnx-ui::filter-chip
+                        name="role"
+                        icon="user-group"
+                        :label="__('Role')"
+                        :options="[
+                            'root' => __(\App\Enums\Role::Root->label()),
+                            'admin' => __(\App\Enums\Role::Admin->label()),
+                            'none' => __('Standard user'),
+                        ]"
+                        :any-label="__('All roles')"
+                        :active="$role !== 'all'"
+                    />
+
+                    <x-lnx-ui::filter-chip
+                        name="verification"
+                        icon="shield-check"
+                        :label="__('Email verification')"
+                        :options="['verified' => __('Verified'), 'unverified' => __('Unverified')]"
+                        :any-label="__('All')"
+                        :active="$verification !== 'all'"
+                    />
+
+                    {{-- ms-auto en un wrapper: el ítem del flex es el wrapper del tooltip,
+                        y una clase en el botón interior no empuja nada. --}}
+                    <div class="ms-auto flex items-center gap-2">
+                        @if ($this->hasActiveFilters())
+                            <flux:button
+                                size="sm"
+                                square
+                                icon="funnel-x"
+                                :tooltip="__('Clear filters')"
+                                :aria-label="__('Clear filters')"
+                                wire:click="clearFilters"
+                            />
+                        @endif
+
+                        <x-lnx-ui::table-per-page :options="$perPageOptions" :aria-label="__('Per page')" />
                     </div>
-                </div>
+                </x-lnx-ui::filter-bar>
             </x-slot:toolbar>
 
             <x-slot:actions>
-                @if ($this->hasActiveFilters())
-                    <flux:button icon="x-mark" wire:click="clearFilters">{{ __('Clear filters') }}</flux:button>
-                @endif
-                <div class="w-24">
-                    <flux:select wire:model.live="perPage" :aria-label="__('Per page')">
-                        @foreach ($perPageOptions as $option)
-                            <flux:select.option value="{{ $option }}">{{ $option }}</flux:select.option>
-                        @endforeach
-                    </flux:select>
-                </div>
                 <flux:button icon="arrow-down-tray" :href="$this->exportUrl()">{{ __('Export CSV') }}</flux:button>
                 <flux:button :href="route('admin.users.invitations')" wire:navigate>{{ __('Invitations') }}</flux:button>
                 @if (auth()->user()->hasRole(\App\Enums\Role::Root))
@@ -188,7 +209,8 @@
                         <flux:table.cell>
                             @if ($user->isSuspended())
                                 <span class="inline-flex" title="{{ __('Suspended') }}">
-                                    <flux:icon icon="pause-circle" class="size-5 text-amber-500" />
+                                    {{-- Rose, como la stat-card «Suspendidos»: una paleta, un significado (crm#16). --}}
+                                    <flux:icon icon="pause-circle" class="size-5 text-rose-500" />
                                     <span class="sr-only">{{ __('Suspended') }}</span>
                                 </span>
                             @else

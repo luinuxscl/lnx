@@ -82,6 +82,27 @@ it('marks pending notifications on every page and leaves another account untouch
         ->and($other->unreadNotifications()->count())->toBe(1);
 });
 
+it('filters the list down to unread notifications and clears the filter', function () {
+    $user = User::factory()->create();
+    $user->notify(new RoleChanged(null, Role::Admin->value));
+    $unread = $user->notifications()->firstOrFail();
+
+    $this->travelTo(now()->addMinute());
+    $user->notify(new RoleChanged(null, Role::Admin->value));
+    $read = $user->notifications()->orderByDesc('created_at')->firstOrFail();
+    $read->markAsRead();
+
+    Livewire::actingAs($user)->test(Index::class)
+        ->assertSee($unread->id)
+        ->assertSee($read->id)
+        ->set('status', 'unread')
+        ->assertSee($unread->id)
+        ->assertDontSee($read->id)
+        ->call('clearFilters')
+        ->assertSee($unread->id)
+        ->assertSee($read->id);
+});
+
 it('returns 404 for foreign or missing notification IDs even for root', function () {
     $this->seed(RolePermissionSeeder::class);
     $owner = User::factory()->create();
