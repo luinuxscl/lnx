@@ -9,14 +9,14 @@ paths:
 Este repo usa Git Flow: `main` (producción, estable), `develop` (integración), ramas `feature/nombre` para features nuevos (creadas desde `develop`) y ramas `fix/nombre` o `hotfix/nombre` para correcciones (creadas desde `main`). Antes de trabajar en un nuevo feature o corrección, avisar al usuario y crear la rama correspondiente.
 
 ## Versión de la app: ritual de release obligatorio
-La versión que muestra la app no se edita a mano: la resuelve `App\Support\AppVersion` desde los tags de Git (README §«Identidad por defecto»). Cada integración a `main` es un release y exige el ritual completo; ningún agente debe hacer merge a `main` sin tag ni dar por cerrado un corte sin él:
+La versión que muestra la app no se edita a mano: la resuelve `App\Support\AppVersion` desde los tags de Git (ver la sección de versión del README de cada repo). Por eso, **cada integración a `main` es un release y exige el ritual completo**; ningún agente debe hacer merge a `main` sin tag ni dar por cerrado un corte sin él:
 
 1. Commit del trabajo en `develop`.
 2. Merge `--no-ff` a `main` y tag anotado `vX.Y.Z` sobre `main` (SemVer: patch para fixes, minor para features, major para breaking).
 3. Push de `develop`, `main` y el tag.
 4. Back-merge de `main` a `develop` y push (sin él el tag no es alcanzable desde `develop` y `git describe` degrada a hash pelado).
 
-El número visible lo refresca `php artisan app:version` (enganchado a `post-autoload-dump`). Si una verificación muestra `0.0.0-dev` o un hash sin tag donde se esperaba un corte, faltó el ritual: completarlo antes de dar por terminado el trabajo.
+El número visible lo refresca `php artisan app:version` (enganchado a `post-autoload-dump`; para verlo al instante: `php artisan app:version`). Si una verificación muestra `0.0.0-dev` o un hash sin tag donde se esperaba un corte, faltó el ritual: completarlo antes de dar por terminado el trabajo.
 
 ## Documentación siempre actualizada y prioritaria
 La documentación es prioritaria y obligatoria. Antes de dar por terminado un feature o corrección, verificar y actualizar la documentación afectada (README.md, guías en .ai/rules, o docs relevantes). Toda funcionalidad nueva o cambio de comportamiento debe reflejarse en la documentación en el mismo PR o commit, nunca después. Cuando se trabaja en áreas no documentadas del repositorio, proponer crear su documentación.
