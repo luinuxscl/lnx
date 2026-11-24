@@ -2,6 +2,17 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.24.0] - 2026-11-23
+
+### Añadido
+- **Reglas de diseño por capas:** el kit entrega el shell neutro (sidebar, header, auth, públicas y pantallas genéricas); la dirección visual la decide cada app en su propio contrato. Precedencia explícita en el README («Trabajo con agentes» y «Contrato visual»), en `.ai/guidelines/project-entry.md` y en la skill `design-screen`: el contrato del proyecto activo gana sobre toda skill global o personal de diseño.
+- **Regla de widgets de métricas en el kit:** `.ai/rules/livewire.md` entra al kit (generalizada) con su fila en `.ai/rules/index.md`.
+
+### Corregido
+- `luinuxscl/lnx-ui` descrito como repositorio público en las reglas de vistas, el README y la skill `lnx-ui-release`.
+- Iconografía: «Flux (nombres lógicos) con arte Lucide» en la skill `brand-logos`.
+- `general.md` §«Versión de la app»: referencia genérica al README de cada repo para eliminar el drift de redacción con las apps derivadas.
+
 ## [1.23.0] - 2026-11-01
 
 ### Añadido

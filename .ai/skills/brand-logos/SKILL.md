@@ -17,7 +17,7 @@ La vía autorizada es la API REST pública más el vendorizado local. No se aña
 
 ## Cuándo NO usar
 
-- Iconografía de interfaz genérica: usa Flux/Heroicons, no SVGL. Aquí solo logos de marca.
+- Iconografía de interfaz: usa Flux (nombres lógicos) con arte Lucide, no SVGL. Aquí solo logos de marca.
 - Si el logo no está en SVGL: descárgalo de la web oficial de la marca respetando su guía de marca y vendorízalo igual.
 - Para consultar la API desde la aplicación en producción: el logo se descarga una vez y queda en el repo.
 
