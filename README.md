@@ -1016,11 +1016,13 @@ Las reglas versionadas en `.ai/rules` expresan decisiones de lnx; las skills ens
 
 Los módulos actuales son autenticación y perfil (`routes/settings.php`), usuarios e invitaciones (`routes/users.php`), actividad administrativa (`app/Livewire/Activity/`), configuración global (`app/Livewire/Settings/`), checklist de puesta en marcha (`app/Livewire/Setup/`), servidor MCP de lectura con escritura declarable (`app/Mcp/`) y base de IA con OpenRouter (`app/Ai/`, `/admin/ai`, `/admin/ai/usage`, asistente de texto `app/Livewire/Ai/TextAssistant.php`). Las versiones y la lista de rutas se consultan con los comandos de la tabla, sin fijarlas en instrucciones generadas.
 
-La instrucción explícita del usuario prevalece. Después se aplican las reglas del proyecto derivado para sus decisiones, las reglas de lnx para el núcleo que sigue usando y, finalmente, las recomendaciones de Boost y skills. Si dos instrucciones del mismo nivel chocan, detén solo la decisión afectada y pide una aclaración concreta; no escribas una regla nueva por inferencia. Las reglas permanentes se registran únicamente a petición explícita mediante `record-rule`.
+La instrucción explícita del usuario prevalece. Después se aplican las reglas del proyecto derivado para sus decisiones, las reglas de lnx para el núcleo que sigue usando y, finalmente, las recomendaciones de Boost y skills. En diseño rige la misma precedencia por capas: el kit entrega el shell neutro y cada proyecto derivado declara su dirección visual en su contrato; el contrato del proyecto activo gana sobre toda skill global o personal de diseño (p. ej. `design-taste-frontend`, `frontend-design`), y esas skills solo aplican donde el contrato calla. Si dos instrucciones del mismo nivel chocan, detén solo la decisión afectada y pide una aclaración concreta; no escribas una regla nueva por inferencia. Las reglas permanentes se registran únicamente a petición explícita mediante `record-rule`.
 
 ### Contrato visual
 
 La referencia de tokens es `resources/css/app.css`: Instrument Sans, escala de espaciado de Tailwind 4, superficies zinc y variables `--color-accent`, `--color-accent-content` y `--color-accent-foreground`. En las pantallas actuales, `flux:heading` y `flux:text` establecen la jerarquía tipográfica, `gap-4` separa acciones próximas y `mt-6` o `space-y-6` separan secciones y campos. Las seis variantes de acento se implementan en `resources/views/livewire/settings/general.blade.php` (selector de sitio, solo `root`) y la selección claro/oscuro/sistema en `resources/views/livewire/settings/appearance.blade.php`, ambas aplicadas por `resources/views/partials/head.blade.php`. El proyecto derivado puede sustituir la identidad y el acento predeterminado sin alterar los patrones de interacción del kit.
+
+**El kit entrega el shell neutro.** Lo que el kit entrega —sidebar, header, autenticación, páginas públicas y pantallas genéricas de administración— es una base neutra y sobria, sin flair de diseño, pensada para que cada app derivada la personalice: los valores por defecto (acento, logo, tipografía) no son una decisión de marca. La dirección visual de cada app (tipografía de display, jerarquía por radio, micro-interacciones, paleta semántica) la decide el proyecto derivado en su propio contrato de diseño, y ese contrato prevalece sobre este para todo lo que la app pinta. Las skills de diseño globales o personales solo llenan los vacíos que el contrato del proyecto no cubre.
 
 | Patrón | Implementación canónica |
 | --- | --- |
@@ -1113,7 +1115,7 @@ Los estilos reutilizables aprobados se registran en `.ai/skills/create-ui-compon
 
 ### Componentes compartidos (paquete `luinuxscl/lnx-ui`)
 
-Los componentes presentacionales reutilizables viven en el paquete Composer privado `luinuxscl/lnx-ui`, fuente única para lnx y sus apps derivadas. Por defecto, **todo componente visual reutilizable nuevo se crea en el paquete**, no en la app; solo los muy específicos o acoplados al host (`app-logo`, `user-avatar`, `desktop-user-menu`, `dev-credentials-warning`, `settings/layout`) se quedan en `resources/views/components/` de cada app. El clon local para desarrollar el paquete se registra en `.ai/rules/local.md`.
+Los componentes presentacionales reutilizables viven en el paquete Composer público `luinuxscl/lnx-ui`, fuente única para lnx y sus apps derivadas. Por defecto, **todo componente visual reutilizable nuevo se crea en el paquete**, no en la app; solo los muy específicos o acoplados al host (`app-logo`, `user-avatar`, `desktop-user-menu`, `dev-credentials-warning`, `settings/layout`) se quedan en `resources/views/components/` de cada app. El clon local para desarrollar el paquete se registra en `.ai/rules/local.md`.
 
 En cada aplicación:
 

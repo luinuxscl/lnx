@@ -7,7 +7,7 @@ description: "Publica el paquete luinuxscl/lnx-ui desde su checkout de desarroll
 
 > Fuente canónica: el paquete `lnx-ui`, en su skill de Boost `lnx-ui-release`. Mantén esta copia en sincronía con ella.
 
-Este procedimiento deja el paquete `luinuxscl/lnx-ui` publicado y consumible: parte del checkout de desarrollo, verifica, integra `develop` y `main`, crea el tag SemVer y sube todo a `origin`. Después, opcionalmente, actualiza los proyectos que requieren el paquete. El paquete se consume como VCS privado (`^1.0`), así que un cambio no llega a las apps hasta que existe un tag nuevo y cada app ejecuta `composer update luinuxscl/lnx-ui`.
+Este procedimiento deja el paquete `luinuxscl/lnx-ui` publicado y consumible: parte del checkout de desarrollo, verifica, integra `develop` y `main`, crea el tag SemVer y sube todo a `origin`. Después, opcionalmente, actualiza los proyectos que requieren el paquete. El paquete se consume como repositorio VCS público (`^1.0`), así que un cambio no llega a las apps hasta que existe un tag nuevo y cada app ejecuta `composer update luinuxscl/lnx-ui`.
 
 ## Cuándo usar
 
