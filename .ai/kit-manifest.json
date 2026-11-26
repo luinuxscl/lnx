@@ -37,6 +37,7 @@
       ".ai/skills/update-agent-kit/SKILL.md",
       ".ai/skills/verify-delivery/SKILL.md",
       "app/Console/Commands/LnxResetCommand.php",
+      "app/Support/Dashboard/DashboardHome.php",
       "app/Support/Dashboard/DashboardHomeRegistry.php",
       "app/Support/DemoUsers.php",
       "database/seeders/DemoUserSeeder.php",
