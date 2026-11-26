@@ -491,7 +491,7 @@ Vista de configuración global del sitio en `/admin/settings` (`admin.settings.e
 
 ## Panel por rol
 
-`/dashboard` (`dashboard`) mantiene los middleware `auth` y `verified`. La bienvenida muestra el nombre escapado y la fecha localizada en la zona horaria del actor. El dashboard es un **host de widgets**: no contiene datos cableados, sino que recoge los widgets que cada paquete registra en `DashboardRegistry` y los pinta en tres secciones fijas —**Sam**, **Stats** y **Accesos**—. El host comprueba `visible()` antes de resolver cada widget, así que un widget sin permiso no ejecuta su consulta. Añadir un widget no requiere tocar la vista ni el componente.
+`/dashboard` (`dashboard`) mantiene los middleware `auth` y `verified`. La bienvenida muestra el nombre escapado y la fecha localizada en la zona horaria del actor. El dashboard es un **host de widgets**: no contiene datos cableados, sino que recoge los widgets que cada paquete registra en `DashboardRegistry` y los pinta en tres secciones fijas —**Sam**, **Stats** y **Accesos**—. El host comprueba `visible()` antes de resolver cada widget, así que un widget sin permiso no ejecuta su consulta. Añadir un widget no requiere tocar la vista ni el componente. Un paquete que necesite una superficie de inicio completa registra además un `DashboardHome` en `DashboardHomeRegistry` (`CONTRATO-MODULO.md` §3.11): el kit pinta la sección **Accesos** y delega la bienvenida y las secciones Sam/Stats a su componente Livewire; sin home visible el dashboard genérico queda intacto.
 
 El kit registra tres widgets:
 
