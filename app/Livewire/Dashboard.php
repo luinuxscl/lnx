@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\User;
 use App\Support\Appearance;
+use App\Support\Dashboard\DashboardHomeRegistry;
 use App\Support\Dashboard\DashboardRegistry;
 use App\Support\Dashboard\DashboardSection;
 use App\Support\Dashboard\DashboardWidget;
@@ -28,9 +29,15 @@ class Dashboard extends Component
         $actor = auth()->user();
         $now = now(Appearance::currentTimezone($actor));
 
+        $home = app(DashboardHomeRegistry::class)->forActor($actor);
+
         $sections = [];
 
-        foreach ([DashboardSection::Sam, DashboardSection::Stats, DashboardSection::Access] as $section) {
+        $sectionOrder = $home === null
+            ? [DashboardSection::Sam, DashboardSection::Stats, DashboardSection::Access]
+            : [DashboardSection::Access];
+
+        foreach ($sectionOrder as $section) {
             $sections[] = [
                 'section' => $section,
                 'widgets' => $this->widgetsFor($actor, $section),
@@ -41,6 +48,7 @@ class Dashboard extends Component
             'name' => $actor->name,
             'today' => $now->isoFormat('dddd, LL'),
             'todayIso' => $now->toDateString(),
+            'home' => $home,
             'sections' => $sections,
         ])->layout('layouts.app');
     }

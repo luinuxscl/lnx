@@ -7,9 +7,9 @@
 ])
 
 @php
-    if ($variant === 'solid') {
-        throw new \Exception('The "solid" variant is not supported in Lucide.');
-    }
+    $isSolid = $variant === 'solid';
+
+    $variant = $isSolid ? 'outline' : $variant;
 
     $classes = Flux::classes('shrink-0')->add(
         match ($variant) {
@@ -32,7 +32,7 @@
     data-flux-icon
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
-    fill="none"
+    fill="{{ $isSolid ? 'currentColor' : 'none' }}"
     stroke="currentColor"
     stroke-width="{{ $strokeWidth }}"
     stroke-linecap="round"

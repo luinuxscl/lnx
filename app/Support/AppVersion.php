@@ -57,7 +57,7 @@ class AppVersion
         $describe = trim($gitDescribe);
 
         if (preg_match('~^(?P<tag>.+)-0-g(?P<hash>[0-9a-f]{7,})(?P<dirty>-dirty)?$~', $describe, $matches) === 1) {
-            return $matches['tag'].$matches['dirty'];
+            return $matches['tag'].($matches['dirty'] ?? '');
         }
 
         return $describe;

@@ -4,9 +4,11 @@ Todas las releases notables del kit **lnx** se documentan en este archivo. El de
 
 El kit sigue [SemVer](https://semver.org/lang/es/) y cada release se publica con una etiqueta anotada `vX.Y.Z` sobre `main`. La versión vigente se declara en `.ai/kit-manifest.json` como `lnx_version` y se copia a cada proyecto creado con `scripts/new-project.sh`.
 
-## [No publicado]
+## [2.0.0] - 2026-11-26
 
 ### Añadido
+
+- **Dashboard: superficie propia de inicio (dashboard home) (#96).** Un paquete registra un home en `App\Support\Dashboard\DashboardHomeRegistry` (interfaz `DashboardHome`: `source`, `priority`, `visible`, `livewireComponent`) y `/dashboard` renderiza su componente Livewire en lugar de la bienvenida y las secciones `Sam`/`Stats`, conservando el kit la sección `Access`; sin home visible el dashboard genérico queda intacto. El registry elige la visible de mayor prioridad (desempate por `source`), ignora invisibles y reemplaza por `source`. El contrato se documenta en `CONTRATO-MODULO.md` §3.11; primer implementador real: `CrmDashboardHome` del paquete `crm` (superficie Hoy), generalizado byte a byte desde la implementación local de `crm-app`.
 
 - **Sam: cola de aprobaciones y descarte de borradores.** `SamProposalPresenter` gana `pendingFor(User, int $limit = 5)` y `SamRuntime::pendingProposals()` agrega los borradores pendientes de todos los módulos para la sección permanente del dashboard. `SamProposal` añade `reviewUrl`, `canReject` y `rejectUrl`: el módulo dueño del borrador declara la acción terminal y la superficie solo publica un formulario hacia esa URL. `WidgetItem` gana `prompt` para que un atajo abra el panel con la petición puesta.
 - **Dashboard: contrato de widgets y host genérico (#93).** `App\Support\Dashboard\*`: `DashboardRegistry`, `DashboardWidget`, `Widget`, `DashboardSection`, `WidgetType` y DTOs tipados (`StatData`, `StatsData`, `SeriesData`, `ListData`, `ApprovalsData`, `ActionData`, `TimelineData`, `TextData`, `WidgetItem`, `ApprovalItem`). El dashboard deja de tener datos cableados: el host recoge los widgets registrados por los paquetes, comprueba `visible()` antes de `resolve()` y pinta secciones fijas `Sam`/`Stats`/`Access`. El kit registra `lnx.users`, `lnx.root_tools` y `lnx.account`; la presentación vive en `x-lnx-ui::widget` (lnx-ui v1.27.0). El contrato se documenta en `CONTRATO-MODULO.md` §3.10.
@@ -24,6 +26,8 @@ El kit sigue [SemVer](https://semver.org/lang/es/) y cada release se publica con
 
 ### Corregido
 
+- **`types:check` sin errores.** El atributo `#[Url]` de la página de notificaciones no tenía import: PHP lo resolvía a `App\Livewire\Notifications\Url`, que no existe, Livewire lo ignoraba y el filtro `?status=unread` de la URL no hidrata la propiedad; se añade `use Livewire\Attributes\Url;` con prueba de regresión por query string. En `AppVersion::normalize` la lectura del sufijo `-dirty` pasa a ser explícita (`?? ''`), cerrando los dos avisos de phpstan.
+- **Iconografía Lucide con `variant="solid"` lanzaba un 500 (#96).** Los 131 overrides de `resources/views/flux/icon/` rechazaban solid con excepción, y las vistas que lo piden sobre un icono pisado al heroicon nativo (estrella activada del correo, check de tokens MCP, páginas de paquetes y seguridad) fallaban al renderizar (10 pruebas del kit en rojo). El stub degrada `solid` a `outline` rellenando con `currentColor`; se añade `grip-vertical` al set.
 - **Estado vacío de los widgets y atajos de Sam.** `x-lnx-ui::widget` (lnx-ui v1.27.1) ignora los comentarios que Livewire inyecta alrededor de cada directiva antes de decidir si el slot está vacío, así que los widgets muestran su mensaje de vacío en vez de una tarjeta en blanco. Un widget `Action` cuyos elementos traen `prompt` se pinta como tarjeta con botones apilados a ancho completo: los atajos del agente dejan de truncarse en una columna estrecha.
 - **Endurecimiento del runtime de Sam.** Las bases `SamReadTool`/`SamProposeTool` re-comprueban `SAM_ENABLED` (denegación auditada como `disabled`), el runtime rechaza nombres de herramienta duplicados entre módulos (`duplicate_name`) y la redacción de `CONFIRM …` exige un token de 6 o más caracteres para evitar falsos positivos.
 

@@ -11,6 +11,7 @@ use App\Mail\RecordingMailManager;
 use App\Mcp\McpToolRegistry;
 use App\Models\User;
 use App\Support\AppVersion;
+use App\Support\Dashboard\DashboardHomeRegistry;
 use App\Support\Dashboard\DashboardRegistry;
 use App\Support\Dashboard\Widgets\AccountWidget;
 use App\Support\Dashboard\Widgets\RootToolsWidget;
@@ -54,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(RecordAccessRegistry::class);
         $this->app->singleton(IdentitySeederRegistry::class);
         $this->app->singleton(DashboardRegistry::class);
+        $this->app->singleton(DashboardHomeRegistry::class);
 
         $this->app->make(DashboardRegistry::class)->register('lnx', [
             AccountWidget::class,

@@ -2,6 +2,14 @@
 
 Todas las modificaciones notables al kit para agentes se documentarán en este archivo.
 
+## [1.25.0] - 2026-11-26
+
+### Añadido
+- **Contrato de módulo — superficie propia de inicio (dashboard home) (§3.11, #96):** un paquete puede reemplazar la bienvenida y las secciones `Sam`/`Stats` del dashboard por su propia superficie Livewire registrando un home en `App\Support\Dashboard\DashboardHomeRegistry` (interfaz `DashboardHome`: `source`, `priority`, `visible`, `livewireComponent`). El host conserva la sección `Access`; sin home visible el dashboard genérico queda intacto (retrocompatible). El registry elige la visible de mayor prioridad (desempate por `source`), ignora invisibles y reemplaza por `source`; registros inválidos lanzan `InvalidArgumentException`. Los archivos del contrato (`app/Support/Dashboard/DashboardHome.php`, `app/Support/Dashboard/DashboardHomeRegistry.php`) entran al manifiesto como `kit_maintained` para que el updater los entregue a las apps derivadas en la misma ruta que ya usa la implementación local de `crm-app`. Primer implementador real: `CrmDashboardHome` del paquete `crm` (superficie Hoy). Documentado en `CONTRATO-MODULO.md` §3.11 (con referencia cruzada desde §3.10) y README.
+
+### Corregido
+- **Degradación honesta de `variant="solid"` en los overrides Lucide (#96, mismo ciclo):** los 131 overrides de `resources/views/flux/icon/` lanzaban excepción («The "solid" variant is not supported in Lucide.») cuando una vista pedía solid sobre un icono que el set local pisa al heroicon nativo de Flux — la estrella activada del correo (`MailUiPreviewTest`), el check de copiado de tokens MCP, la página de paquetes y de seguridad — y provocaban un 500 real, con 10 pruebas del kit en rojo (`MailUiPreviewTest`, `LnxUiPackagePageTest`, `McpTokenManagementTest`, `PageHeaderTest`). El stub degrada `solid` a `outline` y rellena con `currentColor`, que es el modo Lucide de dar peso visual. Se añade `grip-vertical` al set (handle de arrastre que usan las apps con el módulo CRM; el host `crm-app` ya lo había commiteado por separado).
+
 ## [1.24.0] - 2026-11-23
 
 ### Añadido

@@ -101,6 +101,11 @@ it('filters the list down to unread notifications and clears the filter', functi
         ->call('clearFilters')
         ->assertSee($unread->id)
         ->assertSee($read->id);
+
+    Livewire::actingAs($user)->withQueryParams(['status' => 'unread'])->test(Index::class)
+        ->assertSet('status', 'unread')
+        ->assertSee($unread->id)
+        ->assertDontSee($read->id);
 });
 
 it('returns 404 for foreign or missing notification IDs even for root', function () {
