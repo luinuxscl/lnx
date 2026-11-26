@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "kit_version": "1.25.0",
-  "lnx_version": "1.0.0",
+  "lnx_version": "2.0.0",
   "source": "https://github.com/luinuxscl/lnx",
-  "updated_at": "2026-11-26T15:58:30Z",
+  "updated_at": "2026-11-26T17:48:05Z",
   "stack_compatibility": {
     "php": ">=8.5",
     "laravel": "^13.0",

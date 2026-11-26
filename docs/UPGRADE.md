@@ -10,7 +10,7 @@ adoptan actualizando dependencias y `lnx_version` en `.ai/kit-manifest.json`
 > `scripts/update-agent-kit.py`; el código de la aplicación, no. Si una entrada
 > de este archivo toca `app/`, `config/` o `composer.json`, es trabajo manual.
 
-## Runtime de Sam empaquetado (próxima release mayor)
+## Runtime de Sam empaquetado (2.0.0)
 
 El runtime de Sam dejó de vivir en la aplicación. Ahora es el paquete público
 **MIT `luinuxscl/lnx-sam`** (namespace `Luinuxscl\LnxSam`): el registro de
@@ -109,3 +109,11 @@ contradice el manifiesto.
   retiran en la siguiente versión mayor.
 - El paquete no trae identidad ni interfaz: eso sigue en `luinuxscl/sam` y en
   `luinuxscl/lnx-ui`.
+
+## `/chat` deja de ser superficie (2.0.0)
+
+La ruta `/chat` sale de la navegación y redirige a `dashboard?sam=open`, donde
+se abre el panel global de Sam si `SAM_ENABLED` y el actor tiene `sam.use`. Tras
+actualizar el código, ejecuta `php artisan navigation:sync` en instalaciones
+existentes para ocultar el ítem huérfano. El componente, el servicio y las
+conversaciones heredadas se conservan hasta la limpieza mayor.
