@@ -651,7 +651,62 @@ Criterios de aceptación:
 > **Estado:** implementado en `lnx` el 2026-11-06 (issue #93). La carcasa visual
 > `x-lnx-ui::widget` vive en `lnx-ui` (issue #5) y el host pinta las secciones
 > `Sam`, `Stats` y `Access`. Los widgets de producto (CRM y Sam) llegan en las
-> issues `crm#26` y `sam#6`.
+> issues `crm#26` y `sam#6`. El paquete que necesite reemplazar la bienvenida y
+> las secciones `Sam`/`Stats` por una superficie completa usa el contrato aparte
+> del §3.11.
+
+### 3.11 Superficie propia de inicio (dashboard home) (implementado)
+
+Un paquete que necesite una **superficie de inicio propia** (p. ej. la agenda
+«Hoy» de un CRM) puede reemplazar la bienvenida y las secciones `Sam`/`Stats`
+del dashboard por su propio componente Livewire. El kit conserva la sección
+`Access` (los accesos del host) y delega el resto al paquete. Sin paquete con
+home visible el dashboard genérico se comporta exactamente igual que antes.
+
+**Registro.** En el `register()` o `boot()` del `ServiceProvider` del paquete:
+
+```php
+use App\Support\Dashboard\DashboardHomeRegistry;
+
+$this->app->make(DashboardHomeRegistry::class)->register('crm', CrmDashboardHome::class);
+```
+
+**Contrato.** Un home implementa `App\Support\Dashboard\DashboardHome`:
+
+| Método | Regla |
+| --- | --- |
+| `source()` | Identificador del paquete (`crm`); debe coincidir con el source del registro |
+| `priority()` | Cuando varios homes son visibles, gana el de mayor prioridad (desempate: `source`, descendente) |
+| `visible(User $actor)` | Un home no visible para el actor equivale a no estar registrado |
+| `livewireComponent()` | Nombre registrado del componente Livewire (p. ej. `luinuxscl.crm.livewire.today`) |
+
+**Reglas:**
+
+- Con un home visible, el host pinta la sección `Access` y renderiza el
+  componente del paquete en el lugar de la cabecera de bienvenida.
+- Registrar dos veces el mismo `source` reemplaza el home (idempotente); un
+  `source` vacío o no coincidente, o una clase que no implementa el contrato,
+  lanza `InvalidArgumentException` al registrar.
+- El paquete es responsable de los permisos dentro de su superficie; el kit solo
+  decide si hay home y cuál.
+- Los archivos del contrato (`DashboardHome.php`, `DashboardHomeRegistry.php`)
+  son `kit_maintained`: el updater los entrega a las apps derivadas en
+  `App\Support\Dashboard`, la misma ruta que ya usa la implementación local de
+  `crm-app`.
+
+Criterios de aceptación:
+
+- Con un home visible, `/dashboard` renderiza el componente del paquete y
+  conserva la sección `Access`; sin home visible, el dashboard genérico queda
+  intacto (bienvenida, Sam, Stats y Access).
+- El registry elige la visible de mayor prioridad, ignora las invisibles y
+  reemplaza por `source`.
+- La suite del kit cubre registry y render.
+
+> **Estado:** implementado en `lnx` el 2026-11-26 (issue #96). Primer
+> implementador real: `CrmDashboardHome` del paquete `crm` (superficie Hoy),
+> que ya usaba este contrato como código local del host `crm-app`; el kit lo
+> generaliza byte a byte.
 
 ## 4. Escritura por MCP (implementado)
 

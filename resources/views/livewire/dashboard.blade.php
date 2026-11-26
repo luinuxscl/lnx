@@ -1,12 +1,16 @@
 <section class="w-full space-y-6">
-    <x-lnx-ui::page-header
-        :title="__('Welcome, :name', ['name' => $name])"
-        :subtitle="__('Your work, your agent and your data in one place.')"
-    >
-        <x-slot:eyebrow>
-            <time datetime="{{ $todayIso }}">{{ $today }}</time>
-        </x-slot:eyebrow>
-    </x-lnx-ui::page-header>
+    @if ($home === null)
+        <x-lnx-ui::page-header
+            :title="__('Welcome, :name', ['name' => $name])"
+            :subtitle="__('Your work, your agent and your data in one place.')"
+        >
+            <x-slot:eyebrow>
+                <time datetime="{{ $todayIso }}">{{ $today }}</time>
+            </x-slot:eyebrow>
+        </x-lnx-ui::page-header>
+    @else
+        @livewire($home->livewireComponent(), key('dashboard-home-'.$home->source()))
+    @endif
 
     @foreach ($sections as $group)
         @if ($group['widgets'] !== [])
